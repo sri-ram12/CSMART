@@ -10,7 +10,7 @@
     "dev:client": "npm run dev --prefix client",
     "build": "npm run build --prefix server && npm run build --prefix client",
     "start": "node server/dist/index.js",
-    "render-build": "npm install --prefix server && npm install --prefix client && npm run prisma:generate --prefix server && npm run prisma:push --prefix server && npm run prisma:seed --prefix server && npm run build --prefix server && npm run build --prefix client",
+    "render-build": "npm install --include=dev --prefix server && npm install --include=dev --prefix client && npm run prisma:generate --prefix server && npm run prisma:push --prefix server && npm run build --prefix server && npm run build --prefix client && node server/dist/seed.js",
     "db:push": "npm run prisma:push --prefix server",
     "db:seed": "npm run prisma:seed --prefix server",
     "setup": "npm run install:all && npm run db:push && npm run db:seed"
