@@ -1,0 +1,21 @@
+{
+  "name": "chandhana-shoe-mart",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CHANDHANA SHOE MART - Premium Full-Stack Footwear E-Commerce Platform",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "start": "node server/dist/index.js",
+    "render-build": "npm install --prefix server && npm install --prefix client && npm run prisma:generate --prefix server && npm run prisma:push --prefix server && npm run prisma:seed --prefix server && npm run build --prefix server && npm run build --prefix client",
+    "db:push": "npm run prisma:push --prefix server",
+    "db:seed": "npm run prisma:seed --prefix server",
+    "setup": "npm run install:all && npm run db:push && npm run db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

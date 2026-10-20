@@ -1,0 +1,192 @@
+import { Product, Category, Order, User, Address, StoreSettings, CartItem } from '../types';
+
+const API_BASE = '/api';
+
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem('csm_token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+      ...options.headers,
+    },
+  });
+
+  const json = await res.json();
+  if (!res.ok || json.success === false) {
+    throw new Error(json.message || 'An error occurred during request');
+  }
+
+  return json.data !== undefined ? json.data : json;
+}
+
+export const api = {
+  // Auth
+  auth: {
+    login: (credentials: { email: string; password: string }) =>
+      request<{ user: User; token: string }>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+      }),
+    register: (data: { name: string; email: string; password: string; phone?: string }) =>
+      request<{ user: User; token: string }>('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    getMe: () => request<User>('/auth/me'),
+    updateProfile: (data: { name?: string; phone?: string }) =>
+      request<User>('/auth/profile', { method: 'PUT', body: JSON.stringify(data) }),
+    getAddresses: () => request<Address[]>('/auth/addresses'),
+    addAddress: (data: Partial<Address>) =>
+      request<Address>('/auth/addresses', { method: 'POST', body: JSON.stringify(data) }),
+    deleteAddress: (id: string) =>
+      request<{ message: string }>(`/auth/addresses/${id}`, { method: 'DELETE' }),
+    getWishlist: () => request<Product[]>('/auth/wishlist'),
+    toggleWishlist: (productId: string) =>
+      request<{ inWishlist: boolean }>('/auth/wishlist/toggle', {
+        method: 'POST',
+        body: JSON.stringify({ productId }),
+      }),
+  },
+
+  // Products
+  products: {
+    getAll: (params: Record<string, string | number | boolean | undefined> = {}) => {
+      const query = new URLSearchParams();
+      Object.entries(params).forEach(([key, val]) => {
+        if (val !== undefined && val !== '') query.append(key, String(val));
+      });
+      return request<{ products: Product[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+        `/products?${query.toString()}`
+      );
+    },
+    getFeatured: () => request<Product[]>('/products/featured'),
+    getTrending: () => request<Product[]>('/products/trending'),
+    get3DCollection: () => request<Product[]>('/products/3d-collection'),
+    getBySlug: (slug: string) => request<Product>(`/products/by-slug/${slug}`),
+    getById: (id: string) => request<Product>(`/products/${id}`),
+  },
+
+  // Categories
+  categories: {
+    getAll: () => request<Category[]>('/categories'),
+    getBySlug: (slug: string) => request<Category>(`/categories/${slug}`),
+  },
+
+  // Checkout & Pincode
+  checkout: {
+    validateCart: (data: { items: any[]; couponCode?: string }) =>
+      request<{
+        items: any[];
+        subtotal: number;
+        discountAmount: number;
+        shippingFee: number;
+        finalAmount: number;
+        coupon: any;
+        stockIssues: string[];
+        isEligibleForFreeShipping: boolean;
+        freeShippingThreshold: number;
+        amountNeededForFreeShipping: number;
+      }>('/checkout/validate', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
+  pincode: {
+    check: (pincode: string) =>
+      request<{
+        pincode: string;
+        serviceable: boolean;
+        city: string;
+        transitDays: number;
+        estimatedDelivery: string;
+        codAvailable: boolean;
+        courier: string;
+        freeDeliveryThreshold: number;
+        message: string;
+      }>(`/pincode/${pincode}`),
+  },
+
+  // Orders
+  orders: {
+    create: (data: {
+      items: any[];
+      shippingAddress: any;
+      paymentMethod: 'COD' | 'RAZORPAY';
+      paymentId?: string;
+      razorpayOrderId?: string;
+      razorpayPaymentId?: string;
+      couponCode?: string;
+      guestInfo?: { name: string; email: string; phone: string };
+    }) => request<Order>('/orders', { method: 'POST', body: JSON.stringify(data) }),
+    getMyOrders: () => request<Order[]>('/orders/my-orders'),
+    getByIdOrNumber: (idOrNumber: string) => request<Order>(`/orders/${idOrNumber}`),
+    cancel: (id: string, reason?: string) =>
+      request<Order>(`/orders/${id}/cancel`, { method: 'POST', body: JSON.stringify({ reason }) }),
+    returnRequest: (id: string, reason?: string) =>
+      request<Order>(`/orders/${id}/return`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  },
+
+  // Payment
+  payment: {
+    createRazorpayOrder: (amount: number, receipt?: string) =>
+      request<{ orderId: string; amount: number; currency: string; keyId: string; isSandbox?: boolean }>(
+        '/payment/razorpay/create-order',
+        { method: 'POST', body: JSON.stringify({ amount, receipt }) }
+      ),
+    verifyRazorpay: (data: {
+      razorpay_order_id: string;
+      razorpay_payment_id: string;
+      razorpay_signature?: string;
+    }) =>
+      request<{ verified: boolean; message: string; paymentId: string }>(
+        '/payment/razorpay/verify',
+        { method: 'POST', body: JSON.stringify(data) }
+      ),
+  },
+
+  // Reviews
+  reviews: {
+    submit: (data: { productId: string; rating: number; title: string; comment: string }) =>
+      request<any>('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+  },
+
+  // Settings
+  settings: {
+    get: () => request<StoreSettings>('/settings'),
+  },
+
+  // Admin
+  admin: {
+    getStats: () => request<any>('/admin/stats'),
+    getOrders: (params: { status?: string; search?: string } = {}) => {
+      const q = new URLSearchParams();
+      if (params.status) q.append('status', params.status);
+      if (params.search) q.append('search', params.search);
+      return request<Order[]>(`/admin/orders?${q.toString()}`);
+    },
+    updateOrderStatus: (id: string, data: { status?: string; trackingNumber?: string; courierName?: string; paymentStatus?: string }) =>
+      request<Order>(`/admin/orders/${id}/status`, { method: 'PUT', body: JSON.stringify(data) }),
+    getInventory: (lowStockOnly = false) =>
+      request<any[]>(`/admin/inventory?lowStockOnly=${lowStockOnly}`),
+    updateInventory: (variantId: string, inventory: number) =>
+      request<any>(`/admin/inventory/${variantId}`, { method: 'PUT', body: JSON.stringify({ inventory }) }),
+    createProduct: (data: any) =>
+      request<Product>('/admin/products', { method: 'POST', body: JSON.stringify(data) }),
+    updateProduct: (id: string, data: any) =>
+      request<Product>(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteProduct: (id: string) =>
+      request<{ message: string }>(`/admin/products/${id}`, { method: 'DELETE' }),
+    getCoupons: () => request<any[]>('/admin/coupons'),
+    createCoupon: (data: any) => request<any>('/admin/coupons', { method: 'POST', body: JSON.stringify(data) }),
+    getSettings: () => request<StoreSettings>('/admin/settings'),
+    updateSettings: (data: Partial<StoreSettings>) =>
+      request<StoreSettings>('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+  },
+};

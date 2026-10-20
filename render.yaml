@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: chandhana-shoe-mart
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm run render-build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: RAZORPAY_KEY_ID
+        value: rzp_test_chandhana_shoemart
+      - key: RAZORPAY_KEY_SECRET
+        value: test_secret_chandhana_12345
