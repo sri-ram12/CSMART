@@ -49,24 +49,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm transition-all">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20 gap-4">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
           {/* Logo & Brand Emblem */}
-          <Link to="/" className="flex items-center gap-3 group shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform duration-300">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shadow-md shadow-red-500/20 group-hover:scale-105 transition-transform duration-300">
               <svg
                 viewBox="0 0 100 100"
-                className="w-6 h-6 text-white fill-current filter drop-shadow"
+                className="w-5 h-5 sm:w-6 sm:h-6 text-white fill-current filter drop-shadow"
               >
                 <path d="M15 65 Q 38 78 78 55 Q 90 42 80 32 Q 62 38 46 52 Q 28 60 15 65 Z" />
                 <circle cx="72" cy="28" r="5" />
               </svg>
             </div>
             <div className="flex flex-col">
-              <span className="font-heading font-black text-lg md:text-xl tracking-tight text-slate-900 group-hover:text-red-600 transition-colors leading-none">
+              <span className="font-heading font-black text-sm sm:text-lg md:text-xl tracking-tight text-slate-900 group-hover:text-red-600 transition-colors leading-none">
                 CHANDHANA
               </span>
-              <span className="text-[10px] uppercase tracking-[0.25em] font-black text-red-600">
+              <span className="text-[8.5px] sm:text-[10px] uppercase tracking-[0.2em] sm:tracking-[0.25em] font-black text-red-600">
                 SHOE MART
               </span>
             </div>

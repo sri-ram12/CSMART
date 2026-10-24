@@ -9,24 +9,24 @@ export const CategoriesPage: React.FC = () => {
   const initialDept = searchParams.get('department') || 'men';
 
   return (
-    <div className="min-h-screen bg-slate-50 py-4 sm:py-8">
+    <div className="min-h-screen bg-slate-50 py-2.5 sm:py-6">
       <div className="max-w-4xl mx-auto px-2 sm:px-4">
         {/* Top Header */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-4 mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xs border border-slate-100 p-3 sm:p-4 mb-2.5 sm:mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors border-none cursor-pointer"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors border-none cursor-pointer"
               aria-label="Back"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <div>
-              <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+              <h1 className="text-base sm:text-lg md:text-xl font-black text-slate-900 tracking-tight">
                 Select Category
               </h1>
-              <p className="text-xs text-slate-500">
+              <p className="text-[10px] sm:text-xs text-slate-500">
                 Explore hand-picked footwear styles across all departments
               </p>
             </div>
@@ -38,8 +38,8 @@ export const CategoriesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Content Box */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        {/* Content Box with Fluid Viewport Height */}
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden h-[calc(100dvh-150px)] sm:h-[600px]">
           <CategorySelectorContent initialDepartment={initialDept} />
         </div>
       </div>

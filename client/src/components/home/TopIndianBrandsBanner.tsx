@@ -154,53 +154,53 @@ export const TopIndianBrandsBanner: React.FC = () => {
       className="relative w-full bg-slate-900 text-white overflow-hidden select-none border-b border-slate-800 shadow-md"
     >
       {/* Top Header Strip with Brand Indicators */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between border-b border-slate-800/80 text-xs">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-2.5 w-2.5 relative">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex items-center justify-between border-b border-slate-800/80 text-xs gap-2">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="flex h-2 w-2 sm:h-2.5 sm:w-2.5 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 sm:h-2.5 sm:w-2.5 bg-blue-500"></span>
           </span>
-          <span className="font-black uppercase tracking-wider text-white text-[11px] sm:text-xs flex items-center gap-1.5">
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span>Top Branded Footwear Stores</span>
+          <span className="font-black uppercase tracking-wider text-white text-[10px] min-[360px]:text-[11px] sm:text-xs flex items-center gap-1 truncate">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Top Branded Footwear</span>
           </span>
-          <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold text-[10px]">
-            Official Partner Banners
+          <span className="hidden sm:inline-block px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-bold text-[10px] shrink-0">
+            Official Stores
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="hidden md:flex items-center gap-1.5 text-slate-400 text-[11px]">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span>100% Authentic Genuine Warranty</span>
+            <span>100% Genuine</span>
           </div>
           <Link
             to="/shop"
-            className="text-blue-400 hover:text-blue-300 font-black text-xs flex items-center gap-1 transition-colors border-none"
+            className="text-blue-400 hover:text-blue-300 font-black text-[10px] sm:text-xs flex items-center gap-0.5 sm:gap-1 transition-colors border-none"
           >
-            <span>View All Brands</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+            <span>All Brands</span>
+            <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           </Link>
         </div>
       </div>
 
       {/* Scrolling Marquee Ribbon of Named Brand Banners */}
-      <div className="relative overflow-hidden py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
+      <div className="relative overflow-hidden py-2 sm:py-3 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950">
         {/* Left & Right Gradient Fade Edges */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-12 sm:w-28 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-12 sm:w-28 bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-28 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-28 bg-gradient-to-l from-slate-950 via-slate-950/80 to-transparent z-10" />
 
         {/* Continuous Marquee Track (Pauses on Hover for Easy Tapping) */}
-        <div className="animate-marquee flex items-center gap-3 sm:gap-4">
+        <div className="animate-marquee flex items-center gap-2.5 sm:gap-4">
           {duplicatedBanners.map((brand, idx) => (
             <Link
               key={`${brand.name}-${idx}`}
               to={`/shop?brand=${encodeURIComponent(brand.queryParam)}`}
-              className="group relative flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-sm hover:shadow-xl hover:ring-2 hover:ring-blue-500 transition-all duration-300 border-none shrink-0 w-64 sm:w-72"
+              className="group relative flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl sm:rounded-2xl bg-white/95 hover:bg-white text-slate-900 shadow-sm hover:shadow-xl hover:ring-2 hover:ring-blue-500 transition-all duration-300 border-none shrink-0 w-52 min-[360px]:w-58 sm:w-68 md:w-72"
             >
               {/* Brand Logo Container */}
-              <div className="w-14 sm:w-16 h-11 sm:h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-1.5 group-hover:scale-105 group-hover:bg-blue-50/40 transition-all shrink-0">
-                <BrandLogo brand={brand.name} className="max-h-7 max-w-full text-slate-900" />
+              <div className="w-12 sm:w-16 h-10 sm:h-12 rounded-lg sm:rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center p-1 sm:p-1.5 group-hover:scale-105 group-hover:bg-blue-50/40 transition-all shrink-0">
+                <BrandLogo brand={brand.name} className="max-h-6 sm:max-h-7 max-w-full text-slate-900" />
               </div>
 
               {/* Named Banner Details */}
@@ -210,22 +210,22 @@ export const TopIndianBrandsBanner: React.FC = () => {
                     {brand.name}
                   </span>
                   <span
-                    className={`text-[8px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0 shadow-2xs ${brand.badgeColor}`}
+                    className={`text-[7.5px] sm:text-[9px] font-black uppercase px-1.5 py-0.5 rounded-full shrink-0 shadow-2xs ${brand.badgeColor}`}
                   >
                     {brand.badge}
                   </span>
                 </div>
 
-                <span className="text-[10px] text-slate-500 font-medium truncate group-hover:text-slate-700">
+                <span className="text-[9px] sm:text-[10px] text-slate-500 font-medium truncate group-hover:text-slate-700">
                   {brand.tagline}
                 </span>
 
-                <div className="mt-1 flex items-center justify-between text-[10px] font-bold">
-                  <span className="text-rose-600 font-extrabold flex items-center gap-0.5">
-                    <Tag className="w-2.5 h-2.5" />
-                    <span>{brand.offerText}</span>
+                <div className="mt-0.5 sm:mt-1 flex items-center justify-between text-[9px] sm:text-[10px] font-bold">
+                  <span className="text-rose-600 font-extrabold flex items-center gap-0.5 truncate">
+                    <Tag className="w-2.5 h-2.5 shrink-0" />
+                    <span className="truncate">{brand.offerText}</span>
                   </span>
-                  <span className="text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5">
+                  <span className="text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-0.5 shrink-0">
                     <span>Shop</span>
                     <ArrowRight className="w-2.5 h-2.5" />
                   </span>

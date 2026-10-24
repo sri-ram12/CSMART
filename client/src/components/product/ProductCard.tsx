@@ -150,24 +150,24 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </Link>
 
       {/* Product Content Details */}
-      <div className="p-3 sm:p-5 flex-1 flex flex-col justify-between space-y-2 sm:space-y-3">
+      <div className="p-2.5 sm:p-4 md:p-5 flex-1 flex flex-col justify-between space-y-1.5 sm:space-y-3">
         <div>
           {/* Brand & Department */}
-          <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 mb-1">
-            <span className="text-red-600 font-extrabold uppercase tracking-wider">
+          <div className="flex items-center justify-between text-[9px] sm:text-[11px] text-slate-500 mb-1">
+            <span className="text-red-600 font-extrabold uppercase tracking-wider truncate mr-1">
               {product.brand}
             </span>
-            <div className="flex items-center gap-1 text-amber-500 font-bold">
-              <Star className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current" />
+            <div className="flex items-center gap-0.5 sm:gap-1 text-amber-500 font-bold shrink-0">
+              <Star className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-current" />
               <span>{product.rating}</span>
-              <span className="text-slate-400 text-[9px] sm:text-[10px]">({product.reviewCount})</span>
+              <span className="text-slate-400 text-[8.5px] sm:text-[10px]">({product.reviewCount})</span>
             </div>
           </div>
 
           {/* Product Title & 360 Tag */}
           <div className="flex items-center justify-between gap-1">
             <Link to={`/product/${product.slug}`} className="flex-1 min-w-0">
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 hover:text-red-600 transition-colors line-clamp-1">
+              <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-900 hover:text-red-600 transition-colors line-clamp-1">
                 {product.title}
               </h3>
             </Link>
@@ -179,10 +179,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   e.stopPropagation();
                   setIs3DModalOpen(true);
                 }}
-                className="shrink-0 text-[9px] font-black text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-2 py-0.5 rounded-full flex items-center gap-0.5 border-none transition-all cursor-pointer"
+                className="shrink-0 text-[8px] sm:text-[9px] font-black text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 border-none transition-all cursor-pointer"
                 title="Tap for 360° View"
               >
-                <RotateCcw className="w-2.5 h-2.5" /> 360°
+                <RotateCcw className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> 360°
               </button>
             )}
           </div>
@@ -192,53 +192,55 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div>
           {/* Color swatch previews */}
           {product.variants && product.variants.length > 0 && (
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-1.5 sm:mb-2.5">
+            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-2">
               {Array.from(new Set(product.variants.map((v) => v.colorHex))).slice(0, 4).map((hex, i) => (
                 <span
                   key={i}
-                  className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full border border-slate-200 inline-block shadow-sm"
+                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border border-slate-200 inline-block shadow-2xs"
                   style={{ backgroundColor: hex }}
                 />
               ))}
               {new Set(product.variants.map((v) => v.colorHex)).size > 4 && (
-                <span className="text-[9px] sm:text-[10px] text-slate-400 font-medium">
+                <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium">
                   +{new Set(product.variants.map((v) => v.colorHex)).size - 4}
                 </span>
               )}
             </div>
           )}
 
-            {/* Price row */}
-            <div className="flex items-center justify-between pt-1.5 sm:pt-2.5 border-t border-slate-100">
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-1.5 sm:gap-2">
-                  <span className="text-sm sm:text-lg font-black text-slate-900">
-                    ₹{product.price.toLocaleString('en-IN')}
+          {/* Price row */}
+          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-slate-100 gap-1">
+            <div className="flex flex-col min-w-0">
+              <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                <span className="text-xs sm:text-sm md:text-base font-black text-slate-900">
+                  ₹{product.price.toLocaleString('en-IN')}
+                </span>
+                {product.originalPrice && (
+                  <span className="text-[9px] sm:text-xs text-slate-400 line-through">
+                    ₹{product.originalPrice.toLocaleString('en-IN')}
                   </span>
-                  {product.originalPrice && (
-                    <span className="text-[10px] sm:text-xs text-slate-400 line-through">
-                      ₹{product.originalPrice.toLocaleString('en-IN')}
-                    </span>
-                  )}
-                </div>
-                <span className="text-[9px] sm:text-[10px] text-emerald-600 font-bold hidden xs:inline">Free Delivery</span>
+                )}
               </div>
-
-              {/* Direct Touch-Friendly Quick Add Button on Mobile (Option Clearly Visible on All Devices) */}
-              <button
-                type="button"
-                onClick={handleQuickAdd}
-                disabled={addedSuccess}
-                className={`sm:hidden border-none p-2 rounded-xl text-xs font-black transition-all shadow-sm flex items-center justify-center shrink-0 active:scale-90 ${
-                  addedSuccess
-                    ? 'bg-emerald-600 text-white'
-                    : 'bg-red-600 text-white hover:bg-red-700'
-                }`}
-                title="Quick Add to Bag"
-              >
-                {addedSuccess ? <Check className="w-3.5 h-3.5" /> : <ShoppingBag className="w-3.5 h-3.5" />}
-              </button>
+              <span className="text-[8px] sm:text-[9px] text-emerald-600 font-bold hidden min-[360px]:inline truncate">
+                Free Delivery
+              </span>
             </div>
+
+            {/* Direct Touch-Friendly Quick Add Button on Mobile */}
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              disabled={addedSuccess}
+              className={`sm:hidden border-none p-1.5 rounded-lg text-xs font-black transition-all shadow-xs flex items-center justify-center shrink-0 active:scale-90 ${
+                addedSuccess
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-red-600 text-white hover:bg-red-700'
+              }`}
+              title="Quick Add to Bag"
+            >
+              {addedSuccess ? <Check className="w-3 h-3" /> : <ShoppingBag className="w-3 h-3" />}
+            </button>
+          </div>
         </div>
       </div>
     </div>

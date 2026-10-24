@@ -692,7 +692,7 @@ export const ProductDetailPage: React.FC = () => {
       </div>
 
       {/* Sticky Mobile Purchase Action Bar (Options & Checkout Always Clearly Visible on Small Devices) */}
-      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 sm:p-4 z-40 lg:hidden shadow-[0_-8px_25px_rgba(0,0,0,0.08)]">
+      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-2.5 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] z-40 lg:hidden shadow-[0_-8px_25px_rgba(0,0,0,0.08)]">
         <div className="max-w-md mx-auto flex items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-baseline gap-1.5">

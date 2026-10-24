@@ -181,26 +181,26 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
   };
 
   return (
-    <div className="flex flex-row h-full min-h-[520px] bg-white select-none">
-      {/* LEFT COLUMN: Department Navigation with Model Photos & Arrow Indicator */}
-      <aside className="w-24 sm:w-28 md:w-32 bg-slate-50/80 border-r border-slate-100 flex flex-col py-3 px-1.5 space-y-2 shrink-0 overflow-y-auto">
+    <div className="flex flex-row w-full h-full min-h-0 bg-white select-none overflow-hidden">
+      {/* LEFT COLUMN: Department Navigation (Fluid responsive width) */}
+      <aside className="w-20 min-[375px]:w-24 sm:w-28 md:w-32 bg-slate-50/90 border-r border-slate-100 flex flex-col py-2.5 sm:py-3 px-1 sm:px-1.5 space-y-1.5 sm:space-y-2 shrink-0 overflow-y-auto no-scrollbar">
         {DEPARTMENTS.map((dept) => {
           const isSelected = selectedDeptId === dept.id;
 
           return (
-            <div key={dept.id} className="relative">
+            <div key={dept.id} className="relative w-full">
               <button
                 type="button"
                 onClick={() => setSelectedDeptId(dept.id)}
-                className={`w-full flex flex-col items-center p-1.5 rounded-2xl transition-all border-none cursor-pointer group text-center ${
+                className={`w-full flex flex-col items-center p-1 sm:p-1.5 rounded-xl sm:rounded-2xl transition-all border-none cursor-pointer group text-center ${
                   isSelected
-                    ? 'bg-rose-50/70 shadow-sm ring-1 ring-rose-200'
+                    ? 'bg-rose-50/80 shadow-xs ring-1 ring-rose-200'
                     : 'bg-transparent hover:bg-slate-100/70'
                 }`}
               >
                 {/* Model Portrait Card */}
                 <div
-                  className={`relative w-16 h-16 sm:w-18 sm:h-18 rounded-2xl overflow-hidden shadow-sm transition-transform duration-200 ${
+                  className={`relative w-13 h-13 min-[375px]:w-15 min-[375px]:h-15 sm:w-18 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs transition-transform duration-200 ${
                     isSelected ? 'ring-2 ring-rose-500 scale-102' : 'group-hover:scale-102'
                   }`}
                 >
@@ -211,8 +211,8 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
                     loading="lazy"
                   />
                   {/* Dark pill badge at bottom of photo (Image 1 reference) */}
-                  <div className="absolute inset-x-1 bottom-1 bg-black/70 backdrop-blur-xs rounded-full py-0.5 text-center">
-                    <span className="text-[9px] font-black tracking-wider text-white uppercase">
+                  <div className="absolute inset-x-0.5 bottom-0.5 sm:inset-x-1 sm:bottom-1 bg-black/75 backdrop-blur-xs rounded-full py-0.5 text-center">
+                    <span className="text-[8px] sm:text-[9px] font-black tracking-wider text-white uppercase block leading-none">
                       {dept.badge}
                     </span>
                   </div>
@@ -220,7 +220,7 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
 
                 {/* Department Label */}
                 <span
-                  className={`mt-1.5 text-xs font-bold leading-tight line-clamp-1 ${
+                  className={`mt-1 sm:mt-1.5 text-[10px] min-[375px]:text-[11px] sm:text-xs font-bold leading-tight line-clamp-1 ${
                     isSelected ? 'text-rose-600 font-black' : 'text-slate-700'
                   }`}
                 >
@@ -230,34 +230,34 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
 
               {/* Orange/Rose Triangular Arrow Notch Pointing to Right Panel (Image 1 reference) */}
               {isSelected && (
-                <div className="absolute -right-[7px] top-1/2 -translate-y-1/2 z-10 w-0 h-0 border-y-[6px] border-y-transparent border-l-[7px] border-l-rose-500" />
+                <div className="absolute -right-[6px] sm:-right-[7px] top-1/2 -translate-y-1/2 z-10 w-0 h-0 border-y-[5px] sm:border-y-[6px] border-y-transparent border-l-[6px] sm:border-l-[7px] border-l-rose-500" />
               )}
             </div>
           );
         })}
       </aside>
 
-      {/* RIGHT COLUMN: 2-Column Subcategory Grid with Footwear Photos */}
-      <section className="flex-1 p-3 sm:p-5 overflow-y-auto bg-white">
-        <div className="mb-3 flex items-center justify-between">
-          <span className="text-xs font-black uppercase tracking-wider text-slate-400">
+      {/* RIGHT COLUMN: Subcategory Grid (Fluid responsive 2-column or 3-column) */}
+      <section className="flex-1 min-w-0 p-2.5 sm:p-4 md:p-5 overflow-y-auto bg-white flex flex-col justify-start">
+        <div className="mb-2 sm:mb-3 flex items-center justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-400 truncate">
             {activeDept.name} Footwear
           </span>
-          <span className="text-[11px] font-semibold text-rose-600">
-            9 Categories Available
+          <span className="text-[10px] sm:text-[11px] font-bold text-rose-600 shrink-0">
+            9 Categories
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3.5">
           {SUBCATEGORIES.map((sub) => (
             <button
               key={sub.id}
               type="button"
               onClick={() => handleSubcategoryClick(sub)}
-              className="flex flex-col items-center p-2.5 sm:p-3 rounded-2xl bg-white hover:bg-slate-50 transition-all border border-slate-100 hover:border-slate-200 group text-center cursor-pointer shadow-xs hover:shadow-sm"
+              className="flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 transition-all border border-slate-100 hover:border-slate-200 group text-center cursor-pointer shadow-xs hover:shadow-sm"
             >
               {/* Soft circular container for footwear cutout */}
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-slate-50 flex items-center justify-center p-2 group-hover:bg-rose-50/50 transition-colors">
+              <div className="w-16 h-16 min-[375px]:w-18 min-[375px]:h-18 sm:w-22 sm:h-22 rounded-full bg-slate-50 flex items-center justify-center p-1.5 sm:p-2 group-hover:bg-rose-50/50 transition-colors">
                 <img
                   src={sub.imageUrl}
                   alt={sub.name}
@@ -267,7 +267,7 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
               </div>
 
               {/* Subcategory Name */}
-              <span className="mt-2 text-xs font-bold text-slate-800 group-hover:text-rose-600 transition-colors line-clamp-2">
+              <span className="mt-1.5 sm:mt-2 text-[10px] min-[375px]:text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
                 {sub.name}
               </span>
             </button>

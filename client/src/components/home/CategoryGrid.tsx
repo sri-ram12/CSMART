@@ -58,13 +58,13 @@ export const CategoryGrid: React.FC = () => {
           </Link>
         </div>
 
-        {/* Department Cards Grid (BORDERLESS) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Department Cards Grid (Responsive 2-column mobile, 4-column desktop) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {departments.map((dept) => (
             <Link
               key={dept.title}
               to={dept.link}
-              className={`group relative rounded-3xl overflow-hidden h-[360px] flex flex-col justify-end p-6 transition-all duration-500 hover:-translate-y-1.5 shadow-card hover:shadow-card-hover border-none ${
+              className={`group relative rounded-2xl sm:rounded-3xl overflow-hidden h-52 min-[380px]:h-60 sm:h-72 lg:h-[360px] flex flex-col justify-end p-3.5 sm:p-5 lg:p-6 transition-all duration-500 hover:-translate-y-1.5 shadow-card hover:shadow-card-hover border-none ${
                 dept.highlight ? 'ring-2 ring-red-500 shadow-glow' : ''
               }`}
             >
@@ -79,7 +79,7 @@ export const CategoryGrid: React.FC = () => {
               {/* Badge */}
               <div className="relative z-10 mb-auto">
                 <span
-                  className={`inline-block text-[10px] uppercase font-black px-3 py-1 rounded-full backdrop-blur-md border-none ${
+                  className={`inline-block text-[9px] sm:text-[10px] uppercase font-black px-2 sm:px-3 py-0.5 sm:py-1 rounded-full backdrop-blur-md border-none ${
                     dept.highlight
                       ? 'bg-red-600 text-white shadow-md'
                       : 'bg-white/90 text-red-600 shadow-sm'
@@ -90,16 +90,16 @@ export const CategoryGrid: React.FC = () => {
               </div>
 
               {/* Text Info */}
-              <div className="relative z-10 space-y-2">
-                <h3 className="text-xl font-bold text-white group-hover:text-red-400 transition-colors">
+              <div className="relative z-10 space-y-1 sm:space-y-2">
+                <h3 className="text-sm sm:text-lg lg:text-xl font-bold text-white group-hover:text-red-400 transition-colors leading-tight">
                   {dept.title}
                 </h3>
-                <p className="text-xs text-slate-200 line-clamp-2 leading-relaxed">
+                <p className="text-[10px] sm:text-xs text-slate-200 line-clamp-1 sm:line-clamp-2 leading-relaxed">
                   {dept.subtitle}
                 </p>
 
-                <div className="pt-2 flex items-center gap-1 text-xs font-bold text-red-400 group-hover:translate-x-1 transition-transform">
-                  <span>Explore Now</span>
+                <div className="pt-1 sm:pt-2 flex items-center gap-1 text-[11px] sm:text-xs font-bold text-red-400 group-hover:translate-x-1 transition-transform">
+                  <span>Explore</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </div>
               </div>
