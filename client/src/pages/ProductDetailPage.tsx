@@ -64,7 +64,7 @@ export const ProductDetailPage: React.FC = () => {
       .getBySlug(slug)
       .then((data) => {
         setProduct(data);
-        if (data.has3D) {
+        if (data.has3D !== false) {
           setActiveMediaTab('3d');
         } else if (data.videoUrl) {
           setActiveMediaTab('video');
@@ -213,7 +213,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-7 space-y-4">
             {/* Media Type Switcher Tabs - borderless pills (Scrollable on small mobile) */}
             <div className="flex items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl shadow-sm border-none w-full sm:max-w-fit overflow-x-auto shrink-0">
-              {product.has3D && (
+              {product.has3D !== false && (
                 <button
                   onClick={() => setActiveMediaTab('3d')}
                   className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer whitespace-nowrap shrink-0 ${
@@ -259,10 +259,21 @@ export const ProductDetailPage: React.FC = () => {
               {activeMediaTab === '3d' && (
                 <div className="bg-white rounded-3xl shadow-sm border-none overflow-hidden p-2">
                   <Shoe3DViewer
+                    product={product}
                     primaryColor={currentVariant?.colorHex || modelConfig.defaultColor}
                     accentColor={modelConfig.accentColor}
                     soleColor={modelConfig.soleColor}
-                    height="h-[360px] sm:h-[460px] md:h-[540px]"
+                    onColorChange={(hex, name) => {
+                      const match = product.variants?.find(
+                        (v) =>
+                          v.colorHex.toLowerCase() === hex.toLowerCase() ||
+                          (name && v.colorName.toLowerCase() === name.toLowerCase())
+                      );
+                      if (match) {
+                        setSelectedColor(match.colorName);
+                      }
+                    }}
+                    height="h-[360px] sm:h-[420px] md:h-[480px]"
                   />
                 </div>
               )}

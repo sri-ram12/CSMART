@@ -91,17 +91,15 @@ export const Quick3DModal: React.FC<Quick3DModalProps> = ({ product, isOpen, onC
 
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-          {/* 3D Interactive Stage */}
           <div className="md:col-span-7 bg-slate-50 rounded-2xl overflow-hidden p-2 relative shadow-inner">
             <Shoe3DViewer
+              product={product}
               primaryColor={activeColorHex}
               accentColor={modelConfig.accentColor}
               soleColor={modelConfig.soleColor}
-              height="h-[300px] sm:h-[380px] md:h-[420px]"
+              onColorChange={(hex) => setSelectedColor(hex)}
+              height="h-[320px] sm:h-[400px] md:h-[450px]"
             />
-            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-slate-600 shadow-sm pointer-events-none">
-              👆 Drag to rotate 360° • Scroll/Pinch to zoom
-            </div>
           </div>
 
           {/* Details & Fast Actions */}

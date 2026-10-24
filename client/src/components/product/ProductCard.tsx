@@ -81,7 +81,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {product.discountPercent}% OFF
               </span>
             )}
-            {product.has3D && (
+            {product.has3D !== false && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -112,7 +112,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
           {/* Quick View overlay buttons (BORDERLESS) */}
           <div className="absolute inset-x-2 sm:inset-x-3 bottom-2 sm:bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2 z-10">
-            {product.has3D && (
+            {product.has3D !== false && (
               <button
                 type="button"
                 onClick={(e) => {
