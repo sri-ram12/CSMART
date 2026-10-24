@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TopIndianBrandsBanner } from '../components/home/TopIndianBrandsBanner';
 import { HeroSection } from '../components/home/HeroSection';
 import { CategoryGrid } from '../components/home/CategoryGrid';
 import { VideoShowcase } from '../components/home/VideoShowcase';
@@ -34,6 +35,9 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* 0. Top Indian Footwear Companies Scrolling Ticker Banner */}
+      <TopIndianBrandsBanner />
+
       {/* 1. Hero Section with Photorealistic 3D Footwear Canvas */}
       <HeroSection />
 

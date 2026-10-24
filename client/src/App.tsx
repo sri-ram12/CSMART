@@ -7,11 +7,13 @@ import { WishlistProvider } from './context/WishlistContext';
 import { Navbar } from './components/layout/Navbar';
 import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { Footer } from './components/layout/Footer';
+import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { SearchModal } from './components/common/SearchModal';
 import { CartDrawer } from './components/cart/CartDrawer';
 
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
+import CategoriesPage from './pages/CategoriesPage';
 import SlippersPage from './pages/SlippersPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import CartPage from './pages/CartPage';
@@ -54,11 +56,12 @@ export function App() {
               <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
               <CartDrawer />
 
-              <main className="flex-1">
+              <main className="flex-1 pb-16 lg:pb-0">
                 <Routes>
                   {/* Public Storefront Routes */}
                   <Route path="/" element={<HomePage />} />
                   <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/categories" element={<CategoriesPage />} />
                   <Route path="/slippers" element={<SlippersPage />} />
                   <Route path="/sandals" element={<Navigate to="/slippers" replace />} />
                   <Route path="/men" element={<Navigate to="/shop?department=MEN" replace />} />
@@ -85,6 +88,7 @@ export function App() {
               </main>
 
               <Footer />
+              <MobileBottomNav />
             </div>
           </WishlistProvider>
         </CartProvider>

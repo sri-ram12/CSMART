@@ -33,6 +33,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     { label: "Women's Footwear", href: '/shop?department=WOMEN' },
     { label: "Kids' Footwear", href: '/shop?department=KIDS' },
     {
+      label: 'Categories',
+      href: '/categories',
+      badge: 'New',
+    },
+    {
       label: 'Slippers & Sandals',
       href: '/slippers',
       highlight: true,
@@ -214,9 +219,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               ) : (
                 <button
                   onClick={() => navigate('/login')}
-                  className="btn-primary text-xs py-2.5 px-5 font-bold"
+                  className="btn-primary text-xs py-2 sm:py-2.5 px-2.5 sm:px-5 font-bold flex items-center gap-1.5 border-none shadow-sm cursor-pointer"
+                  title="Sign In / Register"
                 >
-                  Sign In
+                  <UserIcon className="w-3.5 h-3.5 sm:hidden" />
+                  <span className="hidden sm:inline">Sign In</span>
                 </button>
               )}
             </div>

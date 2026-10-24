@@ -189,7 +189,7 @@ export const ProductDetailPage: React.FC = () => {
   )}`;
 
   return (
-    <div className="min-h-screen bg-slate-50/60 py-10">
+    <div className="min-h-screen bg-slate-50/60 pt-6 pb-28 lg:py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
         {/* Breadcrumb Bar */}
         <nav className="flex items-center gap-2 text-xs text-slate-500">
@@ -211,12 +211,12 @@ export const ProductDetailPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
           {/* LEFT: Media Stage (3D Viewer, Video Demo & Image Gallery) */}
           <div className="lg:col-span-7 space-y-4">
-            {/* Media Type Switcher Tabs - borderless pills */}
-            <div className="flex items-center gap-2 bg-white p-1.5 rounded-2xl shadow-sm border-none max-w-fit">
+            {/* Media Type Switcher Tabs - borderless pills (Scrollable on small mobile) */}
+            <div className="flex items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl shadow-sm border-none w-full sm:max-w-fit overflow-x-auto shrink-0">
               {product.has3D && (
                 <button
                   onClick={() => setActiveMediaTab('3d')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer whitespace-nowrap shrink-0 ${
                     activeMediaTab === '3d'
                       ? 'bg-red-600 text-white shadow-md'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -230,7 +230,7 @@ export const ProductDetailPage: React.FC = () => {
               {product.videoUrl && (
                 <button
                   onClick={() => setActiveMediaTab('video')}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
+                  className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer whitespace-nowrap shrink-0 ${
                     activeMediaTab === 'video'
                       ? 'bg-red-600 text-white shadow-md'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -243,7 +243,7 @@ export const ProductDetailPage: React.FC = () => {
 
               <button
                 onClick={() => setActiveMediaTab('gallery')}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer whitespace-nowrap shrink-0 ${
                   activeMediaTab === 'gallery'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
@@ -682,13 +682,57 @@ export const ProductDetailPage: React.FC = () => {
         {product.related && product.related.length > 0 && (
           <div className="space-y-6 pt-6">
             <h3 className="text-xl font-black text-slate-900">You May Also Like</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
               {product.related.map((rel) => (
                 <ProductCard key={rel.id} product={rel} />
               ))}
             </div>
           </div>
         )}
+      </div>
+
+      {/* Sticky Mobile Purchase Action Bar (Options & Checkout Always Clearly Visible on Small Devices) */}
+      <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/90 p-3 sm:p-4 z-40 lg:hidden shadow-[0_-8px_25px_rgba(0,0,0,0.08)]">
+        <div className="max-w-md mx-auto flex items-center justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-base sm:text-lg font-black text-slate-900">
+                ₹{product.price.toLocaleString('en-IN')}
+              </span>
+              {product.originalPrice && (
+                <span className="text-xs text-slate-400 line-through">
+                  ₹{product.originalPrice.toLocaleString('en-IN')}
+                </span>
+              )}
+            </div>
+            <div className="text-[10px] text-slate-500 font-semibold truncate">
+              {selectedSize ? `Size: ${selectedSize}` : 'Pick a size'} • {selectedColor}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => toggleWishlist(product)}
+            className={`p-2.5 rounded-xl border-none transition-all shadow-sm shrink-0 cursor-pointer ${
+              isFavorite
+                ? 'bg-red-50 text-red-600 ring-1 ring-red-300'
+                : 'bg-slate-100 text-slate-600'
+            }`}
+            title="Wishlist"
+          >
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current text-red-600' : ''}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAddToCart}
+            disabled={isOutOfStock}
+            className="flex-1 btn-primary text-xs font-black py-3 px-3 flex items-center justify-center gap-1.5 border-none shadow-md shrink-0 cursor-pointer active:scale-95"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>{isOutOfStock ? 'Out of Stock' : 'Add to Cart'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Size Guide Modal */}

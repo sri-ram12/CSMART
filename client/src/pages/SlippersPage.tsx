@@ -12,10 +12,10 @@ export const SlippersPage: React.FC = () => {
   useEffect(() => {
     setIsLoading(true);
     Promise.all([
-      api.products.getAll({ department: 'SLIPPERS_SANDALS', limit: 30 }),
-      api.products.getAll({ category: 'sandals-wedges', limit: 10 }),
-      api.products.getAll({ category: 'kolhapuri-ethnic', limit: 10 }),
-      api.products.getAll({ category: 'memory-foam-slippers', limit: 10 }),
+      api.products.getAll({ department: 'SLIPPERS_SANDALS', limit: 50 }),
+      api.products.getAll({ category: 'sandals-wedges', limit: 30 }),
+      api.products.getAll({ category: 'kolhapuri-ethnic', limit: 30 }),
+      api.products.getAll({ category: 'memory-foam-slippers', limit: 30 }),
     ])
       .then(([deptRes, cat1, cat2, cat3]) => {
         const combined = [...deptRes.products, ...cat1.products, ...cat2.products, ...cat3.products];

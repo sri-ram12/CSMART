@@ -70,6 +70,14 @@ export const api = {
     get3DCollection: () => request<Product[]>('/products/3d-collection'),
     getBySlug: (slug: string) => request<Product>(`/products/by-slug/${slug}`),
     getById: (id: string) => request<Product>(`/products/${id}`),
+    getFacets: () =>
+      request<{
+        brands: Array<{ name: string; count: number }>;
+        categories: Array<{ slug: string; name: string; count: number }>;
+        departments: Record<string, number>;
+        priceRange: { min: number; max: number };
+        totalProducts: number;
+      }>('/products/facets'),
   },
 
   // Categories
