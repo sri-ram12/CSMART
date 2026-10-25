@@ -132,32 +132,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
             </div>
 
             {/* ========================================================
-                RIGHT SIDE: DIRECT WHATSAPP WITH OWNER + SEARCH + WISHLIST + CART
-                (No account creation, direct WhatsApp communication)
+                RIGHT SIDE: SEARCH + WISHLIST + CART (Clean, Uncluttered Top Bar)
                ======================================================== */}
             <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
-              {/* DIRECT WHATSAPP WITH OWNER BUTTON */}
-              <a
-                href={getWhatsAppGeneralInquiryUrl()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-[#25D366] hover:bg-[#20bd5a] text-white py-1.5 sm:py-2 px-3 sm:px-4 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1.5 shadow-sm hover:shadow-md active:scale-95 transition-all border-none"
-                title="Chat with Store Owner on WhatsApp (9553536884)"
-              >
-                <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-                <span className="hidden sm:inline">WhatsApp Owner</span>
-                <span className="sm:hidden">WhatsApp</span>
-              </a>
-
-              {/* Direct Call to Owner Button (Desktop / Tablet) */}
-              <a
-                href={`tel:${OWNER_PHONE}`}
-                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-[#FAF7FD] hover:bg-[#EDE9FE] text-[#5B21B6] font-bold text-xs transition-all border-none"
-                title={`Call Store: ${OWNER_PHONE}`}
-              >
-                <Phone className="w-3.5 h-3.5 text-[#5B21B6]" />
-                <span>Cell: {OWNER_PHONE}</span>
-              </a>
 
               {/* Search Option */}
               <button

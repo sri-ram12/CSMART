@@ -5,7 +5,6 @@ import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 
 import { Navbar } from './components/layout/Navbar';
-import { AnnouncementBar } from './components/layout/AnnouncementBar';
 import { Footer } from './components/layout/Footer';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { SearchModal } from './components/common/SearchModal';
@@ -51,7 +50,6 @@ export function App() {
         <CartProvider>
           <WishlistProvider>
             <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden">
-              <AnnouncementBar />
               <Navbar onOpenSearch={() => setIsSearchOpen(true)} />
               <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
               <CartDrawer />
