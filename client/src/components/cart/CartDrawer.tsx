@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Trash2, ShoppingBag, ArrowRight, Truck, Check, Tag } from 'lucide-react';
+import { X, Trash2, ShoppingBag, ArrowRight, Truck, Check, Tag, MessageCircle, Phone } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
+import { getWhatsAppCartOrderUrl } from '../../utils/whatsapp';
 
 export const CartDrawer: React.FC = () => {
   const {
@@ -253,27 +254,35 @@ export const CartDrawer: React.FC = () => {
                 </div>
               </div>
 
-              {/* Checkout CTA */}
-              <button
-                onClick={() => {
-                  closeCart();
-                  navigate('/checkout');
-                }}
-                className="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md border-none"
+              {/* WhatsApp Direct Order CTA */}
+              <a
+                href={getWhatsAppCartOrderUrl(
+                  items.map((it) => ({
+                    title: it.title,
+                    size: it.size,
+                    colorName: it.colorName,
+                    quantity: it.quantity,
+                    unitPrice: it.unitPrice,
+                  })),
+                  total
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => closeCart()}
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-3.5 sm:py-4 text-xs sm:text-sm font-black rounded-2xl flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:shadow-xl active:scale-95 transition-all border-none"
+                title="Order on WhatsApp with Owner"
               >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 fill-white stroke-none" />
+                <span>Order on WhatsApp with Owner</span>
+              </a>
 
-              <button
-                onClick={() => {
-                  closeCart();
-                  navigate('/cart');
-                }}
-                className="w-full border-none text-center text-xs font-bold text-slate-500 hover:text-red-600 transition-colors py-1 bg-transparent cursor-pointer"
+              <a
+                href="tel:9553536884"
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-purple-50 text-[#5B21B6] hover:bg-purple-100 transition-all text-xs font-bold border-none"
               >
-                View Full Shopping Cart Page
-              </button>
+                <Phone className="w-3.5 h-3.5 text-[#5B21B6]" />
+                <span>Call Owner: 9553536884</span>
+              </a>
             </div>
           )}
         </div>

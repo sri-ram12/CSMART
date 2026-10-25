@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Star, Sparkles, Check, RotateCcw } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Sparkles, Check, RotateCcw, MessageCircle } from 'lucide-react';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { getWhatsAppProductUrl } from '../../utils/whatsapp';
 import { Quick3DModal } from './Quick3DModal';
 
 interface ProductCardProps {
@@ -149,24 +150,39 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               </div>
             </div>
 
-            {/* Circular Purple Cart Icon Button (As seen in the reference image) */}
-            <button
-              type="button"
-              onClick={handleQuickAdd}
-              disabled={addedSuccess}
-              className={`border-none w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-300 shadow-sm flex items-center justify-center shrink-0 cursor-pointer active:scale-90 ${
-                addedSuccess
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white'
-              }`}
-              title="Add to Shopping Bag"
-            >
-              {addedSuccess ? (
-                <Check className="w-4 h-4 text-white" />
-              ) : (
-                <ShoppingBag className="w-4 h-4" />
-              )}
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* WhatsApp Price Inquiry */}
+              <a
+                href={getWhatsAppProductUrl(product.title, product.price, defaultVariant.size, defaultVariant.colorName)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="border-none w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-all duration-300 shadow-2xs cursor-pointer active:scale-90"
+                title="Inquire Price with Owner on WhatsApp"
+                aria-label="Inquire Price on WhatsApp"
+              >
+                <MessageCircle className="w-4 h-4 fill-white stroke-none" />
+              </a>
+
+              {/* Circular Purple Cart Icon Button */}
+              <button
+                type="button"
+                onClick={handleQuickAdd}
+                disabled={addedSuccess}
+                className={`border-none w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-300 shadow-sm flex items-center justify-center shrink-0 cursor-pointer active:scale-90 ${
+                  addedSuccess
+                    ? 'bg-emerald-600 text-white'
+                    : 'bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white'
+                }`}
+                title="Add to Shopping Bag"
+              >
+                {addedSuccess ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : (
+                  <ShoppingBag className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

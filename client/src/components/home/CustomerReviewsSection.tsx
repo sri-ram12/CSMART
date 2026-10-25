@@ -30,11 +30,11 @@ export const CustomerReviewsSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-[#FAF7FD] border-t border-purple-100">
+    <section className="py-16 sm:py-20 bg-[#FAF7FD] border-none">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#EDE9FE] text-xs font-bold text-[#5B21B6] border border-purple-200">
+        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#EDE9FE] text-xs font-bold text-[#5B21B6] border-none shadow-2xs">
             <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
             <span>Verified Customer Reviews</span>
           </div>
@@ -57,7 +57,7 @@ export const CustomerReviewsSection: React.FC = () => {
           {reviews.map((r, i) => (
             <div
               key={i}
-              className="p-6 sm:p-7 rounded-[28px] bg-white shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-purple-900/10 hover:ring-1 hover:ring-purple-200 relative group border border-purple-100/60"
+              className="p-6 sm:p-7 rounded-[28px] bg-white shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-xl relative group border-none"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between">

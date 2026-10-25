@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Compass, LayoutGrid, ShoppingBag, User } from 'lucide-react';
+import { Home, Compass, LayoutGrid, ShoppingBag, MessageCircle } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
 import { SelectCategoryModal } from '../category/SelectCategoryModal';
+import { getWhatsAppGeneralInquiryUrl } from '../../utils/whatsapp';
 
 export const MobileBottomNav: React.FC = () => {
   const location = useLocation();
   const { itemCount, toggleCart } = useCart();
-  const { user } = useAuth();
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
 
   // If on Product Detail Page, the specialized sticky buy bar is active
@@ -19,7 +18,6 @@ export const MobileBottomNav: React.FC = () => {
   const isHome = location.pathname === '/';
   const isShop = location.pathname === '/shop';
   const isCategories = location.pathname === '/categories' || isCategoryModalOpen;
-  const isAccount = location.pathname === '/profile' || location.pathname === '/login';
 
   return (
     <>
@@ -65,17 +63,17 @@ export const MobileBottomNav: React.FC = () => {
             {isCategories && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
           </button>
 
-          {/* 4. Account */}
-          <Link
-            to={user ? '/profile' : '/login'}
-            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none ${
-              isAccount ? 'text-[#5B21B6] font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
-            }`}
+          {/* 4. Direct WhatsApp with Store Owner (No account creation needed) */}
+          <a
+            href={getWhatsAppGeneralInquiryUrl()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none text-[#25D366] hover:text-[#1ea851] font-bold"
+            title="Chat with Store Owner on WhatsApp (9553536884)"
           >
-            <User className={`w-5 h-5 ${isAccount ? 'stroke-[2.5px]' : 'stroke-2'}`} />
-            <span className="text-[10px] mt-0.5 tracking-tight">Account</span>
-            {isAccount && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
-          </Link>
+            <MessageCircle className="w-5 h-5 fill-[#25D366] stroke-none" />
+            <span className="text-[10px] mt-0.5 tracking-tight font-bold text-[#1ea851]">WhatsApp</span>
+          </a>
 
           {/* 5. Cart */}
           <button

@@ -5,6 +5,7 @@ import { DualPromotionalBanners } from '../components/home/DualPromotionalBanner
 import { ValueFeatureBar } from '../components/home/ValueFeatureBar';
 import { TopIndianBrandsBanner } from '../components/home/TopIndianBrandsBanner';
 import { VideoShowcase } from '../components/home/VideoShowcase';
+import { CustomerReviewsSection } from '../components/home/CustomerReviewsSection';
 
 export const HomePage: React.FC = () => {
   return (
@@ -27,6 +28,11 @@ export const HomePage: React.FC = () => {
       {/* 6. Borderless Pinterest Autoscroll Video Reels Showcase */}
       <div id="video-reels">
         <VideoShowcase />
+      </div>
+
+      {/* 7. Customer Reviews & Ratings Section (Direct Target from Categories Drawer) */}
+      <div id="customer-reviews">
+        <CustomerReviewsSection />
       </div>
     </div>
   );

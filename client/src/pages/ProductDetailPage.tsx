@@ -25,6 +25,7 @@ import {
   Camera,
   Check,
   Share2,
+  Phone,
 } from 'lucide-react';
 
 export const ProductDetailPage: React.FC = () => {
@@ -561,25 +562,25 @@ export const ProductDetailPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Buy Now Button */}
-              <button
-                onClick={handleBuyNow}
-                disabled={isOutOfStock}
-                className="w-full py-3.5 text-xs font-extrabold flex items-center justify-center gap-2 rounded-xl bg-slate-900 text-white hover:bg-red-600 transition-all border-none shadow-md cursor-pointer"
-              >
-                <Zap className="w-4 h-4 text-amber-400" />
-                <span>Instant Buy Now (Direct Checkout)</span>
-              </button>
-
-              {/* WhatsApp Help Inquiry */}
+              {/* Primary CTA: WhatsApp Direct Order & Chat with Owner */}
               <a
                 href={whatsAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-all text-xs font-bold border-none"
+                className="w-full py-4 text-xs sm:text-sm font-black flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg hover:shadow-xl active:scale-95 transition-all border-none cursor-pointer"
+                title="Chat and Order with Owner on WhatsApp (9553536884)"
               >
-                <MessageCircle className="w-4 h-4 text-emerald-600" />
-                <span>Ask Question on WhatsApp</span>
+                <MessageCircle className="w-5 h-5 fill-white stroke-none" />
+                <span>Chat & Order on WhatsApp with Owner</span>
+              </a>
+
+              {/* Direct Call Store */}
+              <a
+                href="tel:9553536884"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-50 text-[#5B21B6] hover:bg-purple-100 transition-all text-xs font-bold border-none"
+              >
+                <Phone className="w-4 h-4 text-[#5B21B6]" />
+                <span>Call Store Owner: 9553536884</span>
               </a>
             </div>
 

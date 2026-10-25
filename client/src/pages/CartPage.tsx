@@ -6,7 +6,10 @@ import {
   ArrowRight,
   ShoppingBag,
   ShieldCheck,
+  MessageCircle,
+  Phone,
 } from 'lucide-react';
+import { getWhatsAppCartOrderUrl } from '../utils/whatsapp';
 
 export const CartPage: React.FC = () => {
   const {
@@ -216,17 +219,37 @@ export const CartPage: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => navigate('/checkout')}
-                className="w-full btn-primary py-3.5 text-xs font-black flex items-center justify-center gap-2 border-none shadow-md cursor-pointer"
+              <a
+                href={getWhatsAppCartOrderUrl(
+                  items.map((it) => ({
+                    title: it.title,
+                    size: it.size,
+                    colorName: it.colorName,
+                    quantity: it.quantity,
+                    unitPrice: it.unitPrice,
+                  })),
+                  total
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white py-4 text-xs sm:text-sm font-black rounded-2xl flex items-center justify-center gap-2 border-none shadow-lg hover:shadow-xl active:scale-95 transition-all cursor-pointer"
+                title="Order on WhatsApp with Owner"
               >
-                <span>Proceed to Checkout</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
+                <MessageCircle className="w-5 h-5 fill-white stroke-none" />
+                <span>Order on WhatsApp with Owner</span>
+              </a>
+
+              <a
+                href="tel:9553536884"
+                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-purple-50 text-[#5B21B6] hover:bg-purple-100 transition-all text-xs font-bold border-none"
+              >
+                <Phone className="w-4 h-4 text-[#5B21B6]" />
+                <span>Call Owner Directly: 9553536884</span>
+              </a>
 
               <div className="flex items-center justify-center gap-2 text-[11px] text-slate-500 font-medium pt-2">
-                <ShieldCheck className="w-3.5 h-3.5 text-red-600" />
-                <span>SSL Encrypted Checkout & 100% Secure Payment</span>
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span>Direct WhatsApp Deal with Store Owner • 100% Genuine</span>
               </div>
             </div>
           </div>

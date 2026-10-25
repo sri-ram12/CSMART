@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Star, Check } from 'lucide-react';
+import { Heart, ShoppingBag, Star, Check, MessageCircle } from 'lucide-react';
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
+import { getWhatsAppProductUrl } from '../../utils/whatsapp';
 
 import bootPink from '../../assets/boot_pink.jpg';
 import bootPurple from '../../assets/boot_purple.jpg';
@@ -200,29 +201,43 @@ export const TrendingCarousel: React.FC<TrendingCarouselProps> = () => {
                     </div>
                   </div>
 
-                  {/* Price & Soft Lavender Circular Cart Button */}
-                  <div className="flex items-center justify-between pt-2">
+                  {/* Price, WhatsApp Inquire & Lavender Cart Button */}
+                  <div className="flex items-center justify-between pt-2 gap-1">
                     <span className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight">
                       {boot.priceUSD}
                     </span>
 
-                    <button
-                      type="button"
-                      onClick={(e) => handleAddToCart(e, boot)}
-                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 shadow-xs border-none cursor-pointer ${
-                        isAdded
-                          ? 'bg-emerald-500 text-white'
-                          : 'bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white'
-                      }`}
-                      aria-label="Add to cart"
-                      title="Add to Cart"
-                    >
-                      {isAdded ? (
-                        <Check className="w-4 h-4 text-white stroke-[2.5]" />
-                      ) : (
-                        <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" />
-                      )}
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      {/* Direct WhatsApp Inquire */}
+                      <a
+                        href={getWhatsAppProductUrl(boot.name, boot.priceINR, 'UK 7', boot.colorName)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-all duration-300 shadow-2xs border-none cursor-pointer"
+                        title="Chat & Inquire on WhatsApp (9553536884)"
+                        aria-label="Inquire Price on WhatsApp"
+                      >
+                        <MessageCircle className="w-4 h-4 fill-white stroke-none" />
+                      </a>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleAddToCart(e, boot)}
+                        className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full flex items-center justify-center transition-all duration-300 shadow-xs border-none cursor-pointer ${
+                          isAdded
+                            ? 'bg-emerald-500 text-white'
+                            : 'bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white'
+                        }`}
+                        aria-label="Add to cart"
+                        title="Add to Cart"
+                      >
+                        {isAdded ? (
+                          <Check className="w-4 h-4 text-white stroke-[2.5]" />
+                        ) : (
+                          <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2]" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
