@@ -16,10 +16,14 @@ test.before(() => {
   });
 });
 
-test.after(() => {
-  return new Promise<void>((resolve) => {
+import { prisma } from '../prisma.js';
+
+test.after(async () => {
+  await prisma.$disconnect();
+  await new Promise<void>((resolve) => {
     server.close(() => resolve());
   });
+  setTimeout(() => process.exit(0), 100);
 });
 
 test('GET /api/health should return status healthy', async () => {

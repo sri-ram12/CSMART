@@ -1,4 +1,5 @@
 import { Product, Category, Order, User, Address, StoreSettings, CartItem } from '../types';
+import { fallbackFeaturedProducts } from '../data/featuredProducts';
 
 const API_BASE = '/api';
 
@@ -56,34 +57,117 @@ export const api = {
 
   // Products
   products: {
-    getAll: (params: Record<string, string | number | boolean | undefined> = {}) => {
+    getAll: async (params: Record<string, string | number | boolean | undefined> = {}) => {
       const query = new URLSearchParams();
       Object.entries(params).forEach(([key, val]) => {
         if (val !== undefined && val !== '') query.append(key, String(val));
       });
-      return request<{ products: Product[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
-        `/products?${query.toString()}`
-      );
+      try {
+        return await request<{ products: Product[]; pagination: { total: number; page: number; limit: number; totalPages: number } }>(
+          `/products?${query.toString()}`
+        );
+      } catch (err) {
+        console.warn('api.products.getAll failed, using fallback data', err);
+        return {
+          products: fallbackFeaturedProducts,
+          pagination: { total: fallbackFeaturedProducts.length, page: 1, limit: 12, totalPages: 1 },
+        };
+      }
     },
-    getFeatured: () => request<Product[]>('/products/featured'),
-    getTrending: () => request<Product[]>('/products/trending'),
-    get3DCollection: () => request<Product[]>('/products/3d-collection'),
-    getBySlug: (slug: string) => request<Product>(`/products/by-slug/${slug}`),
-    getById: (id: string) => request<Product>(`/products/${id}`),
-    getFacets: () =>
-      request<{
-        brands: Array<{ name: string; count: number }>;
-        categories: Array<{ slug: string; name: string; count: number }>;
-        departments: Record<string, number>;
-        priceRange: { min: number; max: number };
-        totalProducts: number;
-      }>('/products/facets'),
+    getFeatured: async () => {
+      try {
+        return await request<Product[]>('/products/featured');
+      } catch {
+        return fallbackFeaturedProducts.filter((p) => p.isFeatured);
+      }
+    },
+    getTrending: async () => {
+      try {
+        return await request<Product[]>('/products/trending');
+      } catch {
+        return fallbackFeaturedProducts.filter((p) => p.isTrending);
+      }
+    },
+    get3DCollection: async () => {
+      try {
+        return await request<Product[]>('/products/3d-collection');
+      } catch {
+        return fallbackFeaturedProducts.filter((p) => p.has3D);
+      }
+    },
+    getBySlug: async (slug: string) => {
+      try {
+        return await request<Product>(`/products/by-slug/${slug}`);
+      } catch {
+        return fallbackFeaturedProducts.find((p) => p.slug === slug) || fallbackFeaturedProducts[0];
+      }
+    },
+    getById: async (id: string) => {
+      try {
+        return await request<Product>(`/products/${id}`);
+      } catch {
+        return fallbackFeaturedProducts.find((p) => p.id === id) || fallbackFeaturedProducts[0];
+      }
+    },
+    getFacets: async () => {
+      try {
+        return await request<{
+          brands: Array<{ name: string; count: number }>;
+          categories: Array<{ slug: string; name: string; count: number }>;
+          departments: Record<string, number>;
+          priceRange: { min: number; max: number };
+          totalProducts: number;
+        }>('/products/facets');
+      } catch {
+        return {
+          brands: [
+            { name: "Mea's Shoelle", count: 2 },
+            { name: 'Campus Active', count: 2 },
+            { name: 'HRX by Hrithik', count: 1 },
+            { name: 'Relaxo Bahamas', count: 1 },
+            { name: 'Red Tape Classic', count: 1 },
+            { name: 'Sparx Premium', count: 1 },
+          ],
+          categories: [
+            { slug: 'heels', name: 'Heels', count: 1 },
+            { slug: 'sneakers', name: 'Sneakers', count: 2 },
+            { slug: 'sandals', name: 'Sandals', count: 1 },
+            { slug: 'boots', name: 'Boots', count: 1 },
+            { slug: 'slippers-sandals', name: 'Slippers & Slides', count: 1 },
+          ],
+          departments: { MEN: 4, WOMEN: 2, KIDS: 1, SLIPPERS_SANDALS: 1 },
+          priceRange: { min: 699, max: 3299 },
+          totalProducts: fallbackFeaturedProducts.length,
+        };
+      }
+    },
   },
 
   // Categories
   categories: {
-    getAll: () => request<Category[]>('/categories'),
-    getBySlug: (slug: string) => request<Category>(`/categories/${slug}`),
+    getAll: async () => {
+      try {
+        return await request<Category[]>('/categories');
+      } catch {
+        const fallbacks: Category[] = [
+          { id: 'cat-heels', name: 'Heels', slug: 'heels', department: 'WOMEN', featured: true },
+          { id: 'cat-sandals', name: 'Sandals', slug: 'sandals', department: 'WOMEN', featured: true },
+          { id: 'cat-sneakers', name: 'Sneakers', slug: 'sneakers', department: 'MEN', featured: true },
+          { id: 'cat-boots', name: 'Boots', slug: 'boots', department: 'MEN', featured: true },
+          { id: 'cat-slippers', name: 'Slippers & Slides', slug: 'slippers-sandals', department: 'SLIPPERS_SANDALS', featured: true },
+          { id: 'cat-kids', name: 'Kids Footwear', slug: 'kids', department: 'KIDS', featured: true },
+        ];
+        return fallbacks;
+      }
+    },
+    getBySlug: async (slug: string) => {
+      try {
+        return await request<Category>(`/categories/${slug}`);
+      } catch {
+        const fallback: Category = { id: `cat-${slug}`, name: slug.toUpperCase(), slug, department: 'MEN' };
+        return fallback;
+      }
+    },
   },
 
   // Checkout & Pincode

@@ -32,61 +32,61 @@ export const MobileBottomNav: React.FC = () => {
           <Link
             to="/"
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none ${
-              isHome ? 'text-blue-600 font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
+              isHome ? 'text-[#5B21B6] font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
             <Home className={`w-5 h-5 ${isHome ? 'stroke-[2.5px]' : 'stroke-2'}`} />
             <span className="text-[10px] mt-0.5 tracking-tight">Home</span>
-            {isHome && <span className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />}
+            {isHome && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
           </Link>
 
           {/* 2. Play / Explore */}
           <Link
             to="/shop"
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none ${
-              isShop ? 'text-blue-600 font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
+              isShop ? 'text-[#5B21B6] font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
             <Compass className={`w-5 h-5 ${isShop ? 'stroke-[2.5px]' : 'stroke-2'}`} />
             <span className="text-[10px] mt-0.5 tracking-tight">Explore</span>
-            {isShop && <span className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />}
+            {isShop && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
           </Link>
 
-          {/* 3. Categories (Image 1 & Image 2 4-square grid tab) */}
+          {/* 3. Categories */}
           <button
             type="button"
             onClick={() => setIsCategoryModalOpen(true)}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none bg-transparent cursor-pointer ${
-              isCategories ? 'text-blue-600 font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
+              isCategories ? 'text-[#5B21B6] font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
-            <LayoutGrid className={`w-5 h-5 ${isCategories ? 'stroke-[2.5px] text-blue-600' : 'stroke-2'}`} />
+            <LayoutGrid className={`w-5 h-5 ${isCategories ? 'stroke-[2.5px] text-[#5B21B6]' : 'stroke-2'}`} />
             <span className="text-[10px] mt-0.5 tracking-tight">Categories</span>
-            {isCategories && <span className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />}
+            {isCategories && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
           </button>
 
           {/* 4. Account */}
           <Link
             to={user ? '/profile' : '/login'}
             className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all border-none ${
-              isAccount ? 'text-blue-600 font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
+              isAccount ? 'text-[#5B21B6] font-black' : 'text-slate-500 hover:text-slate-900 font-medium'
             }`}
           >
             <User className={`w-5 h-5 ${isAccount ? 'stroke-[2.5px]' : 'stroke-2'}`} />
             <span className="text-[10px] mt-0.5 tracking-tight">Account</span>
-            {isAccount && <span className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />}
+            {isAccount && <span className="w-1 h-1 rounded-full bg-[#5B21B6] mt-0.5" />}
           </Link>
 
           {/* 5. Cart */}
           <button
             type="button"
             onClick={toggleCart}
-            className="relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all text-slate-500 hover:text-blue-600 font-medium border-none bg-transparent cursor-pointer"
+            className="relative flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all text-slate-500 hover:text-[#5B21B6] font-medium border-none bg-transparent cursor-pointer"
           >
             <div className="relative">
               <ShoppingBag className="w-5 h-5 stroke-2 text-slate-700" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-2.5 min-w-[16px] h-4 rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center px-1 shadow-sm">
+                <span className="absolute -top-1 -right-2.5 min-w-[16px] h-4 rounded-full bg-[#5B21B6] text-white text-[9px] font-black flex items-center justify-center px-1 shadow-sm">
                   {itemCount}
                 </span>
               )}

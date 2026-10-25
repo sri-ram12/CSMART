@@ -20,7 +20,7 @@ declare global {
 }
 
 export const CheckoutPage: React.FC = () => {
-  const { items, subtotal, appliedCoupon, clearCart } = useCart();
+  const { items, subtotal, appliedCoupon, couponDiscount, shippingFee, clearCart, stockIssues } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -29,9 +29,9 @@ export const CheckoutPage: React.FC = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [phone, setPhone] = useState(user?.phone || '');
   const [street, setStreet] = useState('');
-  const [city, setCity] = useState('Bengaluru');
-  const [state, setState] = useState('Karnataka');
-  const [postalCode, setPostalCode] = useState('560001');
+  const [city, setCity] = useState('Tagarapuvalasa');
+  const [state, setState] = useState('Andhra Pradesh');
+  const [postalCode, setPostalCode] = useState('531162');
 
   // Payment Selection
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'RAZORPAY'>('RAZORPAY');
@@ -45,9 +45,9 @@ export const CheckoutPage: React.FC = () => {
       setFullName(def.fullName || user.name);
       setPhone(def.phone || user.phone || '');
       setStreet(def.street || '');
-      setCity(def.city || 'Bengaluru');
-      setState(def.state || 'Karnataka');
-      setPostalCode(def.postalCode || '560001');
+      setCity(def.city || 'Tagarapuvalasa');
+      setState(def.state || 'Andhra Pradesh');
+      setPostalCode(def.postalCode || '531162');
     }
   }, [user]);
 
@@ -56,14 +56,7 @@ export const CheckoutPage: React.FC = () => {
     return null;
   }
 
-  const freeShippingThreshold = 999;
-  const shippingFee = subtotal >= freeShippingThreshold ? 0 : 99;
-  const discountAmount =
-    appliedCoupon === 'WELCOME10'
-      ? subtotal * 0.1
-      : appliedCoupon === 'STEPINSTYLE' && subtotal >= 2499
-      ? 500
-      : 0;
+  const discountAmount = couponDiscount;
   const totalAmount = Math.max(0, subtotal - discountAmount + shippingFee);
 
   const handleSubmitOrder = async (e: React.FormEvent) => {

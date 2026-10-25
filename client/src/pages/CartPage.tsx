@@ -15,42 +15,29 @@ export const CartPage: React.FC = () => {
     updateQuantity,
     subtotal,
     appliedCoupon,
-    setAppliedCoupon,
+    couponDiscount,
+    couponMessage,
+    applyCoupon,
+    removeCoupon,
+    shippingFee,
     clearCart,
   } = useCart();
   const [couponInput, setCouponInput] = useState('');
-  const [couponMsg, setCouponMsg] = useState<string | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
   const navigate = useNavigate();
 
-  const freeShippingThreshold = 999;
-  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 99;
-
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    const code = couponInput.trim().toUpperCase();
-    if (code === 'WELCOME10') {
-      setAppliedCoupon('WELCOME10');
-      setCouponMsg('Coupon WELCOME10 applied (10% discount)!');
-    } else if (code === 'STEPINSTYLE') {
-      if (subtotal >= 2499) {
-        setAppliedCoupon('STEPINSTYLE');
-        setCouponMsg('Coupon STEPINSTYLE applied (₹500 flat off)!');
-      } else {
-        setCouponMsg('Minimum order value of ₹2,499 required for STEPINSTYLE.');
-      }
-    } else {
-      setCouponMsg('Invalid coupon code.');
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    const res = await applyCoupon(couponInput.trim());
+    setIsApplying(false);
+    if (res.success) {
+      setCouponInput('');
     }
   };
 
-  const discount =
-    appliedCoupon === 'WELCOME10'
-      ? subtotal * 0.1
-      : appliedCoupon === 'STEPINSTYLE' && subtotal >= 2499
-      ? 500
-      : 0;
-
-  const total = Math.max(0, subtotal - discount + shipping);
+  const total = Math.max(0, subtotal - couponDiscount + shippingFee);
 
   if (items.length === 0) {
     return (
@@ -162,29 +149,42 @@ export const CartPage: React.FC = () => {
                 Order Summary
               </h3>
 
-              {/* Coupon input */}
-              <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Coupon Code"
-                  value={couponInput}
-                  onChange={(e) => setCouponInput(e.target.value)}
-                  className="flex-1 bg-slate-50 px-3.5 py-2.5 rounded-xl text-xs text-slate-900 placeholder-slate-400 border-none ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-red-600 uppercase font-semibold"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-xs font-bold text-white rounded-xl border-none shadow-sm transition-all cursor-pointer"
-                >
-                  Apply
-                </button>
-              </form>
-              {couponMsg && (
+              {/* Active Coupon or Input form */}
+              {appliedCoupon && couponDiscount > 0 ? (
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-50 text-emerald-800 text-xs font-bold border-none">
+                  <span>Coupon {appliedCoupon} applied (-₹{couponDiscount.toLocaleString('en-IN')})</span>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-xs text-red-600 hover:underline border-none bg-transparent cursor-pointer font-bold"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Coupon Code (e.g. WELCOME10, FESTIVE20)"
+                    value={couponInput}
+                    onChange={(e) => setCouponInput(e.target.value)}
+                    className="flex-1 bg-slate-50 px-3.5 py-2.5 rounded-xl text-xs text-slate-900 placeholder-slate-400 border-none ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-red-600 uppercase font-semibold"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isApplying || !couponInput.trim()}
+                    className="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-xs font-bold text-white rounded-xl border-none shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isApplying ? 'Applying...' : 'Apply'}
+                  </button>
+                </form>
+              )}
+              {couponMessage && (
                 <div
                   className={`text-xs font-semibold ${
-                    couponMsg.includes('applied') ? 'text-emerald-600' : 'text-red-600'
+                    couponDiscount > 0 ? 'text-emerald-600' : 'text-red-600'
                   }`}
                 >
-                  {couponMsg}
+                  {couponMessage}
                 </div>
               )}
 
@@ -194,19 +194,19 @@ export const CartPage: React.FC = () => {
                   <span>Subtotal</span>
                   <span className="font-bold text-slate-900">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                {discount > 0 && (
+                {couponDiscount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-bold">
                     <span>Coupon Discount</span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                    <span>-₹{couponDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium">
                   <span>Shipping Fee</span>
                   <span>
-                    {shipping === 0 ? (
+                    {shippingFee === 0 ? (
                       <span className="text-emerald-600 font-bold">FREE</span>
                     ) : (
-                      `₹${shipping}`
+                      `₹${shippingFee}`
                     )}
                   </span>
                 </div>

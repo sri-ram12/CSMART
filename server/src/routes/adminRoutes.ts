@@ -328,10 +328,25 @@ router.put('/products/:id', async (req: AuthRequest, res: Response, next) => {
 // DELETE /api/admin/products/:id
 router.delete('/products/:id', async (req: AuthRequest, res: Response, next) => {
   try {
-    await prisma.product.delete({
-      where: { id: req.params.id },
+    const productId = req.params.id;
+
+    // Check if product is in any past orders
+    const orderCount = await prisma.orderItem.count({
+      where: { productId },
     });
-    res.json({ success: true, message: 'Product deleted' });
+
+    if (orderCount > 0) {
+      res.status(400).json({
+        success: false,
+        message: `Cannot delete style: referenced in ${orderCount} customer order(s). You can set its inventory to 0 to mark as discontinued.`,
+      });
+      return;
+    }
+
+    await prisma.product.delete({
+      where: { id: productId },
+    });
+    res.json({ success: true, message: 'Product deleted successfully.' });
   } catch (error) {
     next(error);
   }

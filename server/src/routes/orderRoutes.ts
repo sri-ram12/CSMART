@@ -51,10 +51,17 @@ router.post('/', optionalAuth, async (req: AuthRequest, res: Response, next) => 
         let variant = null;
         if (it.variantId) {
           variant = product.variants.find((v) => v.id === it.variantId);
-        } else if (it.size && it.colorName) {
+        }
+        if (!variant && it.size && it.colorName) {
           variant = product.variants.find(
             (v) => v.size === it.size && v.colorName.toLowerCase() === it.colorName.toLowerCase()
           );
+        }
+        if (!variant && it.size) {
+          variant = product.variants.find((v) => v.size === it.size);
+        }
+        if (!variant && product.variants.length > 0) {
+          variant = product.variants[0];
         }
 
         const availableStock = variant ? variant.inventory : 10;
@@ -132,9 +139,9 @@ router.post('/', optionalAuth, async (req: AuthRequest, res: Response, next) => 
         data: {
           orderNumber,
           userId: req.user?.id || null,
-          guestEmail: !req.user ? guestInfo?.email : null,
-          guestName: !req.user ? guestInfo?.name : null,
-          guestPhone: !req.user ? guestInfo?.phone : null,
+          guestEmail: req.user?.email || guestInfo?.email || null,
+          guestName: req.user?.name || guestInfo?.name || (typeof shippingAddress === 'object' ? shippingAddress.fullName : null),
+          guestPhone: req.user?.phone || guestInfo?.phone || (typeof shippingAddress === 'object' ? shippingAddress.phone : null),
           subtotal,
           discountAmount,
           shippingFee,

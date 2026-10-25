@@ -5,240 +5,166 @@ import {
   Phone,
   Mail,
   MessageCircle,
-  ShieldCheck,
-  RotateCcw,
-  Truck,
-  CreditCard,
-  Heart,
 } from 'lucide-react';
+import { CSMAnimatedLogo } from '../common/CSMAnimatedLogo';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-white border-t border-slate-200/70 text-slate-600 pt-16 pb-12 mt-20">
+    <footer className="bg-[#F0E5FC] text-[#2E1065] pt-16 pb-12 mt-16 border-t border-[#DFCBF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Value Proposition Highlights Banner (Clean White & Soft Red Glow) */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-12 border-b border-slate-100">
-          <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50 hover:bg-red-50/40 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">Free Express Shipping</h4>
-              <p className="text-xs text-slate-500">On all orders over ₹999</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50 hover:bg-red-50/40 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">100% Genuine Footwear</h4>
-              <p className="text-xs text-slate-500">Direct from certified artisans</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50 hover:bg-red-50/40 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <RotateCcw className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">Easy 7-Day Exchange</h4>
-              <p className="text-xs text-slate-500">Hassle-free size replacement</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-slate-50 hover:bg-red-50/40 transition-colors">
-            <div className="w-11 h-11 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
-              <CreditCard className="w-5 h-5" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-slate-900">Secure Razorpay & COD</h4>
-              <p className="text-xs text-slate-500">Encrypted payments & UPI</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Footer Links Columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 py-12">
-          {/* Brand Col */}
+        {/* Main Footer Links Columns (Inspired by Reference Image Footer) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 pb-12 border-b border-purple-200/80">
+          {/* Brand & Slogan Column */}
           <div className="lg:col-span-2 space-y-4">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-red-600 to-rose-600 flex items-center justify-center shadow-md shadow-red-500/20">
-                <svg viewBox="0 0 100 100" className="w-6 h-6 text-white fill-current">
-                  <path d="M15 65 Q 38 78 78 55 Q 90 42 80 32 Q 62 38 46 52 Q 28 60 15 65 Z" />
-                  <circle cx="72" cy="28" r="5" />
-                </svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-heading font-black text-lg text-slate-900">CHANDHANA</span>
-                <span className="text-[9px] uppercase tracking-[0.25em] font-black text-red-600">
-                  SHOE MART
-                </span>
-              </div>
-            </Link>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-sm">
-              Established with an obsession for craftsmanship and ergonomic comfort. From nitrogen-infused performance runners to hand-burnished luxury leathers and cloud-soft recovery slides.
+            <div className="bg-white p-3 rounded-2xl inline-block shadow-sm">
+              <CSMAnimatedLogo variant="navbar" />
+            </div>
+            <p className="text-xs text-[#4C1D95] leading-relaxed max-w-sm">
+              <strong className="font-serif font-black text-[#5B21B6]">పాదరక్షల బృందావనం</strong> — Established with a relentless obsession for comfort, chic styles, and ergonomic craftsmanship. From nitrogen-cushioned running shoes to handcrafted bridal heels and orthopedic recovery slides.
             </p>
 
-            <div className="space-y-2 text-xs text-slate-600 pt-2">
-              <div className="flex items-start gap-2.5">
-                <MapPin className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                <span>No. 42, Commercial Street, Shivaji Nagar, Bengaluru, Karnataka 560001</span>
+            <div className="space-y-2 text-xs text-[#3B0764] pt-2 font-medium">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-[#7C3AED] shrink-0 mt-0.5" />
+                <span>Opp: Tata Theatre, Main Road, Tagarapuvalasa - 531162</span>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-red-600 shrink-0" />
-                <a href="tel:+919845012345" className="hover:text-red-600 transition-colors">
-                  +91 98450 12345 / 080-25598124
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                <a href="tel:9553536884" className="hover:text-[#5B21B6] font-bold transition-colors">
+                  Cell: 9553536884
                 </a>
               </div>
-              <div className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-red-600 shrink-0" />
-                <a href="mailto:support@chandhanashoemart.com" className="hover:text-red-600 transition-colors">
+              <div className="flex items-center gap-2">
+                <MessageCircle className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                <a
+                  href="https://wa.me/919553536884?text=Hello%20Chandhana%20Shoe%20Mart"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[#5B21B6] font-medium transition-colors"
+                >
+                  WhatsApp: +91 9553536884
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                <a href="mailto:support@chandhanashoemart.com" className="hover:text-[#5B21B6] transition-colors">
                   support@chandhanashoemart.com
                 </a>
               </div>
             </div>
           </div>
 
-          {/* Footwear Departments */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
-              Departments
-            </h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <Link to="/shop?department=MEN" className="hover:text-red-600 transition-colors">
-                  Men's Running Shoes
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?department=MEN" className="hover:text-red-600 transition-colors">
-                  Men's Casual Sneakers
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?department=MEN" className="hover:text-red-600 transition-colors">
-                  Handcrafted Formal Derbies
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?department=WOMEN" className="hover:text-red-600 transition-colors">
-                  Women's Performance Trainers
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?department=WOMEN" className="hover:text-red-600 transition-colors">
-                  Women's Pointed Flats
-                </Link>
-              </li>
-              <li>
-                <Link to="/shop?department=KIDS" className="hover:text-red-600 transition-colors">
-                  Kids' School & PT Shoes
-                </Link>
-              </li>
+          {/* SHOP Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#1E0842]">SHOP</h4>
+            <ul className="space-y-2 text-xs text-[#4C1D95] font-medium">
+              <li><Link to="/shop" className="hover:text-[#5B21B6] transition-colors">All Products</Link></li>
+              <li><Link to="/shop?sortBy=newest" className="hover:text-[#5B21B6] transition-colors">New Arrivals</Link></li>
+              <li><Link to="/shop?sortBy=best_selling" className="hover:text-[#5B21B6] transition-colors">Best Sellers</Link></li>
+              <li><Link to="/shop?category=women-heels" className="hover:text-[#5B21B6] transition-colors">Heels</Link></li>
+              <li><Link to="/shop?category=running-shoes" className="hover:text-[#5B21B6] transition-colors">Sneakers</Link></li>
+              <li><Link to="/slippers" className="hover:text-[#5B21B6] transition-colors">Slippers & Boots</Link></li>
             </ul>
           </div>
 
-          {/* Slippers & Sandals Specialty */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2 flex items-center gap-1.5">
-              <span>Slippers & Slides</span>
-              <span className="text-[9px] bg-red-100 text-red-600 px-2 py-0.2 rounded-full font-bold">
-                Special
-              </span>
-            </h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <Link to="/slippers" className="hover:text-red-600 transition-colors font-semibold text-red-600">
-                  CloudStep 45mm Slides
-                </Link>
-              </li>
-              <li>
-                <Link to="/slippers" className="hover:text-red-600 transition-colors">
-                  Memory Foam Indoor Slippers
-                </Link>
-              </li>
-              <li>
-                <Link to="/slippers" className="hover:text-red-600 transition-colors">
-                  Anti-Slip Bathroom Flip-Flops
-                </Link>
-              </li>
-              <li>
-                <Link to="/slippers" className="hover:text-red-600 transition-colors">
-                  TerraGrip All-Terrain Sandals
-                </Link>
-              </li>
-              <li>
-                <Link to="/slippers" className="hover:text-red-600 transition-colors">
-                  Poolside & Beach Slides
-                </Link>
-              </li>
+          {/* HELP Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#1E0842]">HELP</h4>
+            <ul className="space-y-2 text-xs text-[#4C1D95] font-medium">
+              <li><a href="#shipping" className="hover:text-[#5B21B6] transition-colors">Shipping and Delivery</a></li>
+              <li><a href="#returns" className="hover:text-[#5B21B6] transition-colors">Return & Exchanges</a></li>
+              <li><a href="#size" className="hover:text-[#5B21B6] transition-colors">Size Guide</a></li>
+              <li><a href="#faqs" className="hover:text-[#5B21B6] transition-colors">FAQs</a></li>
+              <li><Link to="/orders" className="hover:text-[#5B21B6] transition-colors">Track Order</Link></li>
+              <li><a href="tel:9553536884" className="hover:text-[#5B21B6] transition-colors">Contact Us</a></li>
             </ul>
           </div>
 
-          {/* Customer Care & Policies */}
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">
-              Customer Support
-            </h4>
-            <ul className="space-y-2.5 text-xs">
-              <li>
-                <Link to="/orders" className="hover:text-red-600 transition-colors">
-                  Track Your Shipment
-                </Link>
-              </li>
-              <li>
-                <Link to="/profile" className="hover:text-red-600 transition-colors">
-                  Customer Profile & Addresses
-                </Link>
-              </li>
-              <li>
-                <a
-                  href="https://wa.me/919845012345"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-red-600 transition-colors flex items-center gap-1 font-semibold text-red-600"
-                >
-                  <MessageCircle className="w-3.5 h-3.5" />
-                  <span>WhatsApp Assistance</span>
-                </a>
-              </li>
-              <li>
-                <span className="text-slate-500">Authenticity Guarantee</span>
-              </li>
-              <li>
-                <span className="text-slate-500">Size Chart & Measurement Guide</span>
-              </li>
+          {/* ABOUT Column */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#1E0842]">ABOUT</h4>
+            <ul className="space-y-2 text-xs text-[#4C1D95] font-medium">
+              <li><a href="#about" className="hover:text-[#5B21B6] transition-colors">About Us</a></li>
+              <li><a href="#stores" className="hover:text-[#5B21B6] transition-colors">Our Store</a></li>
+              <li><a href="#careers" className="hover:text-[#5B21B6] transition-colors">Careers</a></li>
+              <li><a href="#privacy" className="hover:text-[#5B21B6] transition-colors">Privacy Policy</a></li>
+              <li><a href="#terms" className="hover:text-[#5B21B6] transition-colors">Terms & Conditions</a></li>
             </ul>
+          </div>
+
+          {/* FOLLOW US & NEWSLETTER (From Reference) */}
+          <div className="space-y-4">
+            <h4 className="text-xs font-black uppercase tracking-wider text-[#1E0842]">FOLLOW US</h4>
+            {/* Circular Social Icons in Purple from Reference */}
+            <div className="flex items-center gap-2.5">
+              {/* Facebook */}
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#5B21B6] text-white flex items-center justify-center font-black text-xs hover:bg-[#4C1D95] transition-colors shadow-sm"
+              >
+                f
+              </a>
+              {/* Instagram */}
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#5B21B6] text-white flex items-center justify-center font-black text-xs hover:bg-[#4C1D95] transition-colors shadow-sm"
+              >
+                ig
+              </a>
+              {/* TikTok */}
+              <a
+                href="https://tiktok.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#5B21B6] text-white flex items-center justify-center font-black text-xs hover:bg-[#4C1D95] transition-colors shadow-sm"
+              >
+                tt
+              </a>
+              {/* Pinterest */}
+              <a
+                href="https://pinterest.com"
+                target="_blank"
+                rel="noreferrer"
+                className="w-8 h-8 rounded-full bg-[#5B21B6] text-white flex items-center justify-center font-black text-xs hover:bg-[#4C1D95] transition-colors shadow-sm"
+              >
+                p
+              </a>
+            </div>
+
+            {/* We Accept Payment Icons from Reference */}
+            <div className="pt-2">
+              <span className="text-[11px] font-bold text-[#3B0764] block mb-2">We accept</span>
+              <div className="flex items-center gap-2 flex-wrap text-[10px] font-black uppercase">
+                <span className="px-2.5 py-1 rounded bg-white font-serif tracking-wider shadow-2xs border border-purple-100 text-[#1E0842]">
+                  VISA
+                </span>
+                <span className="px-2.5 py-1 rounded bg-white font-sans tracking-wider shadow-2xs border border-purple-100 text-rose-600">
+                  Mastercard
+                </span>
+                <span className="px-2.5 py-1 rounded bg-white font-sans tracking-wider shadow-2xs border border-purple-100 text-sky-700">
+                  PayPal
+                </span>
+                <span className="px-2.5 py-1 rounded bg-white font-sans tracking-wider shadow-2xs border border-purple-100 text-slate-800">
+                  Apple Pay
+                </span>
+                <span className="px-2.5 py-1 rounded bg-white font-sans tracking-wider shadow-2xs border border-purple-100 text-purple-700">
+                  UPI / Razorpay
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Bottom Bar: Copyright & Payment Icons */}
-        <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
-          <div>
-            © {new Date().getFullYear()} Chandhana Shoe Mart. All Rights Reserved. Crafted with{' '}
-            <Heart className="w-3.5 h-3.5 inline text-red-500 fill-current" /> for footwear enthusiasts.
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] text-slate-400 mr-2">Secure Payments:</span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">
-              Razorpay
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">
-              UPI / QR
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">
-              RuPay
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-[10px] font-bold text-slate-700">
-              Visa / MC
-            </span>
-            <span className="px-2.5 py-1 rounded-lg bg-red-100 text-[10px] font-bold text-red-600">
-              COD Available
-            </span>
-          </div>
+        {/* Bottom Legal / Copyright Strip */}
+        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-[#5B21B6]/80 gap-3">
+          <p>© {new Date().getFullYear()} Chandhana Shoe Mart (CSM). All rights reserved.</p>
+          <p className="font-serif text-[#3B0764] font-bold text-center">
+            పాదరక్షల బృందావనం • Opp: Tata Theatre, Tagarapuvalasa, Andhra Pradesh
+          </p>
         </div>
       </div>
     </footer>

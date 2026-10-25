@@ -1,228 +1,157 @@
-import React, { useState, useRef } from 'react';
-import { Play, Pause, Volume2, VolumeX, Film, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import { Film, Sparkles } from 'lucide-react';
 
-interface VideoReel {
+interface PinterestReel {
   id: string;
-  title: string;
-  category: string;
-  shoeTitle: string;
-  shoeLink: string;
+  pinUrl: string;
   videoUrl: string;
   poster: string;
-  description: string;
+  title: string;
+  category: string;
+  brand: string;
 }
 
+const PINTEREST_REELS: PinterestReel[] = [
+  {
+    id: 'pin-1',
+    pinUrl: 'https://pin.it/2j1DZWwuB',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/46/4b/74/464b748b0b8f698d60d9c423d27e7a18_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/34/7b/22/347b22b79b43940703f90924820b4c07.jpg',
+    title: 'Street Style Premium Sneaker',
+    category: 'Men’s Performance',
+    brand: 'Street Edition',
+  },
+  {
+    id: 'pin-2',
+    pinUrl: 'https://pin.it/5q7rnRCzO',
+    videoUrl: 'https://v1.pinimg.com/videos/mc/expMp4/ef/7e/62/ef7e6264480c3130998fb23372e40b87_t1.mp4',
+    poster: 'https://i.pinimg.com/736x/4b/47/61/4b47616d0e460266e69d57466228050b.jpg',
+    title: 'Women’s Casual Fashion Kicks',
+    category: 'Chic Lifestyle',
+    brand: 'Urban Style',
+  },
+  {
+    id: 'pin-3',
+    pinUrl: 'https://pin.it/6s8S70QzT',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/b5/74/a8/b574a8ac276fdf349d7ce80ccec76960_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/41/8a/f4/418af4b511557d392f0e701381e80adb.jpg',
+    title: 'Supernova Velocity Runner',
+    category: 'Pro Athletic',
+    brand: 'Adidas Supernova',
+  },
+  {
+    id: 'pin-4',
+    pinUrl: 'https://pin.it/4CmW61Q7T',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/b4/17/45/b41745e2a05dcc91fc513a1bbc0c7729_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/de/8e/23/de8e23545aeaacc357a06f463127d030.jpg',
+    title: 'Aesthetic Pastel Lifestyle Sneaker',
+    category: 'Casual Comfort',
+    brand: 'Pastel Street',
+  },
+  {
+    id: 'pin-5',
+    pinUrl: 'https://pin.it/5GhVBccYM',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/ad/19/e1/ad19e187110de79c03b716190852dc8d_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/ce/da/13/ceda13dd05d3c9f958af31064fd5fa6a.jpg',
+    title: 'Dynamic Air Athletic Stride',
+    category: 'High-Impact Sprint',
+    brand: 'Nike Dynamic',
+  },
+  {
+    id: 'pin-6',
+    pinUrl: 'https://pin.it/lCU2UfW6m',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/80/9d/f8/809df8c9ee1ef168a9ec4fb08516824d_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/71/09/23/7109238b487aa468e09ce79254cdc4e8.jpg',
+    title: 'Kids Active Comfort & Play',
+    category: 'Kids Athletic',
+    brand: 'New Balance Kids',
+  },
+  {
+    id: 'pin-7',
+    pinUrl: 'https://pin.it/1i885PosO',
+    videoUrl: 'https://v1.pinimg.com/videos/iht/expMp4/fa/fb/d4/fafbd40f0e546bc76e681f7ac43a6aed_720w.mp4',
+    poster: 'https://i.pinimg.com/736x/cd/e2/95/cde2958ed8b71fa8781b5401f824f4bf.jpg',
+    title: 'Gel-Kayano Ergonomic Walk',
+    category: 'Orthopedic Cushion',
+    brand: 'ASICS Gel Pro',
+  },
+];
+
 export const VideoShowcase: React.FC = () => {
-  const videoReels: VideoReel[] = [
-    {
-      id: 'reel-1',
-      title: 'Nitro Propulsion & Energy Return',
-      category: 'Performance Engineering',
-      shoeTitle: 'Chandhana Apex Nitro Hyper-Speed Runner',
-      shoeLink: '/product/chandhana-apex-nitro-hyper-speed-runner',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-legs-of-a-person-running-on-a-pavement-41484-large.mp4',
-      poster: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1200&auto=format&fit=crop&q=80',
-      description: 'Witness the compression and rebound dynamics of dual-density nitrogen foam on urban tarmac.',
-    },
-    {
-      id: 'reel-2',
-      title: 'Monarch Court Streetstyle Walk',
-      category: 'Lifestyle & Heritage',
-      shoeTitle: 'Chandhana Monarch Suede Heritage Sneaker',
-      shoeLink: '/product/chandhana-monarch-suede-heritage-sneaker',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-feet-of-a-man-walking-with-sneakers-40087-large.mp4',
-      poster: 'https://images.unsplash.com/photo-1552346154-21d32810aba3?w=1200&auto=format&fit=crop&q=80',
-      description: 'Supple suede overlays paired with honey gum rubber outsoles for timeless street aesthetics.',
-    },
-    {
-      id: 'reel-3',
-      title: 'CloudStrata High-Speed Treadmill Pace',
-      category: "Women's Athletics",
-      shoeTitle: 'Chandhana CloudStrata Women’s Trainer',
-      shoeLink: '/product/chandhana-cloudstrata-womens-trainer',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-close-up-of-a-woman-running-on-a-treadmill-41485-large.mp4',
-      poster: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=1200&auto=format&fit=crop&q=80',
-      description: 'Zoned FlexKnit upper flexing naturally with forefoot metatarsals during high-cadence strides.',
-    },
-    {
-      id: 'reel-4',
-      title: 'CloudStep Hydro-Tread Water Resistance',
-      category: 'Slippers & Recovery',
-      shoeTitle: 'Chandhana CloudStep Ultra-Cushion Slides',
-      shoeLink: '/product/chandhana-cloudstep-ultra-cushion-slides',
-      videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-feet-of-a-person-walking-in-the-pool-42861-large.mp4',
-      poster: 'https://images.unsplash.com/photo-1603808033176-9d134970ab36?w=1200&auto=format&fit=crop&q=80',
-      description: '45mm bio-EVA platform dissipating surface water instantly with zero slip on wet porcelain tile.',
-    },
-  ];
-
-  const [activeReel, setActiveReel] = useState<VideoReel>(videoReels[0]);
-  const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const toggleMute = () => {
-    if (videoRef.current) {
-      videoRef.current.muted = !isMuted;
-      setIsMuted(!isMuted);
-    }
-  };
-
-  const handleSelectReel = (reel: VideoReel) => {
-    setActiveReel(reel);
-    setIsPlaying(true);
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-    }
-  };
+  // Duplicated list for seamless infinite autoscroll loop
+  const duplicatedReels = [...PINTEREST_REELS, ...PINTEREST_REELS];
 
   return (
-    <section className="py-16 bg-white border-y border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-bold text-red-600 uppercase tracking-wider mb-2">
-              <Film className="w-3.5 h-3.5" />
-              <span>Cinematic Footwear In Motion</span>
+    <section className="py-14 sm:py-20 bg-gradient-to-b from-[#FAF7FD] to-white overflow-hidden border-none select-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
+        {/* Clean Header without unnecessary buttons */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EDE9FE] text-[#5B21B6] text-xs font-bold tracking-wider uppercase shadow-2xs border-none">
+              <Film className="w-3.5 h-3.5 text-[#7C3AED]" />
+              <span>Pinterest Motion Gallery</span>
+              <span className="text-purple-300">•</span>
+              <span className="text-[10px] text-purple-900 font-black">Autoscroll Reels</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-              Product Demonstration & Motion Gallery
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-slate-900 tracking-tight">
+              Footwear in Dynamic Motion
             </h2>
           </div>
-          <p className="text-xs text-slate-500 max-w-sm">
-            High-definition video reels showcasing sole flexibility, cushioning compression, and real-world traction.
+          <p className="text-xs sm:text-sm text-slate-500 max-w-md">
+            Seamless borderless reels capturing real-world sole flexibility, cushioning rebound, and everyday comfort. Hover to pause.
           </p>
         </div>
+      </div>
 
-        {/* Video Player + Playlist Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          {/* Main Stage Video Player */}
-          <div className="lg:col-span-8 relative rounded-3xl overflow-hidden shadow-2xl aspect-video bg-black group border-none">
-            <video
-              ref={videoRef}
-              src={activeReel.videoUrl}
-              poster={activeReel.poster}
-              autoPlay
-              loop
-              muted={isMuted}
-              playsInline
-              className="w-full h-full object-cover"
-              onPlay={() => setIsPlaying(true)}
-              onPause={() => setIsPlaying(false)}
-            />
+      {/* Infinite Seamless Autoscroll Ribbon of Borderless Videos */}
+      <div className="relative w-full overflow-hidden py-3">
+        {/* Soft edge gradient fades */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-24 bg-gradient-to-r from-[#FAF7FD] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-24 bg-gradient-to-l from-[#FAF7FD] to-transparent z-10" />
 
-            {/* Video Controls Bar */}
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-between p-6">
-              {/* Top status */}
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-white uppercase tracking-wider bg-red-600 px-3.5 py-1 rounded-full shadow-md border-none">
-                  {activeReel.category}
+        {/* Autoscrolling Track (no borders, no unnecessary buttons) */}
+        <div className="animate-reels-scroll flex items-center gap-4 sm:gap-6 px-4">
+          {duplicatedReels.map((reel, idx) => (
+            <div
+              key={`${reel.id}-${idx}`}
+              className="relative w-56 sm:w-64 md:w-72 h-[360px] sm:h-[420px] md:h-[460px] rounded-[28px] sm:rounded-[36px] overflow-hidden bg-slate-900 shadow-xl group border-none shrink-0"
+            >
+              {/* HTML5 Native Muted Looping Video without borders or controls */}
+              <video
+                src={reel.videoUrl}
+                poster={reel.poster}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 pointer-events-none"
+              />
+
+              {/* Seamless Vignette Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+
+              {/* Minimalist Top Live Indicator */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 pointer-events-none">
+                <span className="flex h-2 w-2 relative">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#8B5CF6]"></span>
                 </span>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleMute}
-                    className="border-none p-2.5 rounded-xl bg-white/90 backdrop-blur-md text-slate-800 hover:text-red-600 transition-colors shadow-sm"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={togglePlay}
-                    className="border-none p-2.5 rounded-xl bg-white/90 backdrop-blur-md text-slate-800 hover:text-red-600 transition-colors shadow-sm"
-                  >
-                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                  </button>
-                </div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-white/90 drop-shadow-sm">
+                  {reel.brand}
+                </span>
               </div>
 
-              {/* Bottom information banner */}
-              <div className="space-y-2">
-                <h3 className="text-lg sm:text-xl font-bold text-white drop-shadow">
-                  {activeReel.title}
-                </h3>
-                <p className="text-xs text-slate-200 max-w-xl drop-shadow">
-                  {activeReel.description}
-                </p>
-
-                <div className="pt-2">
-                  <Link
-                    to={activeReel.shoeLink}
-                    className="btn-primary text-xs font-bold py-2.5 px-5 inline-flex items-center gap-2"
-                  >
-                    <span>View {activeReel.shoeTitle}</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
+              {/* Bottom Subtle Glass Tag */}
+              <div className="absolute bottom-4 inset-x-4 p-3.5 rounded-2xl bg-black/40 backdrop-blur-md border-none pointer-events-none">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-[#D8B4F8] mb-0.5">
+                  {reel.category}
+                </div>
+                <div className="text-xs sm:text-sm font-bold text-white truncate drop-shadow-sm">
+                  {reel.title}
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Video Playlist Selector */}
-          <div className="lg:col-span-4 space-y-3">
-            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              Featured Footwear Reels (4)
-            </h4>
-
-            {videoReels.map((reel) => {
-              const isActive = activeReel.id === reel.id;
-              return (
-                <div
-                  key={reel.id}
-                  onClick={() => handleSelectReel(reel)}
-                  className={`p-3.5 rounded-2xl transition-all cursor-pointer flex gap-3.5 items-center border-none ${
-                    isActive
-                      ? 'bg-red-50 ring-2 ring-red-600 shadow-md'
-                      : 'bg-slate-50 hover:bg-slate-100 shadow-sm'
-                  }`}
-                >
-                  <div className="relative w-20 h-14 rounded-xl overflow-hidden shrink-0 bg-slate-900 shadow-sm">
-                    <img
-                      src={reel.poster}
-                      alt={reel.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                      <Play
-                        className={`w-4 h-4 ${
-                          isActive ? 'text-red-500 fill-current' : 'text-white'
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <span className="text-[10px] text-red-600 font-extrabold uppercase tracking-wider block">
-                      {reel.category}
-                    </span>
-                    <h5
-                      className={`text-xs font-bold truncate ${
-                        isActive ? 'text-red-700' : 'text-slate-900'
-                      }`}
-                    >
-                      {reel.title}
-                    </h5>
-                    <span className="text-[11px] text-slate-500 truncate block mt-0.5">
-                      {reel.shoeTitle}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          ))}
         </div>
       </div>
     </section>

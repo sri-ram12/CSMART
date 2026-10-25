@@ -8,76 +8,98 @@
   }
   
   body {
-    @apply bg-slate-50 text-slate-900 overflow-x-hidden antialiased;
+    @apply bg-white text-slate-900 overflow-x-hidden antialiased;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
   }
 
-  /* Custom Smooth Scrollbar */
+  /* Custom Smooth Scrollbar with Lavender & Violet Accent */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
   ::-webkit-scrollbar-track {
-    background: #F8FAFC;
+    background: #FAF7FD;
   }
   ::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
+    background: #D4BAF2;
     border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #DC2626;
+    background: #5B21B6;
   }
 }
 
 @layer components {
-  /* Crisp White Card with Soft Shadow - No Harsh Borders */
+  /* Crisp White Card with Soft Fashion Lavender Shadow */
   .glass-card {
     background-color: #FFFFFF;
-    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    box-shadow: 0 4px 20px -2px rgba(91, 33, 182, 0.06);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .glass-card:hover {
-    box-shadow: 0 12px 35px -4px rgba(220, 38, 38, 0.12);
+    box-shadow: 0 12px 35px -4px rgba(91, 33, 182, 0.14);
   }
 
   .glass-elevated {
-    background-color: rgba(255, 255, 255, 0.95);
+    background-color: rgba(255, 255, 255, 0.96);
     backdrop-filter: blur(16px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 25px -5px rgba(91, 33, 182, 0.08), 0 8px 10px -6px rgba(91, 33, 182, 0.05);
   }
 
-  /* Red Gradient Accent Text */
-  .red-gradient-text {
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 50%, #991B1B 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+  /* Editorial Serif Headings from Reference */
+  .fashion-heading {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    color: #1E1B2E;
+    letter-spacing: -0.02em;
   }
 
-  /* BORDERLESS BUTTONS */
+  /* Primary Deep Royal Violet Pill Button (from reference 'SHOP NOW →') */
   .btn-primary {
-    @apply border-none relative overflow-hidden inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold tracking-wide transition-all duration-300 active:scale-95 shadow-md shadow-red-500/20 hover:shadow-lg hover:shadow-red-500/35 hover:brightness-105;
-    background: linear-gradient(135deg, #EF4444 0%, #DC2626 60%, #B91C1C 100%);
-    color: #FFFFFF;
+    @apply border-none relative overflow-hidden inline-flex items-center justify-center gap-2 px-7 py-3 rounded-full font-bold tracking-wide transition-all duration-300 active:scale-95 shadow-md bg-[#5B21B6] text-white hover:bg-[#4C1D95] hover:shadow-lg shadow-purple-900/20;
   }
 
+  /* Outline Button */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full font-bold tracking-wide border-2 border-[#5B21B6] text-[#5B21B6] hover:bg-[#F3E8FF] transition-all duration-300 active:scale-95;
+  }
+
+  /* Secondary Pastel Lavender Button */
   .btn-secondary {
-    @apply border-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold tracking-wide bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 transition-all duration-300 active:scale-95 shadow-sm;
+    @apply border-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold tracking-wide bg-[#EDE9FE] text-[#5B21B6] hover:bg-[#DDD6FE] transition-all duration-300 active:scale-95 shadow-sm;
   }
 
   .btn-neutral {
-    @apply border-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold tracking-wide bg-slate-100 text-slate-800 hover:bg-slate-200 transition-all duration-300 active:scale-95 shadow-sm;
+    @apply border-none inline-flex items-center justify-center gap-2 px-6 py-3 rounded-full font-bold tracking-wide bg-slate-100 text-slate-800 hover:bg-slate-200 transition-all duration-300 active:scale-95 shadow-sm;
   }
 
-  .badge-red {
-    @apply border-none inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-red-50 text-red-600;
+  /* Badges */
+  .badge-lavender {
+    @apply border-none inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-[#EDE9FE] text-[#5B21B6];
+  }
+
+  .badge-purple {
+    @apply border-none inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wider uppercase bg-[#5B21B6] text-white;
+  }
+
+  /* Starburst Discount Badge (like '15% OFF' in reference) */
+  .badge-starburst {
+    @apply relative flex items-center justify-center rounded-full bg-[#3B0764] text-white font-black text-center shadow-lg border-2 border-white/40;
   }
 }
 
-/* Subtle modern mesh background glow in light mode */
-.bg-mesh-glow {
+/* Subtle decorative pattern in lavender fashion tone */
+.bg-mesh-lavender {
+  background-color: #FAF7FD;
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(239, 68, 68, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(220, 38, 38, 0.04) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(248, 250, 252, 0.8) 0%, transparent 70%);
+    radial-gradient(circle at 10% 10%, rgba(216, 180, 248, 0.45) 0%, transparent 45%),
+    radial-gradient(circle at 90% 80%, rgba(216, 180, 248, 0.35) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.9) 0%, transparent 70%);
+}
+
+/* Signature Reference Arched Lavender Hero Backdrop (#E6D4FB / #D8B4F8 / #C084FC) */
+.bg-reference-lavender {
+  background: linear-gradient(135deg, #E6D4FB 0%, #D8B4F8 50%, #C084FC 100%);
 }
 
 /* Infinite Marquee Animation for Top Brands Banner */
@@ -121,4 +143,88 @@
   animation-play-state: paused;
 }
 
+/* Heartbeat pulse animation for the visiting-card logo */
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  25% {
+    transform: scale(1.22);
+  }
+  40% {
+    transform: scale(0.95);
+  }
+  60% {
+    transform: scale(1.15);
+  }
+}
 
+.animate-heartbeat {
+  animation: heartbeat 1.4s ease-in-out infinite;
+}
+
+/* Slow floating badge */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 5s ease-in-out infinite;
+}
+
+/* Footprint stepping animations */
+@keyframes step-left {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 2px 4px rgba(109, 40, 217, 0.25));
+  }
+  50% {
+    transform: translateY(-2.5px) scale(1.05);
+    filter: drop-shadow(0 4px 10px rgba(109, 40, 217, 0.55));
+  }
+}
+
+@keyframes step-right {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+    filter: drop-shadow(0 2px 4px rgba(109, 40, 217, 0.25));
+  }
+  50% {
+    transform: translateY(-2.5px) scale(1.05);
+    filter: drop-shadow(0 4px 10px rgba(109, 40, 217, 0.55));
+  }
+}
+
+.animate-step-left {
+  animation: step-left 1.6s ease-in-out infinite;
+}
+
+.animate-step-right {
+  animation: step-right 1.6s ease-in-out infinite 0.8s;
+}
+
+/* Silky Pinterest Video Autoscroll Track */
+@keyframes autoscroll-reels {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-reels-scroll {
+  display: flex;
+  width: max-content;
+  animation: autoscroll-reels 38s linear infinite;
+  will-change: transform;
+}
+
+.animate-reels-scroll:hover {
+  animation-play-state: paused;
+}

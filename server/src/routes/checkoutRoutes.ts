@@ -40,10 +40,17 @@ router.post('/validate', async (req: Request, res: Response, next) => {
       let selectedVariant = null;
       if (item.variantId) {
         selectedVariant = product.variants.find((v) => v.id === item.variantId);
-      } else if (item.size && item.colorName) {
+      }
+      if (!selectedVariant && item.size && item.colorName) {
         selectedVariant = product.variants.find(
           (v) => v.size === item.size && v.colorName.toLowerCase() === item.colorName.toLowerCase()
         );
+      }
+      if (!selectedVariant && item.size) {
+        selectedVariant = product.variants.find((v) => v.size === item.size);
+      }
+      if (!selectedVariant && product.variants.length > 0) {
+        selectedVariant = product.variants[0];
       }
 
       const availableStock = selectedVariant ? selectedVariant.inventory : 10;

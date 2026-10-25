@@ -27,26 +27,27 @@ export const SlippersSpecial: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-white via-red-50/20 to-white border-t border-slate-100">
-      {/* Background ambient red glow */}
-      <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-12">
+      {/* Fashion 'Exclusive Offer' Card in Pastel Lavender (#E6D4FB to #D8B4F8) */}
+      <section className="relative overflow-hidden rounded-3xl lg:rounded-[40px] bg-gradient-to-br from-[#E6D4FB] via-[#D8B4F8] to-[#C084FC] p-6 sm:p-10 lg:p-14 border border-purple-200 shadow-xl">
+        {/* Soft radial ambient glow */}
+        <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-white/40 blur-3xl pointer-events-none" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center relative z-10">
           {/* Left Column: Visual Slipper Highlight */}
           <div className="lg:col-span-6 relative">
-            <div className="relative rounded-3xl overflow-hidden bg-white shadow-xl p-6 sm:p-8 border-none ring-1 ring-slate-100">
+            <div className="relative rounded-[32px] overflow-hidden bg-white shadow-xl p-5 sm:p-7 border border-purple-100">
               {/* Product Badge */}
               <div className="flex items-center justify-between mb-4">
-                <span className="badge-red">
-                  <Sparkles className="w-3.5 h-3.5 text-red-600" />
-                  <span>Dedicated Department</span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#EDE9FE] text-[#5B21B6]">
+                  <Sparkles className="w-3.5 h-3.5 text-[#7C3AED]" />
+                  <span>CloudStep Exclusive</span>
                 </span>
-                <span className="text-xs font-black text-red-600">₹699 Special Launch</span>
+                <span className="text-xs font-serif font-black text-[#5B21B6]">Special Launch ₹699</span>
               </div>
 
               {/* Slipper Showcase Image */}
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center p-4">
+              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-[#FAF7FD] flex items-center justify-center p-4">
                 <img
                   src="https://images.unsplash.com/photo-1603808033176-9d134970ab36?w=900&auto=format&fit=crop&q=80"
                   alt="Chandhana CloudStep Ultra-Cushion Slides"
@@ -54,69 +55,74 @@ export const SlippersSpecial: React.FC = () => {
                 />
 
                 {/* Sole Thickness Pin */}
-                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-md text-xs text-slate-800 border-none font-medium">
-                  <span className="text-red-600 font-bold">4.5cm</span> Thick Cushion Base
-                </div>
-
-                {/* Water Resistance Pin */}
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-xl shadow-md text-xs text-slate-800 flex items-center gap-1.5 border-none font-medium">
-                  <Droplets className="w-3.5 h-3.5 text-cyan-500" />
-                  <span>100% Waterproof</span>
+                <div className="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-md text-xs text-[#5B21B6] border border-purple-200 font-medium">
+                  <span className="font-bold text-[#5B21B6]">4.5cm</span> Thick Cushion Base
                 </div>
               </div>
 
-              <div className="mt-4 flex items-center justify-between text-xs text-slate-500">
-                <span>Available Sizes: UK 6 to UK 11</span>
-                <span className="text-emerald-600 font-bold">• In Stock (Ready to Ship)</span>
+              {/* Color Options Swatches */}
+              <div className="flex items-center justify-between mt-4 text-xs font-semibold text-slate-600">
+                <span>Available in 6 Pastel Colorways</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full bg-[#E6D5F7] border border-purple-300 shadow-2xs" />
+                  <span className="w-4 h-4 rounded-full bg-[#FAF7FD] border border-slate-300 shadow-2xs" />
+                  <span className="w-4 h-4 rounded-full bg-[#3B0764] border border-purple-900 shadow-2xs" />
+                  <span className="w-4 h-4 rounded-full bg-[#F5D0C5] border border-rose-200 shadow-2xs" />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Copy & Specs */}
+          {/* Right Column: Copy & CloudStep Perks */}
           <div className="lg:col-span-6 space-y-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-100 text-xs font-bold text-red-700 border-none">
-              <span>Slippers, Slides & Sandals Department</span>
+            <div className="space-y-3 text-center lg:text-left">
+              <span className="inline-block bg-white/90 text-[#5B21B6] font-black text-[10px] uppercase tracking-widest px-3.5 py-1 rounded-full shadow-2xs">
+                Slippers & Recovery Spotlight
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#1E0842] tracking-tight leading-[1.1]">
+                Walking on Clouds. <br />
+                <span className="font-serif italic font-normal text-[#3B0764]">Every Single Day.</span>
+              </h2>
+              <p className="text-xs sm:text-sm text-[#3B0764] leading-relaxed max-w-xl">
+                Engineered with high-rebound injection EVA to cradle tired arches after long shifts, active runs, or relaxing weekends at home.
+              </p>
             </div>
 
-            <h2 className="font-heading font-black text-3xl sm:text-4xl text-slate-900 tracking-tight">
-              CloudStep Recovery & Anti-Slip Comfort Slides
-            </h2>
-
-            <p className="text-slate-600 text-sm leading-relaxed">
-              We dedicated an entire engineering division to perfecting domestic and outdoor slippers. Whether you require orthopedic arch cradling for tile floors, quick-drying bathroom grip, or poolside memory foam, our CloudStep collection delivers unrivaled step relief.
-            </p>
-
-            {/* Feature Perks Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              {slippersPerks.map((p, idx) => {
-                const Icon = p.icon;
+            {/* Perks Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+              {slippersPerks.map((perk) => {
+                const IconComponent = perk.icon;
                 return (
-                  <div key={idx} className="p-4 rounded-2xl bg-white shadow-sm border-none space-y-1.5">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                      <div className="w-7 h-7 rounded-lg bg-red-50 flex items-center justify-center text-red-600 shrink-0">
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span>{p.title}</span>
+                  <div
+                    key={perk.title}
+                    className="p-3.5 rounded-2xl bg-white/90 shadow-xs border border-white/60 flex items-start gap-3"
+                  >
+                    <div className="p-2 rounded-xl bg-[#EDE9FE] text-[#5B21B6] shrink-0">
+                      <IconComponent className="w-4 h-4" />
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-normal">{p.desc}</p>
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-900">{perk.title}</h4>
+                      <p className="text-[11px] text-slate-600 leading-snug mt-0.5">{perk.desc}</p>
+                    </div>
                   </div>
                 );
               })}
             </div>
 
-            <div className="pt-4 flex flex-col sm:flex-row gap-3">
-              <Link to="/slippers" className="btn-primary text-xs font-extrabold py-3.5 px-7">
-                <span>Explore Slippers Department</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link to="/product/chandhana-cloudstep-ultra-cushion-slides" className="btn-secondary text-xs font-extrabold py-3.5 px-7">
-                <span>Inspect in 3D WebGL</span>
+            {/* CTA Button */}
+            <div className="pt-2 flex flex-wrap items-center justify-center lg:justify-start gap-3">
+              <Link
+                to="/slippers"
+                className="btn-primary text-xs sm:text-sm py-3.5 px-8 font-black tracking-wider uppercase inline-flex items-center gap-2 shadow-lg hover:scale-105 active:scale-95 transition-all border-none rounded-full"
+              >
+                <span>Shop Slippers & Sandals</span>
+                <ArrowRight className="w-4 h-4 text-purple-200" />
               </Link>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 };
 

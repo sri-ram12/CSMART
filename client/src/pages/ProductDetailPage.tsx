@@ -130,8 +130,26 @@ export const ProductDetailPage: React.FC = () => {
     }
   } catch {}
 
+  const handleColorChange = (newColorName: string) => {
+    setSelectedColor(newColorName);
+    if (product.variants && product.variants.length > 0) {
+      const match = product.variants.find(
+        (v) => v.colorName.toLowerCase() === newColorName.toLowerCase() && v.size === selectedSize && v.inventory > 0
+      );
+      if (!match) {
+        const firstAvail = product.variants.find(
+          (v) => v.colorName.toLowerCase() === newColorName.toLowerCase() && v.inventory > 0
+        );
+        if (firstAvail) {
+          setSelectedSize(firstAvail.size);
+        }
+      }
+    }
+  };
+
   const handleAddToCart = () => {
     if (isOutOfStock) return;
+    const unitPrice = product.price + (currentVariant?.priceAdjustment || 0);
     addToCart({
       productId: product.id,
       variantId: currentVariant?.id,
@@ -140,8 +158,8 @@ export const ProductDetailPage: React.FC = () => {
       size: selectedSize || 'Standard',
       colorName: selectedColor || 'Standard',
       colorHex: currentVariant?.colorHex || '#DC2626',
-      imageUrl: product.media?.[0]?.url || '',
-      unitPrice: product.price,
+      imageUrl: currentVariant?.imageUrl || product.media?.[0]?.url || '',
+      unitPrice,
       quantity,
       availableStock,
     });
@@ -184,8 +202,8 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const whatsAppUrl = `https://wa.me/919845012345?text=${encodeURIComponent(
-    `Hello Chandhana Shoe Mart, I would like to inquire about ${product.title} (SKU: ${product.sku}, Size: ${selectedSize}, Price: ₹${product.price})`
+  const whatsAppUrl = `https://wa.me/919553536884?text=${encodeURIComponent(
+    `Hello Chandhana Shoe Mart (Tagarapuvalasa), I would like to inquire about ${product.title} (SKU: ${product.sku}, Size: ${selectedSize}, Color: ${selectedColor}, Price: ₹${product.price})`
   )}`;
 
   return (
@@ -270,7 +288,7 @@ export const ProductDetailPage: React.FC = () => {
                           (name && v.colorName.toLowerCase() === name.toLowerCase())
                       );
                       if (match) {
-                        setSelectedColor(match.colorName);
+                        handleColorChange(match.colorName);
                       }
                     }}
                     height="h-[360px] sm:h-[420px] md:h-[480px]"
@@ -404,7 +422,7 @@ export const ProductDetailPage: React.FC = () => {
                   {allColors.map((col) => (
                     <button
                       key={col.colorName}
-                      onClick={() => setSelectedColor(col.colorName)}
+                      onClick={() => handleColorChange(col.colorName)}
                       className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border-none text-xs font-bold transition-all cursor-pointer ${
                         selectedColor === col.colorName
                           ? 'bg-red-600 text-white shadow-md'

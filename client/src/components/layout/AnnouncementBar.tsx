@@ -1,47 +1,48 @@
 import React from 'react';
-import { Phone, MessageCircle, Truck, Sparkles } from 'lucide-react';
+import { Phone, MessageCircle, Sparkles, MapPin } from 'lucide-react';
 
 export const AnnouncementBar: React.FC = () => {
   return (
-    <div className="bg-gradient-to-r from-red-700 via-red-600 to-rose-600 text-white text-xs py-2.5 px-4 shadow-sm">
-      <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-        {/* Left: Contact Info */}
-        <div className="hidden md:flex items-center gap-4 text-red-50">
+    <div className="bg-[#2E1065] text-white text-xs py-2 px-3 sm:px-4 shadow-sm border-b border-[#3B0764]">
+      <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3 sm:gap-4">
+        {/* Left: Direct Store Cell & WhatsApp */}
+        <div className="flex items-center gap-3 text-purple-200 text-[11px] sm:text-xs">
           <a
-            href="tel:+919845012345"
-            className="flex items-center gap-1.5 hover:text-white transition-colors"
+            href="tel:9553536884"
+            className="flex items-center gap-1.5 hover:text-[#E9D5FF] transition-colors font-bold"
+            title="Call Chandhana Shoe Mart"
           >
-            <Phone className="w-3.5 h-3.5" />
-            <span>+91 98450 12345</span>
+            <Phone className="w-3.5 h-3.5 text-[#C4B5FD] shrink-0" />
+            <span>Cell: 9553536884</span>
           </a>
-          <span className="text-red-400">|</span>
+          <span className="text-[#6D28D9] hidden md:inline">|</span>
           <a
-            href="https://wa.me/919845012345?text=Hi%20Chandhana%20Shoe%20Mart,%20I%20have%20an%20enquiry"
+            href="https://wa.me/919553536884?text=Hello%20Chandhana%20Shoe%20Mart,%20I%20have%20an%20enquiry"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-white hover:underline transition-colors"
+            className="hidden md:flex items-center gap-1.5 text-white hover:text-[#E9D5FF] transition-colors font-medium"
           >
-            <MessageCircle className="w-3.5 h-3.5" />
-            <span>WhatsApp Enquiry</span>
+            <MessageCircle className="w-3.5 h-3.5 text-[#C4B5FD]" />
+            <span>WhatsApp</span>
           </a>
         </div>
 
-        {/* Center: Promo Ticker */}
-        <div className="flex-1 text-center flex items-center justify-center gap-2 font-medium text-white">
-          <Sparkles className="w-3.5 h-3.5 text-yellow-300 animate-pulse shrink-0" />
+        {/* Center: Promo & Telugu Tagline */}
+        <div className="flex-1 text-center flex items-center justify-center gap-2 font-medium text-white text-[11px] sm:text-xs">
+          <Sparkles className="w-3.5 h-3.5 text-[#C4B5FD] animate-pulse shrink-0" />
           <span className="truncate">
-            <span className="font-bold">Grand Season Launch:</span> Flat 10% off with code{' '}
-            <span className="font-mono bg-white text-red-600 px-2 py-0.5 rounded-full font-black text-[11px] shadow-sm">
-              WELCOME10
+            <strong className="font-serif text-[#E9D5FF]">పాదరక్షల బృందావనం:</strong> Flat 15% Off with code{' '}
+            <span className="font-mono bg-[#E9D5FF] text-[#4C1D95] px-2 py-0.5 rounded-full font-black text-[10px] shadow-sm tracking-wider">
+              WELCOME15
             </span>{' '}
-            • Free Express Delivery on orders over ₹999
+            • Free Delivery Over ₹999
           </span>
         </div>
 
-        {/* Right: Shipping perk */}
-        <div className="hidden lg:flex items-center gap-1.5 text-red-50">
-          <Truck className="w-3.5 h-3.5" />
-          <span>Pan-India Cash on Delivery</span>
+        {/* Right: Real Store Landmark */}
+        <div className="hidden lg:flex items-center gap-1.5 text-purple-200 text-[11px] font-medium">
+          <MapPin className="w-3.5 h-3.5 text-[#C4B5FD] shrink-0" />
+          <span>Opp: Tata Theatre, Main Road, Tagarapuvalasa-531162</span>
         </div>
       </div>
     </div>

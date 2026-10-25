@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Product, Category } from '../../types';
-import { Plus, Trash2, Sparkles, Film, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Film, ArrowLeft, Edit3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const AdminProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // New product form fields
   const [title, setTitle] = useState('');
@@ -24,17 +27,32 @@ export const AdminProductsPage: React.FC = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [upperMaterial, setUpperMaterial] = useState('');
   const [soleMaterial, setSoleMaterial] = useState('');
+  const [colorName, setColorName] = useState('Crimson Black');
+  const [colorHex, setColorHex] = useState('#DC2626');
+
+  // Edit product fields
+  const [editTitle, setEditTitle] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+  const [editOriginalPrice, setEditOriginalPrice] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editHas3D, setEditHas3D] = useState(true);
+  const [editDepartment, setEditDepartment] = useState<'MEN' | 'WOMEN' | 'KIDS' | 'SLIPPERS_SANDALS'>('MEN');
+
+  const showNotification = (type: 'success' | 'error', message: string) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 4000);
+  };
 
   const loadData = async () => {
     setIsLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([
-        api.products.getAll({ limit: 50 }),
+        api.products.getAll({ limit: 60 }),
         api.categories.getAll(),
       ]);
       setProducts(prodRes.products);
       setCategories(catRes);
-      if (catRes.length > 0) setCategoryId(catRes[0].id);
+      if (catRes.length > 0 && !categoryId) setCategoryId(catRes[0].id);
     } catch (e) {
       console.error(e);
     } finally {
@@ -56,10 +74,12 @@ export const AdminProductsPage: React.FC = () => {
             )
           : 0;
 
+      const generatedSku = sku || `CSM-${Date.now().toString().slice(-6)}`;
+
       await api.admin.createProduct({
         title,
         brand,
-        sku: sku || `CSM-${Date.now().toString().slice(-6)}`,
+        sku: generatedSku,
         department,
         categoryId: categoryId || categories[0]?.id,
         price: parseFloat(price),
@@ -72,13 +92,16 @@ export const AdminProductsPage: React.FC = () => {
         soleMaterial: soleMaterial || 'High-Abrasion Rubber',
         media: [imageUrl || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800'],
         variants: [
-          { size: 'UK 7', colorName: 'Crimson White', colorHex: '#DC2626', inventory: 15 },
-          { size: 'UK 8', colorName: 'Crimson White', colorHex: '#DC2626', inventory: 20 },
-          { size: 'UK 9', colorName: 'Crimson White', colorHex: '#DC2626', inventory: 18 },
+          { size: 'UK 6', colorName: colorName || 'Standard', colorHex: colorHex || '#DC2626', inventory: 15 },
+          { size: 'UK 7', colorName: colorName || 'Standard', colorHex: colorHex || '#DC2626', inventory: 20 },
+          { size: 'UK 8', colorName: colorName || 'Standard', colorHex: colorHex || '#DC2626', inventory: 25 },
+          { size: 'UK 9', colorName: colorName || 'Standard', colorHex: colorHex || '#DC2626', inventory: 20 },
+          { size: 'UK 10', colorName: colorName || 'Standard', colorHex: colorHex || '#DC2626', inventory: 15 },
         ],
       });
 
       setIsModalOpen(false);
+      showNotification('success', `Product "${title}" published successfully!`);
       loadData();
       // Reset form
       setTitle('');
@@ -86,7 +109,46 @@ export const AdminProductsPage: React.FC = () => {
       setOriginalPrice('');
       setDescription('');
     } catch (err: any) {
-      alert(err.message || 'Failed to create product.');
+      showNotification('error', err.message || 'Failed to create product.');
+    }
+  };
+
+  const handleOpenEdit = (p: Product) => {
+    setEditingProduct(p);
+    setEditTitle(p.title);
+    setEditPrice(String(p.price));
+    setEditOriginalPrice(p.originalPrice ? String(p.originalPrice) : '');
+    setEditDescription(p.description || '');
+    setEditHas3D(p.has3D);
+    setEditDepartment(p.department);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct) return;
+    try {
+      const calcDiscount =
+        editOriginalPrice && parseFloat(editOriginalPrice) > parseFloat(editPrice)
+          ? Math.round(
+              ((parseFloat(editOriginalPrice) - parseFloat(editPrice)) / parseFloat(editOriginalPrice)) * 100
+            )
+          : 0;
+
+      await api.admin.updateProduct(editingProduct.id, {
+        title: editTitle,
+        price: parseFloat(editPrice),
+        originalPrice: editOriginalPrice ? parseFloat(editOriginalPrice) : null,
+        discountPercent: calcDiscount,
+        description: editDescription,
+        has3D: editHas3D,
+      });
+
+      setIsEditModalOpen(false);
+      showNotification('success', `Product "${editTitle}" updated successfully!`);
+      loadData();
+    } catch (err: any) {
+      showNotification('error', err.message || 'Failed to update product.');
     }
   };
 
@@ -95,8 +157,9 @@ export const AdminProductsPage: React.FC = () => {
       try {
         await api.admin.deleteProduct(id);
         setProducts((prev) => prev.filter((p) => p.id !== id));
+        showNotification('success', 'Product removed from catalog.');
       } catch (err: any) {
-        alert(err.message || 'Failed to delete product.');
+        showNotification('error', err.message || 'Failed to delete product.');
       }
     }
   };
@@ -111,7 +174,7 @@ export const AdminProductsPage: React.FC = () => {
             </Link>
             <div>
               <h1 className="text-2xl font-black text-slate-900">Footwear Catalog Management</h1>
-              <p className="text-xs text-slate-500 font-medium">Total {products.length} products published</p>
+              <p className="text-xs text-slate-500 font-medium">Total {products.length} products published • Tagarapuvalasa Hub</p>
             </div>
           </div>
 
@@ -123,6 +186,22 @@ export const AdminProductsPage: React.FC = () => {
             <span>Add New Footwear Style</span>
           </button>
         </div>
+
+        {notification && (
+          <div
+            className={`p-3.5 rounded-2xl text-xs font-bold border-none flex items-center justify-between ${
+              notification.type === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-red-50 text-red-600'
+            }`}
+          >
+            <span>{notification.message}</span>
+            <button
+              onClick={() => setNotification(null)}
+              className="text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* Product Table */}
         <div className="p-6 sm:p-7 rounded-3xl bg-white shadow-sm border-none overflow-x-auto">
@@ -178,7 +257,14 @@ export const AdminProductsPage: React.FC = () => {
                   <td className="py-3 px-3.5 font-medium text-amber-600">
                     ★ {p.rating} ({p.reviewCount})
                   </td>
-                  <td className="py-3 px-3.5 text-right">
+                  <td className="py-3 px-3.5 text-right space-x-1">
+                    <button
+                      onClick={() => handleOpenEdit(p)}
+                      className="text-slate-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
+                      title="Edit Product"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleDelete(p.id)}
                       className="text-slate-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors border-none bg-transparent cursor-pointer"
@@ -222,6 +308,22 @@ export const AdminProductsPage: React.FC = () => {
                     />
                   </div>
 
+                  {/* Category Dropdown (Fixed missing dropdown bug) */}
+                  <div className="space-y-1.5">
+                    <label className="text-slate-700 font-bold">Category *</label>
+                    <select
+                      value={categoryId}
+                      onChange={(e) => setCategoryId(e.target.value)}
+                      className="w-full bg-slate-50 p-3 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                    >
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.department})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   <div className="space-y-1.5">
                     <label className="text-slate-700 font-bold">Department *</label>
                     <select
@@ -257,6 +359,35 @@ export const AdminProductsPage: React.FC = () => {
                       placeholder="2999"
                       className="w-full bg-slate-50 p-3 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
                     />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-700 font-bold">Color Name</label>
+                    <input
+                      type="text"
+                      value={colorName}
+                      onChange={(e) => setColorName(e.target.value)}
+                      placeholder="e.g. Crimson Black"
+                      className="w-full bg-slate-50 p-3 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-700 font-bold">Color Hex Code</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="color"
+                        value={colorHex}
+                        onChange={(e) => setColorHex(e.target.value)}
+                        className="w-10 h-10 rounded-xl cursor-pointer border-none bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={colorHex}
+                        onChange={(e) => setColorHex(e.target.value)}
+                        className="flex-1 bg-slate-50 p-3 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-mono"
+                      />
+                    </div>
                   </div>
 
                   <div className="space-y-1.5 sm:col-span-2">
@@ -327,6 +458,88 @@ export const AdminProductsPage: React.FC = () => {
                   </button>
                   <button type="submit" className="btn-primary py-2.5 px-6 font-bold text-xs border-none shadow-md cursor-pointer">
                     Publish Product
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Product Modal */}
+        {isEditModalOpen && editingProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm overflow-y-auto">
+            <div className="max-w-lg w-full bg-white rounded-3xl p-6 sm:p-7 space-y-4 my-8 shadow-2xl border-none">
+              <h3 className="text-base font-extrabold text-slate-900">
+                Edit Product: <span className="text-red-600">{editingProduct.title}</span>
+              </h3>
+
+              <form onSubmit={handleSaveEdit} className="space-y-3.5 text-xs">
+                <div className="space-y-1.5">
+                  <label className="text-slate-700 font-bold">Product Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="w-full bg-slate-50 p-2.5 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-slate-700 font-bold">Selling Price (₹)</label>
+                    <input
+                      type="number"
+                      required
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(e.target.value)}
+                      className="w-full bg-slate-50 p-2.5 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-slate-700 font-bold">Original MRP (₹)</label>
+                    <input
+                      type="number"
+                      value={editOriginalPrice}
+                      onChange={(e) => setEditOriginalPrice(e.target.value)}
+                      className="w-full bg-slate-50 p-2.5 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-slate-700 font-bold">Description</label>
+                  <textarea
+                    rows={3}
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    className="w-full bg-slate-50 p-2.5 rounded-xl text-slate-900 border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-red-600 font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-2 cursor-pointer font-bold text-slate-800">
+                    <input
+                      type="checkbox"
+                      checked={editHas3D}
+                      onChange={(e) => setEditHas3D(e.target.checked)}
+                      className="rounded text-red-600 focus:ring-red-500"
+                    />
+                    <span>Enable 3D WebGL Inspection Viewer</span>
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 border-none bg-transparent cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn-primary py-2 px-5 font-bold text-xs border-none shadow-md cursor-pointer">
+                    Save Changes
                   </button>
                 </div>
               </form>

@@ -20,7 +20,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const primaryMedia = product.media?.[0]?.url || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800';
 
   const defaultVariant = product.variants?.[0] || {
-    id: `${product.id}-v0`,
+    id: undefined,
     sku: product.sku,
     size: 'UK 8',
     colorName: 'Standard',
@@ -42,7 +42,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       colorName: defaultVariant.colorName,
       colorHex: defaultVariant.colorHex,
       imageUrl: primaryMedia,
-      unitPrice: product.price,
+      unitPrice: product.price + (defaultVariant.priceAdjustment || 0),
       quantity: 1,
       availableStock: defaultVariant.inventory,
     });
@@ -59,9 +59,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
   return (
     <>
-      <div className="group relative rounded-2xl sm:rounded-3xl bg-white shadow-card hover:shadow-card-hover overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1.5 border-none">
-        {/* Media Image Area */}
-        <Link to={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-slate-50 block">
+      <div className="group relative rounded-2xl sm:rounded-3xl bg-white shadow-sm hover:shadow-xl hover:shadow-purple-900/10 overflow-hidden flex flex-col transition-all duration-300 hover:-translate-y-1.5 border border-purple-100/60">
+        {/* Media Image Area with Soft Pastel Background */}
+        <Link to={`/product/${product.slug}`} className="relative aspect-square overflow-hidden bg-[#FAF7FD] block">
           {/* Main image with smooth zoom */}
           <img
             src={primaryMedia}
@@ -77,7 +77,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           {/* Top Badges */}
           <div className="absolute top-2 sm:top-3 left-2 sm:left-3 flex flex-col gap-1 sm:gap-1.5 items-start z-10">
             {product.discountPercent > 0 && (
-              <span className="bg-red-600 text-white font-black text-[9px] sm:text-[10px] uppercase px-2 sm:px-2.5 py-0.5 rounded-full shadow-md border-none">
+              <span className="bg-[#5B21B6] text-white font-black text-[9px] sm:text-[10px] uppercase px-2.5 py-0.5 rounded-full shadow-md border-none tracking-wider">
                 {product.discountPercent}% OFF
               </span>
             )}
@@ -89,170 +89,96 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                   e.stopPropagation();
                   setIs3DModalOpen(true);
                 }}
-                className="bg-white/95 hover:bg-red-600 text-red-600 hover:text-white font-black text-[9px] sm:text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-sm border-none transition-all cursor-pointer"
+                className="bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white font-black text-[9px] sm:text-[10px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs border-none transition-all cursor-pointer"
                 title="Tap for 360° Interactive 3D View"
               >
-                <Sparkles className="w-2.5 h-2.5" /> 360° View
+                <Sparkles className="w-2.5 h-2.5" /> 360°
               </button>
             )}
           </div>
 
-          {/* Wishlist Button (BORDERLESS) */}
+          {/* Wishlist Heart Icon Button (Matching reference image top-right position) */}
           <button
             onClick={handleWishlistClick}
             title={isFavorite ? 'Remove from Wishlist' : 'Add to Wishlist'}
-            className={`border-none absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2.5 rounded-full backdrop-blur-md transition-all duration-200 z-10 shadow-sm ${
+            className={`border-none absolute top-2 sm:top-3 right-2 sm:right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10 shadow-sm ${
               isFavorite
-                ? 'bg-red-50 text-red-600'
-                : 'bg-white/90 text-slate-600 hover:text-red-600 hover:bg-white'
+                ? 'bg-rose-50 text-rose-600 ring-1 ring-rose-200'
+                : 'bg-white/90 text-slate-400 hover:text-[#5B21B6] hover:bg-white'
             }`}
           >
-            <Heart className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isFavorite ? 'fill-current text-red-600' : ''}`} />
+            <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current text-rose-600' : ''}`} />
           </button>
-
-          {/* Quick View overlay buttons (BORDERLESS) */}
-          <div className="absolute inset-x-2 sm:inset-x-3 bottom-2 sm:bottom-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex gap-2 z-10">
-            {product.has3D !== false && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIs3DModalOpen(true);
-                }}
-                className="px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black bg-white/95 text-red-600 hover:bg-white transition-all shadow-md flex items-center justify-center gap-1 border-none cursor-pointer"
-                title="View 360° 3D Model"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">360°</span>
-              </button>
-            )}
-            <button
-              onClick={handleQuickAdd}
-              disabled={addedSuccess}
-              className={`flex-1 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-black transition-all shadow-md flex items-center justify-center gap-1.5 border-none ${
-                addedSuccess
-                  ? 'bg-emerald-600 text-white'
-                  : 'btn-primary'
-              }`}
-            >
-              {addedSuccess ? (
-                <>
-                  <Check className="w-3.5 h-3.5" /> Added!
-                </>
-              ) : (
-                <>
-                  <ShoppingBag className="w-3.5 h-3.5" /> Quick Add
-                </>
-              )}
-            </button>
-          </div>
         </Link>
 
-      {/* Product Content Details */}
-      <div className="p-2.5 sm:p-4 md:p-5 flex-1 flex flex-col justify-between space-y-1.5 sm:space-y-3">
-        <div>
-          {/* Brand & Department */}
-          <div className="flex items-center justify-between text-[9px] sm:text-[11px] text-slate-500 mb-1">
-            <span className="text-red-600 font-extrabold uppercase tracking-wider truncate mr-1">
-              {product.brand}
-            </span>
-            <div className="flex items-center gap-0.5 sm:gap-1 text-amber-500 font-bold shrink-0">
-              <Star className="w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 fill-current" />
-              <span>{product.rating}</span>
-              <span className="text-slate-400 text-[8.5px] sm:text-[10px]">({product.reviewCount})</span>
-            </div>
-          </div>
-
-          {/* Product Title & 360 Tag */}
-          <div className="flex items-center justify-between gap-1">
-            <Link to={`/product/${product.slug}`} className="flex-1 min-w-0">
-              <h3 className="text-[11px] sm:text-xs md:text-sm font-bold text-slate-900 hover:text-red-600 transition-colors line-clamp-1">
+        {/* Product Content Details */}
+        <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between space-y-2">
+          <div>
+            {/* Title */}
+            <Link to={`/product/${product.slug}`} className="block">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-800 hover:text-[#5B21B6] transition-colors line-clamp-1">
                 {product.title}
               </h3>
             </Link>
-            {product.has3D && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIs3DModalOpen(true);
-                }}
-                className="shrink-0 text-[8px] sm:text-[9px] font-black text-red-600 hover:text-white bg-red-50 hover:bg-red-600 px-1.5 sm:px-2 py-0.5 rounded-full flex items-center gap-0.5 border-none transition-all cursor-pointer"
-                title="Tap for 360° View"
-              >
-                <RotateCcw className="w-2 h-2 sm:w-2.5 sm:h-2.5" /> 360°
-              </button>
-            )}
-          </div>
-        </div>
 
-        {/* Pricing & Variants bar */}
-        <div>
-          {/* Color swatch previews */}
-          {product.variants && product.variants.length > 0 && (
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-1 sm:mb-2">
-              {Array.from(new Set(product.variants.map((v) => v.colorHex))).slice(0, 4).map((hex, i) => (
-                <span
-                  key={i}
-                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full border border-slate-200 inline-block shadow-2xs"
-                  style={{ backgroundColor: hex }}
-                />
-              ))}
-              {new Set(product.variants.map((v) => v.colorHex)).size > 4 && (
-                <span className="text-[8px] sm:text-[9px] text-slate-400 font-medium">
-                  +{new Set(product.variants.map((v) => v.colorHex)).size - 4}
-                </span>
-              )}
+            {/* 5-Star Rating (Matching reference image yellow stars) */}
+            <div className="flex items-center gap-1 mt-1 text-amber-400">
+              <div className="flex items-center text-xs">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-3 h-3 fill-current text-amber-400" />
+                ))}
+              </div>
+              <span className="text-[10px] text-slate-400 font-semibold ml-0.5">
+                ({product.reviewCount || 12})
+              </span>
             </div>
-          )}
+          </div>
 
-          {/* Price row */}
-          <div className="flex items-center justify-between pt-1 sm:pt-2 border-t border-slate-100 gap-1">
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-                <span className="text-xs sm:text-sm md:text-base font-black text-slate-900">
+          {/* Price & Reference Circular Cart Action Button */}
+          <div className="flex items-center justify-between pt-2 border-t border-purple-50">
+            <div className="flex flex-col">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-sm sm:text-base font-serif font-black text-[#1E0842]">
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
                 {product.originalPrice && (
-                  <span className="text-[9px] sm:text-xs text-slate-400 line-through">
+                  <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                     ₹{product.originalPrice.toLocaleString('en-IN')}
                   </span>
                 )}
               </div>
-              <span className="text-[8px] sm:text-[9px] text-emerald-600 font-bold hidden min-[360px]:inline truncate">
-                Free Delivery
-              </span>
             </div>
 
-            {/* Direct Touch-Friendly Quick Add Button on Mobile */}
+            {/* Circular Purple Cart Icon Button (As seen in the reference image) */}
             <button
               type="button"
               onClick={handleQuickAdd}
               disabled={addedSuccess}
-              className={`sm:hidden border-none p-1.5 rounded-lg text-xs font-black transition-all shadow-xs flex items-center justify-center shrink-0 active:scale-90 ${
+              className={`border-none w-8 h-8 sm:w-9 sm:h-9 rounded-full transition-all duration-300 shadow-sm flex items-center justify-center shrink-0 cursor-pointer active:scale-90 ${
                 addedSuccess
                   ? 'bg-emerald-600 text-white'
-                  : 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-[#EDE9FE] hover:bg-[#5B21B6] text-[#5B21B6] hover:text-white'
               }`}
-              title="Quick Add to Bag"
+              title="Add to Shopping Bag"
             >
-              {addedSuccess ? <Check className="w-3 h-3" /> : <ShoppingBag className="w-3 h-3" />}
+              {addedSuccess ? (
+                <Check className="w-4 h-4 text-white" />
+              ) : (
+                <ShoppingBag className="w-4 h-4" />
+              )}
             </button>
           </div>
         </div>
       </div>
-    </div>
 
-    {/* Quick 360° Interactive Modal */}
-    <Quick3DModal
-      product={product}
-      isOpen={is3DModalOpen}
-      onClose={() => setIs3DModalOpen(false)}
-    />
-  </>
-);
+      {/* Quick 360° Interactive Modal */}
+      <Quick3DModal
+        product={product}
+        isOpen={is3DModalOpen}
+        onClose={() => setIs3DModalOpen(false)}
+      />
+    </>
+  );
 };
 
 export default ProductCard;

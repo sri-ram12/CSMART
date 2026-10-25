@@ -30,25 +30,25 @@ export const CustomerReviewsSection: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-slate-50/80 border-t border-slate-100">
+    <section className="py-20 bg-[#FAF7FD] border-t border-purple-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-2xl mx-auto mb-14 space-y-3">
-          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-red-100 text-xs font-bold text-red-700 border-none">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>Verified Customer Testimonials</span>
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#EDE9FE] text-xs font-bold text-[#5B21B6] border border-purple-200">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
+            <span>Verified Customer Reviews</span>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-            Trusted by Walkers, Runners & Professionals
+          <h2 className="font-serif font-black text-3xl sm:text-4xl text-slate-900 tracking-tight">
+            Loved By Thousands
           </h2>
           <div className="flex items-center justify-center gap-2 pt-1">
-            <div className="flex text-amber-500">
+            <div className="flex text-amber-400">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 fill-current" />
+                <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-current text-amber-400" />
               ))}
             </div>
-            <span className="text-sm font-bold text-slate-900">4.9 / 5.0</span>
-            <span className="text-xs text-slate-500">(Over 50,000+ Verified Customer Ratings)</span>
+            <span className="text-sm font-bold text-[#5B21B6]">4.9 / 5.0</span>
+            <span className="text-xs text-slate-500">(Over 50,000+ Happy Footwear Buyers)</span>
           </div>
         </div>
 
@@ -57,38 +57,34 @@ export const CustomerReviewsSection: React.FC = () => {
           {reviews.map((r, i) => (
             <div
               key={i}
-              className="p-6 sm:p-7 rounded-3xl bg-white shadow-card flex flex-col justify-between transition-all duration-300 hover:shadow-card-hover relative group border-none"
+              className="p-6 sm:p-7 rounded-[28px] bg-white shadow-sm flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:shadow-purple-900/10 hover:ring-1 hover:ring-purple-200 relative group border border-purple-100/60"
             >
-              <Quote className="w-8 h-8 text-red-100 absolute top-6 right-6 pointer-events-none group-hover:text-red-200 transition-colors" />
-
               <div className="space-y-4">
-                {/* Stars & Badge */}
                 <div className="flex items-center justify-between">
-                  <div className="flex text-amber-500">
+                  <div className="flex text-amber-400">
                     {[...Array(r.rating)].map((_, idx) => (
-                      <Star key={idx} className="w-4 h-4 fill-current" />
+                      <Star key={idx} className="w-3.5 h-3.5 fill-current text-amber-400" />
                     ))}
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full">
-                    <CheckCircle2 className="w-3 h-3" /> Verified Purchase
-                  </span>
+                  <Quote className="w-6 h-6 text-purple-200 group-hover:text-purple-300 transition-colors" />
                 </div>
 
-                <p className="text-xs text-slate-600 leading-relaxed italic">
+                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed italic">
                   "{r.text}"
                 </p>
               </div>
 
-              {/* User Profile */}
-              <div className="pt-4 mt-6 border-t border-slate-100 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white font-black text-sm shadow-sm">
-                  {r.name.charAt(0)}
-                </div>
+              <div className="pt-6 border-t border-purple-50 mt-6 flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-900">{r.name}</h4>
-                  <p className="text-[11px] text-slate-500">{r.city}</p>
-                  <p className="text-[10px] text-red-600 font-bold mt-0.5">{r.shoe}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-900">{r.name}</span>
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#5B21B6]" />
+                  </div>
+                  <span className="text-[10px] text-slate-400 block">{r.city}</span>
                 </div>
+                <span className="text-[10px] font-bold text-[#5B21B6] bg-[#EDE9FE] px-2 py-0.5 rounded-full">
+                  {r.shoe.split(' ')[0]}
+                </span>
               </div>
             </div>
           ))}

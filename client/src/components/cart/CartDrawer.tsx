@@ -12,45 +12,33 @@ export const CartDrawer: React.FC = () => {
     updateQuantity,
     subtotal,
     appliedCoupon,
-    setAppliedCoupon,
+    couponDiscount,
+    couponMessage,
+    applyCoupon,
+    removeCoupon,
+    freeShippingThreshold,
+    shippingFee,
   } = useCart();
   const [couponInput, setCouponInput] = useState('');
-  const [couponMessage, setCouponMessage] = useState<string | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
   const navigate = useNavigate();
 
   if (!isCartOpen) return null;
 
-  const freeShippingThreshold = 999;
   const progressPercent = Math.min(100, Math.round((subtotal / freeShippingThreshold) * 100));
   const amountNeeded = Math.max(0, freeShippingThreshold - subtotal);
+  const total = Math.max(0, subtotal - couponDiscount + shippingFee);
 
-  const handleApplyCoupon = (e: React.FormEvent) => {
+  const handleApplyCoupon = async (e: React.FormEvent) => {
     e.preventDefault();
-    const code = couponInput.trim().toUpperCase();
-    if (code === 'WELCOME10') {
-      setAppliedCoupon('WELCOME10');
-      setCouponMessage('WELCOME10 applied: 10% discount on order!');
-    } else if (code === 'STEPINSTYLE') {
-      if (subtotal >= 2499) {
-        setAppliedCoupon('STEPINSTYLE');
-        setCouponMessage('STEPINSTYLE applied: ₹500 flat off!');
-      } else {
-        setCouponMessage('STEPINSTYLE requires minimum order of ₹2,499');
-      }
-    } else {
-      setCouponMessage('Invalid coupon code');
+    if (!couponInput.trim()) return;
+    setIsApplying(true);
+    const res = await applyCoupon(couponInput.trim());
+    setIsApplying(false);
+    if (res.success) {
+      setCouponInput('');
     }
   };
-
-  const calculateDiscount = () => {
-    if (appliedCoupon === 'WELCOME10') return subtotal * 0.1;
-    if (appliedCoupon === 'STEPINSTYLE' && subtotal >= 2499) return 500;
-    return 0;
-  };
-
-  const discount = calculateDiscount();
-  const shipping = subtotal >= freeShippingThreshold || subtotal === 0 ? 0 : 99;
-  const total = Math.max(0, subtotal - discount + shipping);
 
   return (
     <div className="fixed inset-0 z-50 overflow-hidden">
@@ -74,7 +62,7 @@ export const CartDrawer: React.FC = () => {
             </div>
             <button
               onClick={closeCart}
-              className="border-none p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              className="border-none p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -117,7 +105,7 @@ export const CartDrawer: React.FC = () => {
                     closeCart();
                     navigate('/shop');
                   }}
-                  className="mt-5 btn-primary text-xs py-3 px-6"
+                  className="mt-5 btn-primary text-xs py-3 px-6 border-none shadow-md cursor-pointer"
                 >
                   Explore Footwear
                 </button>
@@ -153,7 +141,7 @@ export const CartDrawer: React.FC = () => {
                       <div className="flex items-center rounded-xl bg-white shadow-xs">
                         <button
                           onClick={() => updateQuantity(item.sku, item.quantity - 1)}
-                          className="border-none px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 font-bold"
+                          className="border-none px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 font-bold bg-transparent cursor-pointer"
                         >
                           -
                         </button>
@@ -162,7 +150,7 @@ export const CartDrawer: React.FC = () => {
                         </span>
                         <button
                           onClick={() => updateQuantity(item.sku, item.quantity + 1)}
-                          className="border-none px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 font-bold"
+                          className="border-none px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 font-bold bg-transparent cursor-pointer"
                         >
                           +
                         </button>
@@ -177,7 +165,7 @@ export const CartDrawer: React.FC = () => {
                   {/* Remove Button */}
                   <button
                     onClick={() => removeFromCart(item.sku)}
-                    className="border-none text-slate-400 hover:text-rose-600 p-1.5 self-start transition-colors"
+                    className="border-none text-slate-400 hover:text-rose-600 p-1.5 self-start transition-colors bg-transparent cursor-pointer"
                     title="Remove item"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -187,32 +175,50 @@ export const CartDrawer: React.FC = () => {
             )}
           </div>
 
-          {/* Drawer Footer with Totals & Coupon */}
+          {/* Drawer Footer with Totals & Dynamic Coupon */}
           {items.length > 0 && (
             <div className="p-4 border-t border-slate-100 bg-white space-y-3">
-              {/* Coupon Form */}
-              <form onSubmit={handleApplyCoupon} className="flex gap-2">
-                <div className="relative flex-1">
-                  <Tag className="w-3.5 h-3.5 text-red-600 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="text"
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value)}
-                    placeholder="Coupon (e.g. WELCOME10)"
-                    className="w-full pl-8 pr-2 py-2 bg-slate-50 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-red-500 border-none font-medium"
-                  />
+              {/* Active Coupon Tag if applied */}
+              {appliedCoupon && couponDiscount > 0 ? (
+                <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 text-emerald-800 text-xs font-bold">
+                  <div className="flex items-center gap-1.5">
+                    <Tag className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Coupon {appliedCoupon} applied (-₹{couponDiscount})</span>
+                  </div>
+                  <button
+                    onClick={removeCoupon}
+                    className="text-[11px] text-red-600 hover:underline border-none bg-transparent cursor-pointer font-bold"
+                  >
+                    Remove
+                  </button>
                 </div>
-                <button
-                  type="submit"
-                  className="btn-secondary text-xs py-2 px-4 shrink-0"
-                >
-                  Apply
-                </button>
-              </form>
+              ) : (
+                /* Coupon Input Form */
+                <form onSubmit={handleApplyCoupon} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Tag className="w-3.5 h-3.5 text-red-600 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={couponInput}
+                      onChange={(e) => setCouponInput(e.target.value)}
+                      placeholder="Coupon (e.g. WELCOME10, FESTIVE20)"
+                      className="w-full pl-8 pr-2 py-2 bg-slate-50 rounded-xl text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-red-500 border-none font-medium uppercase"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isApplying || !couponInput.trim()}
+                    className="btn-secondary text-xs py-2 px-4 shrink-0 disabled:opacity-50 cursor-pointer"
+                  >
+                    {isApplying ? 'Applying...' : 'Apply'}
+                  </button>
+                </form>
+              )}
+
               {couponMessage && (
                 <div
                   className={`text-[11px] font-semibold ${
-                    couponMessage.includes('applied') ? 'text-emerald-600' : 'text-red-600'
+                    couponDiscount > 0 ? 'text-emerald-600' : 'text-red-600'
                   }`}
                 >
                   {couponMessage}
@@ -225,15 +231,21 @@ export const CartDrawer: React.FC = () => {
                   <span>Subtotal</span>
                   <span className="font-bold text-slate-900">₹{subtotal.toLocaleString('en-IN')}</span>
                 </div>
-                {discount > 0 && (
+                {couponDiscount > 0 && (
                   <div className="flex justify-between text-emerald-600 font-bold">
                     <span>Coupon Discount</span>
-                    <span>-₹{discount.toLocaleString('en-IN')}</span>
+                    <span>-₹{couponDiscount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between">
                   <span>Estimated Shipping</span>
-                  <span>{shipping === 0 ? <span className="text-emerald-600 font-bold">FREE</span> : `₹${shipping}`}</span>
+                  <span>
+                    {shippingFee === 0 ? (
+                      <span className="text-emerald-600 font-bold">FREE</span>
+                    ) : (
+                      `₹${shippingFee}`
+                    )}
+                  </span>
                 </div>
                 <div className="flex justify-between text-sm font-black text-slate-900 pt-2 border-t border-slate-100">
                   <span>Total Amount</span>
@@ -247,7 +259,7 @@ export const CartDrawer: React.FC = () => {
                   closeCart();
                   navigate('/checkout');
                 }}
-                className="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2"
+                className="w-full btn-primary py-3.5 text-sm font-bold flex items-center justify-center gap-2 cursor-pointer shadow-md border-none"
               >
                 <span>Proceed to Checkout</span>
                 <ArrowRight className="w-4 h-4" />
@@ -258,7 +270,7 @@ export const CartDrawer: React.FC = () => {
                   closeCart();
                   navigate('/cart');
                 }}
-                className="w-full border-none text-center text-xs font-bold text-slate-500 hover:text-red-600 transition-colors py-1"
+                className="w-full border-none text-center text-xs font-bold text-slate-500 hover:text-red-600 transition-colors py-1 bg-transparent cursor-pointer"
               >
                 View Full Shopping Cart Page
               </button>
