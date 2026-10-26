@@ -261,15 +261,15 @@ export const SplitFilterDrawer: React.FC<SplitFilterDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end">
+    <div className="fixed inset-0 z-50 flex justify-start">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
-      {/* Main Drawer Shell (Full Screen on Mobile, 480px on Desktop) */}
-      <div className="relative w-full sm:max-w-xl h-full bg-white flex flex-col z-10 shadow-2xl animate-in slide-in-from-right duration-250">
+      {/* Main Drawer Shell (Aligned to LEFT SIDE ONLY - Image 2 reference) */}
+      <div className="relative w-full sm:max-w-xl h-full bg-white flex flex-col z-10 shadow-2xl animate-in slide-in-from-left duration-250">
         {/* HEADER: Matching Image 2 (<- Filters       Clear All Filters) */}
         <header className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200 bg-white shrink-0">
           <div className="flex items-center gap-3">

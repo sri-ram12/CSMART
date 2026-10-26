@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Star, Percent, SlidersHorizontal } from 'lucide-react';
 
 export interface DepartmentItem {
   id: string;
@@ -235,6 +236,52 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
             </div>
           );
         })}
+
+        {/* Quick Links: Customer Reviews & Ratings + Offers (All categories mentioned up to reviews) */}
+        <div className="pt-2 border-t border-slate-200/80 space-y-1.5 w-full">
+          {/* Reviews & Ratings */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onSelect) onSelect();
+              const el = document.getElementById('customer-reviews');
+              if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+              } else {
+                navigate('/#customer-reviews');
+              }
+            }}
+            className="w-full flex flex-col items-center p-1 sm:p-1.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/90 transition-colors border-none cursor-pointer text-center group shadow-2xs"
+            title="Customer Reviews & Ratings (4.9 ★)"
+          >
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-amber-100 group-hover:bg-amber-200 text-amber-600 flex items-center justify-center">
+              <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+            </div>
+            <span className="mt-1 text-[9px] sm:text-[10px] font-black text-amber-900 leading-tight">
+              Reviews
+            </span>
+            <span className="text-[7.5px] font-black text-amber-600">4.9 ★</span>
+          </button>
+
+          {/* Offers & Discounts */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onSelect) onSelect();
+              navigate('/shop?discount=15');
+            }}
+            className="w-full flex flex-col items-center p-1 sm:p-1.5 rounded-xl bg-purple-50/80 hover:bg-purple-100/90 transition-colors border-none cursor-pointer text-center group shadow-2xs"
+            title="Offers & Discounts (15% OFF)"
+          >
+            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-purple-100 group-hover:bg-purple-200 text-purple-600 flex items-center justify-center">
+              <Percent className="w-4 h-4 stroke-[2.5]" />
+            </div>
+            <span className="mt-1 text-[9px] sm:text-[10px] font-black text-purple-900 leading-tight">
+              Offers
+            </span>
+            <span className="text-[7.5px] font-black text-purple-600">15% OFF</span>
+          </button>
+        </div>
       </aside>
 
       {/* RIGHT COLUMN: Subcategory Grid (Fluid responsive 2-column or 3-column) */}

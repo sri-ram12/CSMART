@@ -123,7 +123,7 @@ export const HeroSection: React.FC = () => {
                 </p>
               </div>
 
-              {/* RESPONSIVE BUTTONS ROW - ALIGNS PERFECTLY ON ALL SCREEN SIZES */}
+              {/* RESPONSIVE BUTTONS ROW - EXACTLY MATCHING PINTEREST REFERENCE */}
               <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-4 pt-2">
                 {/* 1. Primary SHOP NOW Button */}
                 <Link
@@ -143,18 +143,6 @@ export const HeroSection: React.FC = () => {
                     <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                   </div>
                   <span>watch video</span>
-                </a>
-
-                {/* 3. Direct WhatsApp with Owner for Instant Pricing */}
-                <a
-                  href={getWhatsAppGeneralInquiryUrl()}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 bg-[#25D366] hover:bg-[#20bd5a] text-white px-5 sm:px-6 py-3 sm:py-4 rounded-full font-black text-xs sm:text-sm shadow-md hover:shadow-lg active:scale-95 transition-all border-none cursor-pointer"
-                  title="Direct WhatsApp Communication with Owner (9553536884)"
-                >
-                  <MessageCircle className="w-4 h-4 fill-white stroke-none" />
-                  <span>WhatsApp Price</span>
                 </a>
               </div>
             </div>
