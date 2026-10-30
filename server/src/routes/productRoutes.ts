@@ -32,40 +32,137 @@ router.get('/', async (req: Request, res: Response, next) => {
     const where: any = {};
     const andClauses: any[] = [];
 
+    // 1. Department Filtering
     if (department && department !== 'ALL') {
-      const depts = (department as string).split(',').map((d) => d.trim()).filter(Boolean);
-      if (depts.length === 1) {
-        if (depts[0] === 'BOYS' || depts[0] === 'GIRLS') {
-          where.department = 'KIDS';
+      const depts = (department as string).split(',').map((d) => d.trim().toUpperCase()).filter(Boolean);
+      const isSlippersSandals = depts.includes('SLIPPERS_SANDALS');
+      const standardDepts = depts.filter((d) => d !== 'SLIPPERS_SANDALS');
+
+      if (isSlippersSandals && standardDepts.length === 0) {
+        // User clicked "Slippers & Sandals" department: match any slipper, slide, sandal, or wedge
+        andClauses.push({
+          OR: [
+            { category: { slug: { contains: 'slipper' } } },
+            { category: { slug: { contains: 'sandal' } } },
+            { category: { slug: { contains: 'wedge' } } },
+            { title: { contains: 'Slipper' } },
+            { title: { contains: 'Sandal' } },
+            { title: { contains: 'Slide' } },
+            { title: { contains: 'Wedge' } },
+          ],
+        });
+      } else if (standardDepts.length > 0) {
+        const mappedDepts = Array.from(
+          new Set(
+            standardDepts.map((d) => (d === 'BOYS' || d === 'GIRLS' ? 'KIDS' : d))
+          )
+        );
+        if (mappedDepts.length === 1) {
+          where.department = mappedDepts[0];
         } else {
-          where.department = depts[0];
+          where.department = { in: mappedDepts };
         }
-      } else if (depts.length > 1) {
-        const mapped = Array.from(new Set(depts.map((d) => (d === 'BOYS' || d === 'GIRLS' ? 'KIDS' : d))));
-        where.department = { in: mapped };
       }
     }
 
+    // 2. Brand Filtering (Case-insensitive multi-brand OR support)
     if (brand) {
       const brands = (brand as string).split(',').map((b) => b.trim()).filter(Boolean);
-      if (brands.length === 1) {
-        where.brand = { contains: brands[0] };
-      } else if (brands.length > 1) {
+      if (brands.length > 0) {
         andClauses.push({
-          OR: brands.map((b) => ({ brand: { contains: b } })),
+          OR: brands.flatMap((b) => [
+            { brand: { contains: b } },
+            { brand: { contains: b.toLowerCase() } },
+            { brand: { contains: b.toUpperCase() } },
+            { brand: { contains: b.charAt(0).toUpperCase() + b.slice(1).toLowerCase() } },
+          ]),
         });
       }
     }
 
+    // 3. Smart Semantic Category Filtering
     if (category) {
-      const cats = (category as string).split(',').map((c) => c.trim().toLowerCase()).filter(Boolean);
-      const categoryConditions = cats.flatMap((c) => [
-        { category: { slug: { contains: c } } },
-        { category: { name: { contains: c } } },
-        { title: { contains: c } },
-        { description: { contains: c } },
+      const rawCats = (category as string).split(',').map((c) => c.trim().toLowerCase()).filter(Boolean);
+      
+      const expandCategoryTerms = (term: string): string[] => {
+        const t = term.toLowerCase().trim();
+        // 1. Slippers & Slides Family
+        if (t.includes('slipper') || t.includes('slide') || t.includes('chappal')) {
+          return ['slipper', 'slide', 'chappal', 'mens-slippers', 'womens-slippers', 'kids-slippers', 'slippers-slides'];
+        }
+        // 2. Shoes, Sneakers, Sports, Running, Formals, Loafers, Boots Family
+        if (
+          t.includes('sport') ||
+          t.includes('run') ||
+          t.includes('train') ||
+          t.includes('sneaker') ||
+          t.includes('shoe') ||
+          t.includes('formal') ||
+          t.includes('school') ||
+          t.includes('derby') ||
+          t.includes('oxford') ||
+          t.includes('loafer') ||
+          t.includes('flat') ||
+          t.includes('boot') ||
+          t.includes('outdoor')
+        ) {
+          return [
+            'shoe',
+            'sport',
+            'running',
+            'sneaker',
+            'casual',
+            'mens-running-shoes',
+            'womens-running-trainers',
+            'kids-sports-shoes',
+            'sports-casual-shoes',
+            'mens-formal-shoes',
+            'mens-casual-loafers',
+            'mens-boots-outdoor',
+            'mens-sneakers',
+          ];
+        }
+        // 3. Sandals, Floaters, Wedges, Heels, Straps Family
+        if (
+          t.includes('sandal') ||
+          t.includes('floater') ||
+          t.includes('strap') ||
+          t.includes('ethnic') ||
+          t.includes('wedge') ||
+          t.includes('heel') ||
+          t.includes('pump')
+        ) {
+          return [
+            'sandal',
+            'floater',
+            'wedge',
+            'heel',
+            'mens-ethnic-sandals',
+            'sandals-wedges',
+            'sandals-floaters',
+            'wedges-heel-support',
+            'kids-sandals',
+            'adjustable-strap-sandals',
+          ];
+        }
+        // 4. Crocs, Clogs, Moulded EVA Family
+        if (t.includes('croc') || t.includes('clog') || t.includes('mould') || t.includes('eva')) {
+          return ['croc', 'clog', 'mould', 'mens-crocs-clogs', 'womens-crocs-clogs', 'kids-crocs-clogs', 'slide', 'slipper'];
+        }
+        return [t];
+      };
+
+      const allSearchTerms = Array.from(new Set(rawCats.flatMap(expandCategoryTerms)));
+      const categoryConditions = allSearchTerms.flatMap((term) => [
+        { category: { slug: { contains: term } } },
+        { category: { name: { contains: term } } },
+        { title: { contains: term } },
+        { description: { contains: term } },
       ]);
-      andClauses.push({ OR: categoryConditions });
+
+      if (categoryConditions.length > 0) {
+        andClauses.push({ OR: categoryConditions });
+      }
     }
 
     if (discount) {
@@ -102,15 +199,41 @@ router.get('/', async (req: Request, res: Response, next) => {
       where.has3D = true;
     }
 
-    // Filter by variant properties (size, color, inStock)
-    if (size || color || inStock === 'true') {
-      where.variants = {
-        some: {
-          ...(size ? { size: size as string } : {}),
-          ...(color ? { colorName: { contains: color as string } } : {}),
-          ...(inStock === 'true' ? { inventory: { gt: 0 } } : {}),
-        },
-      };
+    // 4. Variant Properties Filtering (Size, Color, In-Stock)
+    const variantWhere: any = {};
+
+    if (size) {
+      const sizeStr = (size as string).trim();
+      const sizes = sizeStr.split(',').map((s) => s.trim()).filter(Boolean);
+      const sizeVariants = sizes.flatMap((s) => {
+        const rawDigits = s.replace(/^[^\d]*/, '').trim();
+        return Array.from(
+          new Set([
+            s,
+            `UK ${rawDigits}`,
+            rawDigits,
+            `UK ${s}`,
+          ].filter(Boolean))
+        );
+      });
+      variantWhere.size = { in: sizeVariants };
+    }
+
+    if (color) {
+      const colors = (color as string).split(',').map((c) => c.trim()).filter(Boolean);
+      if (colors.length === 1) {
+        variantWhere.colorName = { contains: colors[0] };
+      } else if (colors.length > 1) {
+        variantWhere.OR = colors.map((c) => ({ colorName: { contains: c } }));
+      }
+    }
+
+    if (inStock === 'true') {
+      variantWhere.inventory = { gt: 0 };
+    }
+
+    if (Object.keys(variantWhere).length > 0) {
+      where.variants = { some: variantWhere };
     }
 
     // Sorting
@@ -137,7 +260,7 @@ router.get('/', async (req: Request, res: Response, next) => {
         break;
     }
 
-    const [products, totalCount] = await Promise.all([
+    let [products, totalCount] = await Promise.all([
       prisma.product.findMany({
         where,
         include: {
@@ -152,6 +275,128 @@ router.get('/', async (req: Request, res: Response, next) => {
       prisma.product.count({ where }),
     ]);
 
+    // SMART RECOVERY FALLBACK: If strict filter combination returns 0 results,
+    // gracefully relax constraints so the shopper never sees a 0-result dead end!
+    let isFallback = false;
+    let fallbackMessage: string | null = null;
+
+    if (totalCount === 0) {
+      // Tier 1: Try relaxing department (cross-department search for the category/brand/size)
+      if (department) {
+        const relaxedWhere = { ...where };
+        delete relaxedWhere.department;
+        const [fbProducts, fbCount] = await Promise.all([
+          prisma.product.findMany({
+            where: relaxedWhere,
+            include: {
+              category: { select: { id: true, name: true, slug: true, department: true } },
+              media: { orderBy: { order: 'asc' } },
+              variants: true,
+            },
+            orderBy,
+            skip,
+            take,
+          }),
+          prisma.product.count({ where: relaxedWhere }),
+        ]);
+
+        if (fbCount > 0) {
+          products = fbProducts;
+          totalCount = fbCount;
+          isFallback = true;
+          fallbackMessage = 'Showing matching footwear across all store departments.';
+        }
+      }
+
+      // Tier 2: If still 0 and brand was filtered, relax brand
+      if (totalCount === 0 && brand) {
+        const relaxedWhere = { ...where };
+        delete relaxedWhere.department;
+        if (relaxedWhere.AND) {
+          relaxedWhere.AND = (relaxedWhere.AND as any[]).filter(
+            (clause) => !clause.OR || !clause.OR.some((c: any) => c.brand)
+          );
+          if (relaxedWhere.AND.length === 0) delete relaxedWhere.AND;
+        }
+
+        const [fbProducts, fbCount] = await Promise.all([
+          prisma.product.findMany({
+            where: relaxedWhere,
+            include: {
+              category: { select: { id: true, name: true, slug: true, department: true } },
+              media: { orderBy: { order: 'asc' } },
+              variants: true,
+            },
+            orderBy,
+            skip,
+            take,
+          }),
+          prisma.product.count({ where: relaxedWhere }),
+        ]);
+
+        if (fbCount > 0) {
+          products = fbProducts;
+          totalCount = fbCount;
+          isFallback = true;
+          fallbackMessage = 'We stock authentic Walkaroo & Sparx collections. Showing popular matching styles:';
+        }
+      }
+
+      // Tier 3: If still 0 and price was too restrictive, relax price
+      if (totalCount === 0 && (minPrice || maxPrice)) {
+        const relaxedWhere = { ...where };
+        delete relaxedWhere.price;
+        delete relaxedWhere.department;
+
+        const [fbProducts, fbCount] = await Promise.all([
+          prisma.product.findMany({
+            where: relaxedWhere,
+            include: {
+              category: { select: { id: true, name: true, slug: true, department: true } },
+              media: { orderBy: { order: 'asc' } },
+              variants: true,
+            },
+            orderBy,
+            skip,
+            take,
+          }),
+          prisma.product.count({ where: relaxedWhere }),
+        ]);
+
+        if (fbCount > 0) {
+          products = fbProducts;
+          totalCount = fbCount;
+          isFallback = true;
+          fallbackMessage = 'Showing our premium footwear collection nearest to your selected budget.';
+        }
+      }
+
+      // Tier 4: Ultimate safety net - If all strict clauses yielded 0, show featured top-rated products
+      if (totalCount === 0) {
+        const [fbProducts, fbCount] = await Promise.all([
+          prisma.product.findMany({
+            where: { isFeatured: true },
+            include: {
+              category: { select: { id: true, name: true, slug: true, department: true } },
+              media: { orderBy: { order: 'asc' } },
+              variants: true,
+            },
+            orderBy: [{ rating: 'desc' }, { reviewCount: 'desc' }],
+            skip,
+            take,
+          }),
+          prisma.product.count({ where: { isFeatured: true } }),
+        ]);
+
+        if (fbCount > 0) {
+          products = fbProducts;
+          totalCount = fbCount;
+          isFallback = true;
+          fallbackMessage = 'No exact match found. Showing our top-rated customer favorites:';
+        }
+      }
+    }
+
     res.json({
       success: true,
       data: {
@@ -161,6 +406,8 @@ router.get('/', async (req: Request, res: Response, next) => {
           page: pageNum,
           limit: take,
           totalPages: Math.ceil(totalCount / take),
+          isFallback,
+          fallbackMessage,
         },
       },
     });

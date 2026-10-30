@@ -31,3 +31,7 @@ pnpm-debug.log*
 .idea/
 .DS_Store
 Thumbs.db
+scratch/
+
+# Large Catalog Raw Files (>100MB exceeds GitHub push limit)
+*.pdf

@@ -16,22 +16,38 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 pb-12 border-b border-purple-200/80">
           {/* Brand & Slogan Column */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white p-3 rounded-2xl inline-block shadow-sm">
-              <CSMAnimatedLogo variant="navbar" />
+            <div className="bg-white p-3 rounded-2xl inline-block shadow-xs border border-purple-100">
+              <CSMAnimatedLogo variant="footer" />
             </div>
             <p className="text-xs text-[#4C1D95] leading-relaxed max-w-sm">
-              <strong className="font-serif font-black text-[#5B21B6]">పాదరక్షల బృందావనం</strong> — Established with a relentless obsession for comfort, chic styles, and ergonomic craftsmanship. From nitrogen-cushioned running shoes to handcrafted bridal heels and orthopedic recovery slides.
+              <strong className="font-serif font-black text-[#5B21B6]">పాదరక్షల బృందావనం</strong> — Established with a relentless obsession for comfort, chic styles, and ergonomic craftsmanship. Footwear for the entire family with quality first.
             </p>
 
-            <div className="space-y-2 text-xs text-[#3B0764] pt-2 font-medium">
+            <div className="space-y-2.5 text-xs text-[#3B0764] pt-2 font-medium">
               <div className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-[#7C3AED] shrink-0 mt-0.5" />
-                <span>Opp: Tata Theatre, Main Road, Tagarapuvalasa - 531162</span>
+                <div>
+                  <a
+                    href="https://maps.app.goo.gl/YBteoVzaYAF12mW97"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:text-[#5B21B6] transition-colors font-semibold flex items-center gap-1.5"
+                    title="Open in Google Maps"
+                  >
+                    <span>Opp: Tata Theatre, Main Road, Tagarapuvalasa - 531162</span>
+                    <span className="text-[10px] font-bold text-[#5B21B6] bg-white px-1.5 py-0.5 rounded border border-purple-200">
+                      Maps ↗
+                    </span>
+                  </a>
+                  <p className="text-[11px] text-[#6B21A8]/80 mt-0.5">
+                    Open: 9:00 AM – 9:00 PM (Tue Closed)
+                  </p>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-[#7C3AED] shrink-0" />
-                <a href="tel:9553536884" className="hover:text-[#5B21B6] font-bold transition-colors">
-                  Cell: 9553536884
+                <a href="tel:09553536884" className="hover:text-[#5B21B6] font-bold transition-colors">
+                  Cell: +91 95535 36884
                 </a>
               </div>
               <div className="flex items-center gap-2">

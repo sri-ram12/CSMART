@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../../services/api';
 import { Product, Category } from '../../types';
-import { Plus, Trash2, Sparkles, Film, ArrowLeft, Edit3 } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Film, ArrowLeft, Edit3, Box } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Admin3DModelStudioModal } from '../../components/admin/Admin3DModelStudioModal';
 
 export const AdminProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -10,6 +11,8 @@ export const AdminProductsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [is3DStudioOpen, setIs3DStudioOpen] = useState(false);
+  const [selected3DProduct, setSelected3DProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -178,13 +181,29 @@ export const AdminProductsPage: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="btn-primary text-xs font-bold py-2.5 px-5 flex items-center gap-1.5 border-none shadow-md cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Add New Footwear Style</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => {
+                if (products.length > 0) {
+                  setSelected3DProduct(products[0]);
+                  setIs3DStudioOpen(true);
+                }
+              }}
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md transition-all cursor-pointer border-none"
+              title="Launch 3D Footwear Asset Studio"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>3D Model Studio</span>
+            </button>
+
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="btn-primary text-xs font-bold py-2.5 px-5 flex items-center gap-1.5 border-none shadow-md cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add New Footwear Style</span>
+            </button>
+          </div>
         </div>
 
         {notification && (
@@ -241,11 +260,32 @@ export const AdminProductsPage: React.FC = () => {
                     ₹{p.price.toLocaleString('en-IN')}
                   </td>
                   <td className="py-3 px-3.5">
-                    <div className="flex gap-1.5">
-                      {p.has3D && (
-                        <span className="text-[9px] bg-red-50 text-red-600 font-extrabold px-2 py-0.5 rounded-full border-none flex items-center gap-1">
-                          <Sparkles className="w-2.5 h-2.5" /> 3D
-                        </span>
+                    <div className="flex items-center gap-1.5">
+                      {p.has3D ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelected3DProduct(p);
+                            setIs3DStudioOpen(true);
+                          }}
+                          className="text-[9px] bg-purple-50 hover:bg-purple-100 text-purple-700 font-extrabold px-2 py-0.5 rounded-full border border-purple-200/80 flex items-center gap-1 cursor-pointer transition-colors"
+                          title="Open 3D Model Studio"
+                        >
+                          <Sparkles className="w-2.5 h-2.5 text-purple-600" />
+                          <span>{((p.model3DConfig as any)?.modelType || '3D').toUpperCase()}</span>
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelected3DProduct(p);
+                            setIs3DStudioOpen(true);
+                          }}
+                          className="text-[9px] bg-slate-100 text-slate-500 hover:bg-slate-200 font-bold px-2 py-0.5 rounded-full border-none flex items-center gap-1 cursor-pointer"
+                          title="Configure 3D Model"
+                        >
+                          <span>+ 3D</span>
+                        </button>
                       )}
                       {p.videoUrl && (
                         <span className="text-[9px] bg-cyan-50 text-cyan-700 font-bold px-2 py-0.5 rounded-full border-none flex items-center gap-1">
@@ -258,6 +298,16 @@ export const AdminProductsPage: React.FC = () => {
                     ★ {p.rating} ({p.reviewCount})
                   </td>
                   <td className="py-3 px-3.5 text-right space-x-1">
+                    <button
+                      onClick={() => {
+                        setSelected3DProduct(p);
+                        setIs3DStudioOpen(true);
+                      }}
+                      className="text-purple-600 hover:text-purple-800 p-1.5 rounded-lg hover:bg-purple-50 transition-colors border-none bg-transparent cursor-pointer"
+                      title="Launch 3D Asset Studio"
+                    >
+                      <Box className="w-4 h-4" />
+                    </button>
                     <button
                       onClick={() => handleOpenEdit(p)}
                       className="text-slate-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
@@ -546,6 +596,19 @@ export const AdminProductsPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* 3D Model Studio Modal */}
+        <Admin3DModelStudioModal
+          isOpen={is3DStudioOpen}
+          onClose={() => setIs3DStudioOpen(false)}
+          product={selected3DProduct}
+          onProductUpdated={(updated) => {
+            setProducts((prev) =>
+              prev.map((p) => (p.id === updated.id ? updated : p))
+            );
+            showNotification('success', `3D model configuration saved for "${updated.title}"`);
+          }}
+        />
       </div>
     </div>
   );

@@ -5,8 +5,10 @@ import * as THREE from 'three';
 
 export type FootwearType = 'sneaker' | 'slipper' | 'formal' | 'loafer' | 'boot' | 'sandal' | 'clog';
 
-interface FootwearModelProps {
+export interface FootwearModelProps {
   type: FootwearType;
+  modelUrl?: string;
+  shoeTextureVariant?: string;
   primaryColor: string;
   accentColor?: string;
   soleColor?: string;
@@ -14,11 +16,81 @@ interface FootwearModelProps {
   autoRotate: boolean;
 }
 
-// 1. SNEAKER MODEL (Official photorealistic GLB asset, normalized scale & rotation)
-function SneakerGLBModel({ primaryColor, accentColor, soleColor, wireframe, autoRotate }: FootwearModelProps) {
-  const { scene } = useGLTF('/models/shoe.glb');
+export const MODEL_PATHS: Record<FootwearType, string> = {
+  sneaker: '/models/shoe.glb',
+  slipper: '/models/slipper.glb',
+  sandal: '/models/sandal.glb',
+  formal: '/models/formal.glb',
+  loafer: '/models/loafer.glb',
+  boot: '/models/boot.glb',
+  clog: '/models/slipper.glb',
+};
+
+// Preload standard category GLB models for instantaneous viewing
+try {
+  useGLTF.preload('/models/shoe.glb');
+  useGLTF.preload('/models/slipper.glb');
+  useGLTF.preload('/models/sandal.glb');
+  useGLTF.preload('/models/formal.glb');
+  useGLTF.preload('/models/loafer.glb');
+  useGLTF.preload('/models/boot.glb');
+} catch {}
+
+// 1. UNIVERSAL CATEGORY-DRIVEN GLB MODEL LOADER
+export function CategoryGLBModel({
+  type,
+  modelUrl,
+  shoeTextureVariant,
+  primaryColor,
+  accentColor,
+  soleColor,
+  wireframe,
+  autoRotate,
+}: FootwearModelProps) {
+  const resolvedUrl = modelUrl || MODEL_PATHS[type] || '/models/shoe.glb';
+  const { scene } = useGLTF(resolvedUrl);
   const groupRef = useRef<THREE.Group>(null);
   const clonedScene = useMemo(() => scene.clone(true), [scene]);
+
+  const isShopifyShoe = resolvedUrl.includes('shoe.glb');
+
+  // Select authentic diffuse texture variant for athletic shoe
+  const textureUrl = useMemo(() => {
+    if (shoeTextureVariant === 'green_runner' || shoeTextureVariant === 'beach_runner') {
+      return '/models/diffuseBeach.jpg';
+    }
+    if (shoeTextureVariant === 'white_street' || shoeTextureVariant === 'street_runner') {
+      return '/models/diffuseStreet.jpg';
+    }
+    if (shoeTextureVariant === 'black_midnight' || shoeTextureVariant === 'midnight_runner') {
+      return '/models/diffuseMidnight.jpg';
+    }
+    // Auto-select based on primary color brightness if no explicit texture variant
+    if (primaryColor) {
+      const clean = primaryColor.replace('#', '');
+      if (clean.length === 6 || clean.length === 3) {
+        const expanded = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
+        const num = parseInt(expanded, 16);
+        const r = (num >> 16) & 255;
+        const g = (num >> 8) & 255;
+        const b = num & 255;
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        if (brightness < 80) return '/models/diffuseMidnight.jpg';
+        if (brightness > 200) return '/models/diffuseStreet.jpg';
+      }
+    }
+    return '/models/diffuseStreet.jpg';
+  }, [shoeTextureVariant, primaryColor]);
+
+  // Load diffuse texture and configure color space and UV orientation
+  const diffuseTexture = useMemo(() => {
+    if (!isShopifyShoe) return null;
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load(textureUrl);
+    tex.flipY = false;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, [isShopifyShoe, textureUrl]);
 
   useEffect(() => {
     clonedScene.traverse((child) => {
@@ -29,26 +101,80 @@ function SneakerGLBModel({ primaryColor, accentColor, soleColor, wireframe, auto
 
         if (mesh.material) {
           const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          mats.forEach((mat) => {
+          const clonedMats = mats.map((m) => {
+            const mat = (m as THREE.Material).clone();
             (mat as any).wireframe = wireframe;
+
             if (mat instanceof THREE.MeshStandardMaterial || mat instanceof THREE.MeshPhysicalMaterial) {
-              const name = (mesh.name || '').toLowerCase();
-              if (name.includes('sole') || name.includes('bottom')) {
-                mat.color = new THREE.Color(soleColor || '#F8FAFC');
-              } else if (name.includes('stripe') || name.includes('logo') || name.includes('accent')) {
-                mat.color = new THREE.Color(accentColor || '#FFFFFF');
+              if (isShopifyShoe) {
+                // For shoe.glb, preserve full photorealistic PBR maps & details
+                if (diffuseTexture) {
+                  mat.map = diffuseTexture;
+                }
+                // Keep base color pure white so textures are sharp, crisp and not mud-tinted
+                mat.color = new THREE.Color('#FFFFFF');
+                mat.roughness = 0.58;
+                mat.metalness = 0.12;
+                mat.needsUpdate = true;
               } else {
-                mat.color = new THREE.Color(primaryColor);
+                const name = ((mesh.name || '') + ' ' + (mat.name || '')).toLowerCase();
+
+                // Sole & Outsole & Tread
+                if (
+                  name.includes('sole') ||
+                  name.includes('bottom') ||
+                  name.includes('tread') ||
+                  name.includes('heel') ||
+                  name.includes('bumper')
+                ) {
+                  mat.color = new THREE.Color(soleColor || (type === 'formal' ? '#29180C' : '#18181B'));
+                  mat.roughness = 0.8;
+                  mat.metalness = 0.05;
+                }
+                // Accents, Logos, Buckles, Rings, Laces
+                else if (
+                  name.includes('stripe') ||
+                  name.includes('logo') ||
+                  name.includes('accent') ||
+                  name.includes('buckle') ||
+                  name.includes('ring') ||
+                  name.includes('badge') ||
+                  name.includes('lace')
+                ) {
+                  mat.color = new THREE.Color(accentColor || '#FFFFFF');
+                  if (name.includes('buckle') || name.includes('ring') || name.includes('metal')) {
+                    mat.roughness = 0.25;
+                    mat.metalness = 0.85;
+                  } else {
+                    mat.roughness = 0.5;
+                    mat.metalness = 0.15;
+                  }
+                }
+                // Upper / Straps / Vamp / Quarters
+                else {
+                  mat.color = new THREE.Color(primaryColor);
+                  if (type === 'formal' || type === 'loafer') {
+                    mat.roughness = 0.32;
+                    mat.metalness = 0.18;
+                  } else if (type === 'boot') {
+                    mat.roughness = 0.6;
+                    mat.metalness = 0.1;
+                  } else {
+                    mat.roughness = 0.52;
+                    mat.metalness = 0.1;
+                  }
+                }
+                mat.needsUpdate = true;
               }
-              mat.roughness = 0.5;
-              mat.metalness = 0.12;
-              mat.needsUpdate = true;
             }
+            return mat;
           });
+
+          mesh.material = Array.isArray(mesh.material) ? clonedMats : clonedMats[0];
         }
       }
     });
-  }, [clonedScene, primaryColor, accentColor, soleColor, wireframe]);
+  }, [clonedScene, isShopifyShoe, diffuseTexture, primaryColor, accentColor, soleColor, wireframe, type]);
 
   useFrame((_, delta) => {
     if (autoRotate && groupRef.current) {
@@ -56,12 +182,20 @@ function SneakerGLBModel({ primaryColor, accentColor, soleColor, wireframe, auto
     }
   });
 
+  const scale = isShopifyShoe ? 1.85 : 0.95;
+  const rotation: [number, number, number] = isShopifyShoe ? [0, -Math.PI / 2, 0] : [0, 0, 0];
+  const positionY = isShopifyShoe ? -0.05 : 0;
+
   return (
-    <group ref={groupRef} position={[0, -0.05, 0]}>
-      {/* Aligned with standard longitudinal Three.js coordinates */}
-      <primitive object={clonedScene} scale={1.85} rotation={[0, -Math.PI / 2, 0]} />
+    <group ref={groupRef} position={[0, positionY, 0]}>
+      <primitive object={clonedScene} scale={scale} rotation={rotation} />
     </group>
   );
+}
+
+// Legacy Sneaker fallback
+function SneakerGLBModel(props: FootwearModelProps) {
+  return <CategoryGLBModel {...props} type="sneaker" />;
 }
 
 // 2. SLIPPER & SLIDE 3D MODEL (CloudStep Slide / Bahamas / Comfort Flip)
@@ -517,21 +651,6 @@ function Clog3DModel({ primaryColor, accentColor, soleColor, wireframe, autoRota
 
 // Master Footwear Dispatcher
 export function Footwear3DModel(props: FootwearModelProps) {
-  switch (props.type) {
-    case 'slipper':
-      return <SlipperSlide3DModel {...props} />;
-    case 'formal':
-      return <FormalShoe3DModel {...props} />;
-    case 'loafer':
-      return <Loafer3DModel {...props} />;
-    case 'boot':
-      return <Boot3DModel {...props} />;
-    case 'sandal':
-      return <Sandal3DModel {...props} />;
-    case 'clog':
-      return <Clog3DModel {...props} />;
-    case 'sneaker':
-    default:
-      return <SneakerGLBModel {...props} />;
-  }
+  // Uses dedicated high-fidelity GLB binary asset for each footwear category
+  return <CategoryGLBModel {...props} />;
 }

@@ -409,4 +409,225 @@ router.put('/settings', async (req: AuthRequest, res: Response, next) => {
   }
 });
 
+// =========================================================================
+// 3D MODEL ASSET MANAGEMENT ENDPOINTS (CHANDHANA SHOE MART 3D STUDIO)
+// =========================================================================
+
+// GET /api/admin/models/available (List built-in and uploaded 3D assets)
+router.get('/models/available', async (_req: AuthRequest, res: Response, next) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const modelsDir = path.resolve(process.cwd(), 'client/public/models');
+
+    const available: Array<{
+      filename: string;
+      url: string;
+      type: string;
+      sizeBytes: number;
+      format: string;
+      isBuiltIn: boolean;
+    }> = [];
+
+    if (fs.existsSync(modelsDir)) {
+      const files = fs.readdirSync(modelsDir);
+      for (const file of files) {
+        if (file.toLowerCase().endsWith('.glb') || file.toLowerCase().endsWith('.gltf')) {
+          const stats = fs.statSync(path.join(modelsDir, file));
+          const isBuiltIn = ['shoe.glb', 'slipper.glb', 'sandal.glb', 'formal.glb', 'loafer.glb', 'boot.glb'].includes(file);
+          
+          let inferredType = 'custom';
+          if (file.includes('shoe')) inferredType = 'sneaker';
+          else if (file.includes('slipper')) inferredType = 'slipper';
+          else if (file.includes('sandal')) inferredType = 'sandal';
+          else if (file.includes('formal')) inferredType = 'formal';
+          else if (file.includes('loafer')) inferredType = 'loafer';
+          else if (file.includes('boot')) inferredType = 'boot';
+
+          available.push({
+            filename: file,
+            url: `/models/${file}`,
+            type: inferredType,
+            sizeBytes: stats.size,
+            format: 'glb',
+            isBuiltIn,
+          });
+        }
+      }
+    }
+
+    res.json({ success: true, data: available });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/models/upload (Securely upload and validate GLB model)
+router.post('/models/upload', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const fs = await import('fs');
+    const path = await import('path');
+    const { filename, base64Data } = req.body;
+
+    if (!filename || !base64Data) {
+      res.status(400).json({
+        success: false,
+        message: 'Both filename and base64Data are required for model upload.',
+      });
+      return;
+    }
+
+    // Strip data URL scheme prefix if provided
+    const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
+    const buffer = Buffer.from(cleanBase64, 'base64');
+
+    // 1. Size Validation (Max 35 MB)
+    const MAX_SIZE_BYTES = 35 * 1024 * 1024;
+    if (buffer.length > MAX_SIZE_BYTES) {
+      res.status(400).json({
+        success: false,
+        message: `File exceeds maximum allowed size of 35MB (Current: ${(buffer.length / (1024 * 1024)).toFixed(1)}MB).`,
+      });
+      return;
+    }
+
+    // 2. Binary glTF Header Validation (Magic bytes: 'glTF' -> 0x46546C67)
+    if (buffer.length < 20) {
+      res.status(400).json({
+        success: false,
+        message: 'Uploaded file is corrupted or too small to be a valid 3D model.',
+      });
+      return;
+    }
+
+    const magic = buffer.toString('utf8', 0, 4);
+    if (magic !== 'glTF') {
+      res.status(400).json({
+        success: false,
+        message: `Invalid 3D model format. Header magic was "${magic}", expected "glTF" binary. Only standard glTF 2.0 binary (.glb) files are accepted.`,
+      });
+      return;
+    }
+
+    const version = buffer.readUInt32LE(4);
+    if (version !== 2) {
+      res.status(400).json({
+        success: false,
+        message: `Unsupported glTF version: ${version}. Only glTF 2.0 is supported.`,
+      });
+      return;
+    }
+
+    // 3. Sanitize filename & save
+    const safeBaseName = filename
+      .toLowerCase()
+      .replace(/\.glb$/i, '')
+      .replace(/[^a-z0-9_-]/g, '_')
+      .slice(0, 40);
+
+    const savedFilename = `custom_${safeBaseName}_${Date.now().toString().slice(-6)}.glb`;
+
+    const targetDirs = [
+      path.resolve(process.cwd(), 'client/public/models'),
+      path.resolve(process.cwd(), 'client/dist/models'),
+      path.resolve(process.cwd(), 'uploads/models'),
+    ];
+
+    for (const d of targetDirs) {
+      if (!fs.existsSync(d)) {
+        fs.mkdirSync(d, { recursive: true });
+      }
+      fs.writeFileSync(path.join(d, savedFilename), buffer);
+    }
+
+    const modelUrl = `/models/${savedFilename}`;
+
+    res.status(201).json({
+      success: true,
+      message: '3D model validated and published successfully.',
+      data: {
+        filename: savedFilename,
+        modelUrl,
+        sizeBytes: buffer.length,
+        format: 'glb',
+        version: 2,
+        status: 'ready',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/model (Assign/Update product 3D configuration)
+router.put('/products/:id/model', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const productId = req.params.id;
+    const {
+      has3D,
+      modelType,
+      modelUrl,
+      defaultColor,
+      accentColor,
+      soleColor,
+      roughness,
+      metalness,
+      variants,
+    } = req.body;
+
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!existingProduct) {
+      res.status(404).json({ success: false, message: 'Product not found.' });
+      return;
+    }
+
+    // Parse or build model3DConfig
+    let parsedConfig: any = {};
+    if (existingProduct.model3DConfig) {
+      try {
+        parsedConfig = JSON.parse(existingProduct.model3DConfig);
+      } catch {}
+    }
+
+    const updatedConfig = {
+      ...parsedConfig,
+      modelType: modelType !== undefined ? modelType : parsedConfig.modelType || 'sneaker',
+      modelUrl: modelUrl !== undefined ? modelUrl : parsedConfig.modelUrl,
+      format: 'glb',
+      status: 'ready',
+      defaultColor: defaultColor || parsedConfig.defaultColor || '#DC2626',
+      accentColor: accentColor || parsedConfig.accentColor || '#FFFFFF',
+      soleColor: soleColor || parsedConfig.soleColor || '#F8FAFC',
+      roughness: roughness !== undefined ? parseFloat(roughness) : (parsedConfig.roughness ?? 0.5),
+      metalness: metalness !== undefined ? parseFloat(metalness) : (parsedConfig.metalness ?? 0.1),
+      variants: variants || parsedConfig.variants || [],
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updated = await prisma.product.update({
+      where: { id: productId },
+      data: {
+        has3D: has3D !== undefined ? Boolean(has3D) : true,
+        model3DConfig: JSON.stringify(updatedConfig),
+      },
+      include: {
+        category: true,
+        variants: true,
+        media: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Product 3D configuration saved successfully.',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

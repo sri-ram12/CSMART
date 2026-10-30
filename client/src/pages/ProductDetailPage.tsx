@@ -65,7 +65,7 @@ export const ProductDetailPage: React.FC = () => {
       .getBySlug(slug)
       .then((data) => {
         setProduct(data);
-        if (data.has3D !== false) {
+        if (Boolean(data.has3D)) {
           setActiveMediaTab('3d');
         } else if (data.videoUrl) {
           setActiveMediaTab('video');
@@ -232,7 +232,7 @@ export const ProductDetailPage: React.FC = () => {
           <div className="lg:col-span-7 space-y-4">
             {/* Media Type Switcher Tabs - borderless pills (Scrollable on small mobile) */}
             <div className="flex items-center gap-1.5 sm:gap-2 bg-white p-1.5 rounded-2xl shadow-sm border-none w-full sm:max-w-fit overflow-x-auto shrink-0">
-              {product.has3D !== false && (
+              {Boolean(product.has3D) && (
                 <button
                   onClick={() => setActiveMediaTab('3d')}
                   className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all border-none cursor-pointer whitespace-nowrap shrink-0 ${

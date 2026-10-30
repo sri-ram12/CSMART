@@ -280,5 +280,23 @@ export const api = {
     getSettings: () => request<StoreSettings>('/admin/settings'),
     updateSettings: (data: Partial<StoreSettings>) =>
       request<StoreSettings>('/admin/settings', { method: 'PUT', body: JSON.stringify(data) }),
+    getAvailableModels: () =>
+      request<Array<{ name: string; url: string; sizeBytes: number; isBuiltIn: boolean }>>('/admin/models/available'),
+    uploadModel: async (file: File) => {
+      const formData = new FormData();
+      formData.append('model', file);
+      const res = await fetch(`${API_BASE}/admin/models/upload`, {
+        method: 'POST',
+        headers: getAuthHeader(),
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok || json.success === false) {
+        throw new Error(json.message || 'Model upload failed');
+      }
+      return json.data !== undefined ? json.data : json;
+    },
+    updateProductModel: (id: string, data: { has3D: boolean; model3DConfig?: any }) =>
+      request<Product>(`/admin/products/${id}/model`, { method: 'PUT', body: JSON.stringify(data) }),
   },
 };

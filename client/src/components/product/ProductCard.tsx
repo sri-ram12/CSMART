@@ -67,7 +67,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <img
             src={primaryMedia}
             alt={product.title}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-contain p-2 object-center group-hover:scale-105 transition-transform duration-500 bg-white"
             loading="lazy"
             onError={(e) => {
               (e.target as HTMLImageElement).src =
@@ -82,7 +82,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 {product.discountPercent}% OFF
               </span>
             )}
-            {product.has3D !== false && (
+            {Boolean(product.has3D) && (
               <button
                 type="button"
                 onClick={(e) => {

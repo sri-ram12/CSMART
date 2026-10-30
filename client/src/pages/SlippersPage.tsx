@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { Product } from '../types';
 import { ProductCard } from '../components/product/ProductCard';
-import { Shoe3DViewer } from '../components/3d/Shoe3DViewer';
+import { Sparkles, ShieldCheck } from 'lucide-react';
 
 export const SlippersPage: React.FC = () => {
   const [slippers, setSlippers] = useState<Product[]>([]);
@@ -11,28 +11,20 @@ export const SlippersPage: React.FC = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([
-      api.products.getAll({ department: 'SLIPPERS_SANDALS', limit: 50 }),
-      api.products.getAll({ category: 'sandals-wedges', limit: 30 }),
-      api.products.getAll({ category: 'kolhapuri-ethnic', limit: 30 }),
-      api.products.getAll({ category: 'memory-foam-slippers', limit: 30 }),
-    ])
-      .then(([deptRes, cat1, cat2, cat3]) => {
-        const combined = [...deptRes.products, ...cat1.products, ...cat2.products, ...cat3.products];
-        const unique = Array.from(new Map(combined.map((item) => [item.id, item])).values());
-        setSlippers(unique);
+    api.products.getAll({ limit: 100 })
+      .then((res) => {
+        setSlippers(res.products);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
   }, []);
 
   const subcategories = [
-    { id: 'ALL', label: 'All Slippers & Sandals' },
-    { id: 'eva-slides-flip-flops', label: 'CloudStep EVA Slides' },
-    { id: 'memory-foam-slippers', label: 'Memory Foam Slippers' },
-    { id: 'adjustable-strap-sandals', label: 'All-Terrain Sandals' },
-    { id: 'sandals-wedges', label: 'Wedges & Strappy Sandals' },
-    { id: 'kolhapuri-ethnic', label: 'Kolhapuri Ethnic Chappals' },
+    { id: 'ALL', label: 'All Catalog Items' },
+    { id: 'slippers-slides', label: 'Slippers & Slides' },
+    { id: 'sandals-floaters', label: 'Sandals & Floaters' },
+    { id: 'wedges-heel-support', label: 'Wedges & Heel Support' },
+    { id: 'sports-casual-shoes', label: 'Shoes & Clogs' },
   ];
 
   const filtered = slippers.filter((s) => {
@@ -78,15 +70,31 @@ export const SlippersPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Interactive 3D Model Showcase */}
-            <div className="lg:col-span-5 relative bg-white/10 backdrop-blur-md rounded-3xl p-3 border-none">
-              <Shoe3DViewer
-                primaryColor="#DC2626"
-                accentColor="#FFFFFF"
-                soleColor="#F8FAFC"
-                height="h-[340px]"
-                modelType="comfort_slide"
-              />
+            {/* Authentic Spotlight Card for Comfort Footwear */}
+            <div className="lg:col-span-5 relative bg-white/95 backdrop-blur-md rounded-3xl p-6 border-none shadow-2xl text-slate-900 flex flex-col items-center justify-center text-center">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-wider mb-3">
+                <Sparkles className="w-3 h-3 text-red-600" /> Catalog Best Seller
+              </span>
+              <div className="relative w-full aspect-[4/3] max-h-[220px] rounded-2xl overflow-hidden bg-slate-50 flex items-center justify-center p-4 mb-4">
+                <img
+                  src="/catalog/walkaroo_wlr74511_product.jpg"
+                  alt="Walkaroo WLR74511 Women's Comfort Slipper"
+                  className="max-h-full max-w-full object-contain drop-shadow-md hover:scale-105 transition-transform duration-300"
+                />
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm sm:text-base line-clamp-1">
+                Walkaroo WLR74511 Ergonomic Slipper
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Peacock Blue · Bio-Elastic EVA Sole · Tagarapuvalasa Store
+              </p>
+              <div className="flex items-center gap-3 mt-3">
+                <span className="text-base font-black text-slate-900">₹265</span>
+                <span className="text-xs text-slate-400 line-through">₹279</span>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                  In Stock
+                </span>
+              </div>
             </div>
           </div>
         </div>

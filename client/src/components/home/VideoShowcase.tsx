@@ -1,5 +1,5 @@
-import React from 'react';
-import { Film, Sparkles } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Film, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
 
 interface PinterestReel {
   id: string;
@@ -78,45 +78,98 @@ const PINTEREST_REELS: PinterestReel[] = [
 ];
 
 export const VideoShowcase: React.FC = () => {
-  // Duplicated list for seamless infinite autoscroll loop
-  const duplicatedReels = [...PINTEREST_REELS, ...PINTEREST_REELS];
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (scrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      setCanScrollLeft(scrollLeft > 10);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    }
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const current = scrollRef.current;
+    if (current) {
+      current.addEventListener('scroll', checkScroll, { passive: true });
+      window.addEventListener('resize', checkScroll);
+      return () => {
+        current.removeEventListener('scroll', checkScroll);
+        window.removeEventListener('resize', checkScroll);
+      };
+    }
+  }, []);
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollDistance = direction === 'left' ? -320 : 320;
+      scrollRef.current.scrollBy({ left: scrollDistance, behavior: 'smooth' });
+    }
+  };
 
   return (
     <section className="py-14 sm:py-20 bg-gradient-to-b from-[#FAF7FD] to-white overflow-hidden border-none select-none">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8 sm:mb-12">
-        {/* Clean Header without unnecessary buttons */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6 sm:mb-10">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#EDE9FE] text-[#5B21B6] text-xs font-bold tracking-wider uppercase shadow-2xs border-none">
               <Film className="w-3.5 h-3.5 text-[#7C3AED]" />
-              <span>Pinterest Motion Gallery</span>
+              <span>Video Highlights</span>
               <span className="text-purple-300">•</span>
-              <span className="text-[10px] text-purple-900 font-black">Autoscroll Reels</span>
+              <span className="text-[10px] text-purple-900 font-black">Dynamic Motion</span>
             </div>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-slate-900 tracking-tight">
               Footwear in Dynamic Motion
             </h2>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-lg">
+              High-definition footwear video reels capturing real-world sole flexibility, cushioning rebound, and everyday comfort.
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-            Seamless borderless reels capturing real-world sole flexibility, cushioning rebound, and everyday comfort. Hover to pause.
-          </p>
+
+          {/* Manual Scroll Controls */}
+          <div className="flex items-center gap-2 shrink-0 self-start md:self-end">
+            <button
+              type="button"
+              onClick={() => handleScroll('left')}
+              disabled={!canScrollLeft}
+              aria-label="Scroll left"
+              className="w-10 h-10 rounded-full bg-white border border-purple-100 flex items-center justify-center text-slate-700 hover:text-[#5B21B6] hover:bg-purple-50 hover:border-purple-200 transition-all shadow-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => handleScroll('right')}
+              disabled={!canScrollRight}
+              aria-label="Scroll right"
+              className="w-10 h-10 rounded-full bg-white border border-purple-100 flex items-center justify-center text-slate-700 hover:text-[#5B21B6] hover:bg-purple-50 hover:border-purple-200 transition-all shadow-xs disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Infinite Seamless Autoscroll Ribbon of Borderless Videos */}
-      <div className="relative w-full overflow-hidden py-3">
+      {/* Manual Smooth Horizontal Scroll Track (No Auto-Scrolling) */}
+      <div className="relative w-full py-3">
         {/* Soft edge gradient fades */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-8 sm:w-24 bg-gradient-to-r from-[#FAF7FD] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-8 sm:w-24 bg-gradient-to-l from-[#FAF7FD] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-6 sm:w-16 bg-gradient-to-r from-[#FAF7FD] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-6 sm:w-16 bg-gradient-to-l from-[#FAF7FD] to-transparent z-10" />
 
-        {/* Autoscrolling Track (no borders, no unnecessary buttons) */}
-        <div className="animate-reels-scroll flex items-center gap-4 sm:gap-6 px-4">
-          {duplicatedReels.map((reel, idx) => (
+        {/* Scrollable Track */}
+        <div
+          ref={scrollRef}
+          className="flex items-center gap-4 sm:gap-6 px-4 sm:px-8 lg:px-12 overflow-x-auto scrollbar-none scroll-smooth snap-x snap-mandatory"
+        >
+          {PINTEREST_REELS.map((reel) => (
             <div
-              key={`${reel.id}-${idx}`}
-              className="relative w-56 sm:w-64 md:w-72 h-[360px] sm:h-[420px] md:h-[460px] rounded-[28px] sm:rounded-[36px] overflow-hidden bg-slate-900 shadow-xl group border-none shrink-0"
+              key={reel.id}
+              className="relative w-56 sm:w-64 md:w-72 h-[360px] sm:h-[420px] md:h-[460px] rounded-[28px] sm:rounded-[36px] overflow-hidden bg-slate-900 shadow-xl group border-none shrink-0 snap-start"
             >
-              {/* HTML5 Native Muted Looping Video without borders or controls */}
+              {/* HTML5 Native Muted Looping Video */}
               <video
                 src={reel.videoUrl}
                 poster={reel.poster}

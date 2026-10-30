@@ -48,42 +48,13 @@ const FILTER_TABS = [
 ];
 
 const POPULAR_BRANDS = [
-  'Nike',
-  'Puma',
-  'Adidas',
-  'Skechers',
-  'Crocs',
-  'Red Tape',
-  'Woodland',
-  'Bata',
-  'Asics',
-  'Campus',
-  'HRX by Hrithik Roshan',
-  'Reebok',
+  'Walkaroo',
   'Sparx',
-  'Relaxo',
-  'Red Chief',
-  'Metro',
 ];
 
 const FALLBACK_ALL_BRANDS = [
-  { name: 'Sparx', count: 309 },
-  { name: 'New Balance', count: 2234 },
-  { name: 'Nike', count: 48 },
-  { name: 'Puma', count: 42 },
-  { name: 'Adidas', count: 36 },
-  { name: 'Bata', count: 31 },
-  { name: 'Red Tape', count: 28 },
-  { name: 'Woodland', count: 24 },
-  { name: 'Crocs', count: 20 },
-  { name: 'Campus', count: 18 },
-  { name: 'Asics', count: 16 },
-  { name: 'Skechers', count: 15 },
-  { name: 'HRX by Hrithik Roshan', count: 14 },
-  { name: 'Reebok', count: 12 },
-  { name: 'Relaxo', count: 11 },
-  { name: 'Red Chief', count: 9 },
-  { name: 'Metro', count: 8 },
+  { name: 'Walkaroo', count: 381 },
+  { name: 'Sparx', count: 174 },
 ];
 
 const CATEGORIES_LIST = [
@@ -114,10 +85,10 @@ const COLORS_LIST = [
 ];
 
 const PRICE_PRESETS = [
-  { label: 'Under ₹999', min: '0', max: '999' },
-  { label: '₹1,000 - ₹2,499', min: '1000', max: '2499' },
-  { label: '₹2,500 - ₹4,999', min: '2500', max: '4999' },
-  { label: '₹5,000+', min: '5000', max: '' },
+  { label: 'Under ₹499', min: '0', max: '499' },
+  { label: '₹500 - ₹999', min: '500', max: '999' },
+  { label: '₹1,000 - ₹1,999', min: '1000', max: '1999' },
+  { label: '₹2,000 & Above', min: '2000', max: '' },
 ];
 
 const DISCOUNT_OPTIONS = [
@@ -156,21 +127,10 @@ export const SplitFilterDrawer: React.FC<SplitFilterDrawerProps> = ({
 
   // Combine and sort brand list
   const mergedBrands = useMemo(() => {
-    const map = new Map<string, number>();
-    // Pre-populate with fallback counts
-    FALLBACK_ALL_BRANDS.forEach((b) => map.set(b.name.toLowerCase(), b.count));
-    // Overwrite with live counts from backend facets if present
-    availableBrands.forEach((b) => map.set(b.name.toLowerCase(), b.count));
-
-    const result = Array.from(map.entries()).map(([k, v]) => {
-      // Find proper display casing
-      const foundPop = POPULAR_BRANDS.find((p) => p.toLowerCase() === k);
-      const foundFall = FALLBACK_ALL_BRANDS.find((f) => f.name.toLowerCase() === k);
-      const name = foundPop || foundFall?.name || k.toUpperCase();
-      return { name, count: v };
-    });
-
-    return result.sort((a, b) => b.count - a.count);
+    if (availableBrands && availableBrands.length > 0) {
+      return availableBrands;
+    }
+    return FALLBACK_ALL_BRANDS;
   }, [availableBrands]);
 
   // Filter brands by search keyword
@@ -498,24 +458,70 @@ export const SplitFilterDrawer: React.FC<SplitFilterDrawerProps> = ({
 
             {/* 4. CATEGORY TAB */}
             {activeTab === 'Category' && (
-              <div className="space-y-2">
-                {CATEGORIES_LIST.map((cat) => {
-                  const isChecked = draftFilters.category.includes(cat.id);
-                  return (
-                    <label
-                      key={cat.id}
-                      className="flex items-center gap-3 py-2.5 px-2 hover:bg-slate-50 rounded-xl cursor-pointer"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={isChecked}
-                        onChange={() => toggleArrayItem('category', cat.id)}
-                        className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
-                      />
-                      <span className="text-xs font-bold text-slate-800">{cat.label}</span>
-                    </label>
-                  );
-                })}
+              <div className="space-y-3">
+                {/* Brand-Based Category Filtration Selector */}
+                <div className="p-2.5 rounded-xl bg-purple-50/80 border border-purple-100">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-black uppercase tracking-wider text-[#5B21B6]">
+                      Filter Categories by Brand:
+                    </span>
+                    {draftFilters.brands.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setDraftFilters((prev) => ({ ...prev, brands: [] }))}
+                        className="text-[10px] font-bold text-rose-600 hover:underline border-none bg-transparent cursor-pointer p-0"
+                      >
+                        Clear Brand ({draftFilters.brands.length})
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['Walkaroo', 'Sparx', 'VKC Pride', 'Paragon', 'Campus', 'Aqualite'].map((br) => {
+                      const isBrSelected = draftFilters.brands.includes(br);
+                      return (
+                        <button
+                          key={br}
+                          type="button"
+                          onClick={() => toggleArrayItem('brands', br)}
+                          className={`px-2 py-1 rounded-lg text-xs font-bold transition-all border cursor-pointer ${
+                            isBrSelected
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
+                          }`}
+                        >
+                          {br}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  {CATEGORIES_LIST.map((cat) => {
+                    const isChecked = draftFilters.category.includes(cat.id);
+                    return (
+                      <label
+                        key={cat.id}
+                        className="flex items-center justify-between py-2 px-2 hover:bg-slate-50 rounded-xl cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => toggleArrayItem('category', cat.id)}
+                            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                          />
+                          <span className="text-xs font-bold text-slate-800">{cat.label}</span>
+                        </div>
+                        {draftFilters.brands.length > 0 && (
+                          <span className="text-[9.5px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md">
+                            {draftFilters.brands.join(', ')}
+                          </span>
+                        )}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             )}
 

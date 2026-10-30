@@ -5,6 +5,7 @@ import { Product, Category } from '../types';
 import { ProductCard } from '../components/product/ProductCard';
 import { SplitFilterDrawer, SplitFilterState } from '../components/shop/SplitFilterDrawer';
 import { SelectCategoryModal } from '../components/category/SelectCategoryModal';
+import { CompanyBrandBanners } from '../components/common/CompanyBrandBanners';
 import {
   SlidersHorizontal,
   X,
@@ -31,6 +32,8 @@ export const ShopPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFallback, setIsFallback] = useState(false);
+  const [fallbackMessage, setFallbackMessage] = useState<string | null>(null);
 
   // Modals state
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState(false);
@@ -85,6 +88,8 @@ export const ShopPage: React.FC = () => {
         setProducts(res.products);
         setTotalCount(res.pagination.total);
         setTotalPages(res.pagination.totalPages || 1);
+        setIsFallback(Boolean((res.pagination as any)?.isFallback));
+        setFallbackMessage((res.pagination as any)?.fallbackMessage || null);
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
@@ -220,7 +225,14 @@ export const ShopPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-5 sm:py-8 bg-slate-50">
+    <div className="min-h-screen py-3 sm:py-6 bg-slate-50">
+      {/* 1. Official Company Branded Banners Scrolling at the Top */}
+      <CompanyBrandBanners
+        variant="shop"
+        currentBrand={currentBrand}
+        onSelectBrand={(b) => updateFilter('brand', currentBrand === b ? null : b)}
+      />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top Header & Breadcrumbs */}
         <div className="pb-5 border-b border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -463,6 +475,29 @@ export const ShopPage: React.FC = () => {
 
         {/* Product Grid Area */}
         <div className="pt-4">
+          {/* Smart Fallback Notification */}
+          {isFallback && !isLoading && products.length > 0 && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-200/80 flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>
+                  {fallbackMessage || (
+                    <>
+                      Showing all available styles matching <strong>"{currentCategory || 'your criteria'}"</strong> across our store collection.
+                    </>
+                  )}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="text-[11px] font-bold text-amber-700 underline hover:text-amber-900 border-none bg-transparent cursor-pointer ml-2 shrink-0"
+              >
+                Clear Filters
+              </button>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {[...Array(8)].map((_, i) => (
@@ -473,17 +508,53 @@ export const ShopPage: React.FC = () => {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="p-8 sm:p-12 text-center bg-white rounded-3xl shadow-sm border border-slate-100 space-y-3 my-8">
+            <div className="p-8 sm:p-12 text-center bg-white rounded-3xl shadow-sm border border-slate-100 space-y-4 my-8 max-w-lg mx-auto">
               <Sparkles className="w-12 h-12 text-rose-400 mx-auto" />
-              <h3 className="text-base font-bold text-slate-900">
-                No products found matching filters
-              </h3>
-              <p className="text-xs text-slate-500">
-                Try clearing selected brand, size, price, or category filters to see more results.
-              </p>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900">
+                  No products found matching filters
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Try clearing selected brand, size, price, or category filters to explore all 555 authentic footwear styles.
+                </p>
+              </div>
+
+              {/* Quick Brand Recovery Suggestions */}
+              <div className="pt-2 border-t border-slate-100 space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Explore In-Stock Authentic Brands:
+                </p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.set('brand', 'Walkaroo');
+                      next.delete('page');
+                      setSearchParams(next);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold text-xs border border-orange-200 transition-colors cursor-pointer"
+                  >
+                    Walkaroo (381 styles)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new URLSearchParams(searchParams);
+                      next.set('brand', 'Sparx');
+                      next.delete('page');
+                      setSearchParams(next);
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors cursor-pointer"
+                  >
+                    Sparx (174 styles)
+                  </button>
+                </div>
+              </div>
+
               <button
                 onClick={clearAllFilters}
-                className="btn-primary text-xs py-2.5 px-6 mt-2 border-none cursor-pointer"
+                className="btn-primary text-xs py-2.5 px-6 border-none cursor-pointer mt-2"
               >
                 Reset All Filters
               </button>

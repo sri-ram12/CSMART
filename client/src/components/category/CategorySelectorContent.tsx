@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, Percent, SlidersHorizontal } from 'lucide-react';
+import { Star, Percent, SlidersHorizontal, Tag, Store, CheckCircle2, ChevronRight } from 'lucide-react';
+import { COMPANY_BRANDS } from '../common/CompanyBrandBanners';
 
 export interface DepartmentItem {
   id: string;
@@ -47,6 +48,24 @@ export const DEPARTMENTS: DepartmentItem[] = [
     photoUrl: 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?w=300&auto=format&fit=crop&q=80',
     queryDept: 'KIDS',
   },
+  {
+    id: 'brands',
+    name: 'By Brands',
+    badge: 'BRANDS',
+    photoUrl: '/catalog/sparx_sm_871_product.jpg',
+    queryDept: 'ALL',
+  },
+];
+
+export const CATEGORY_BRAND_FILTERS = [
+  { id: 'ALL', name: 'All Brands', count: 555 },
+  { id: 'Walkaroo', name: 'Walkaroo', count: 381 },
+  { id: 'Sparx', name: 'Sparx', count: 174 },
+  { id: 'VKC Pride', name: 'VKC Pride', count: null },
+  { id: 'Paragon', name: 'Paragon', count: null },
+  { id: 'Campus', name: 'Campus', count: null },
+  { id: 'Aqualite', name: 'Aqualite', count: null },
+  { id: 'Lancer', name: 'Lancer', count: null },
 ];
 
 export const SUBCATEGORIES: SubcategoryItem[] = [
@@ -170,13 +189,23 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
   initialDepartment = 'men',
 }) => {
   const [selectedDeptId, setSelectedDeptId] = useState<string>(initialDepartment);
+  const [selectedBrand, setSelectedBrand] = useState<string>('ALL');
   const navigate = useNavigate();
 
   const activeDept = DEPARTMENTS.find((d) => d.id === selectedDeptId) || DEPARTMENTS[0];
 
   const handleSubcategoryClick = (sub: SubcategoryItem) => {
     const slug = sub.deptSlugs?.[activeDept.id] || sub.slug;
-    const searchUrl = `/shop?department=${activeDept.queryDept}&category=${slug}`;
+    let searchUrl = `/shop?department=${activeDept.queryDept}&category=${slug}`;
+    if (selectedBrand && selectedBrand !== 'ALL') {
+      searchUrl += `&brand=${encodeURIComponent(selectedBrand)}`;
+    }
+    if (onSelect) onSelect();
+    navigate(searchUrl);
+  };
+
+  const handleBrandDirectClick = (brandName: string) => {
+    const searchUrl = `/shop?brand=${encodeURIComponent(brandName)}`;
     if (onSelect) onSelect();
     navigate(searchUrl);
   };
@@ -195,14 +224,20 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
                 onClick={() => setSelectedDeptId(dept.id)}
                 className={`w-full flex flex-col items-center p-1 sm:p-1.5 rounded-xl sm:rounded-2xl transition-all border-none cursor-pointer group text-center ${
                   isSelected
-                    ? 'bg-rose-50/80 shadow-xs ring-1 ring-rose-200'
+                    ? dept.id === 'brands'
+                      ? 'bg-purple-50/90 shadow-xs ring-1 ring-purple-300'
+                      : 'bg-rose-50/80 shadow-xs ring-1 ring-rose-200'
                     : 'bg-transparent hover:bg-slate-100/70'
                 }`}
               >
                 {/* Model Portrait Card */}
                 <div
                   className={`relative w-13 h-13 min-[375px]:w-15 min-[375px]:h-15 sm:w-18 sm:h-18 rounded-xl sm:rounded-2xl overflow-hidden shadow-xs transition-transform duration-200 ${
-                    isSelected ? 'ring-2 ring-rose-500 scale-102' : 'group-hover:scale-102'
+                    isSelected
+                      ? dept.id === 'brands'
+                        ? 'ring-2 ring-purple-600 scale-102'
+                        : 'ring-2 ring-rose-500 scale-102'
+                      : 'group-hover:scale-102'
                   }`}
                 >
                   <img
@@ -211,8 +246,12 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
                     className="w-full h-full object-cover object-top"
                     loading="lazy"
                   />
-                  {/* Dark pill badge at bottom of photo (Image 1 reference) */}
-                  <div className="absolute inset-x-0.5 bottom-0.5 sm:inset-x-1 sm:bottom-1 bg-black/75 backdrop-blur-xs rounded-full py-0.5 text-center">
+                  {/* Pill badge at bottom of photo */}
+                  <div
+                    className={`absolute inset-x-0.5 bottom-0.5 sm:inset-x-1 sm:bottom-1 rounded-full py-0.5 text-center ${
+                      dept.id === 'brands' ? 'bg-[#5B21B6]/90' : 'bg-black/75'
+                    }`}
+                  >
                     <span className="text-[8px] sm:text-[9px] font-black tracking-wider text-white uppercase block leading-none">
                       {dept.badge}
                     </span>
@@ -222,22 +261,30 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
                 {/* Department Label */}
                 <span
                   className={`mt-1 sm:mt-1.5 text-[10px] min-[375px]:text-[11px] sm:text-xs font-bold leading-tight line-clamp-1 ${
-                    isSelected ? 'text-rose-600 font-black' : 'text-slate-700'
+                    isSelected
+                      ? dept.id === 'brands'
+                        ? 'text-purple-700 font-black'
+                        : 'text-rose-600 font-black'
+                      : 'text-slate-700'
                   }`}
                 >
                   {dept.name}
                 </span>
               </button>
 
-              {/* Orange/Rose Triangular Arrow Notch Pointing to Right Panel (Image 1 reference) */}
+              {/* Arrow Notch Pointing to Right Panel */}
               {isSelected && (
-                <div className="absolute -right-[6px] sm:-right-[7px] top-1/2 -translate-y-1/2 z-10 w-0 h-0 border-y-[5px] sm:border-y-[6px] border-y-transparent border-l-[6px] sm:border-l-[7px] border-l-rose-500" />
+                <div
+                  className={`absolute -right-[6px] sm:-right-[7px] top-1/2 -translate-y-1/2 z-10 w-0 h-0 border-y-[5px] sm:border-y-[6px] border-y-transparent border-l-[6px] sm:border-l-[7px] ${
+                    dept.id === 'brands' ? 'border-l-purple-600' : 'border-l-rose-500'
+                  }`}
+                />
               )}
             </div>
           );
         })}
 
-        {/* Quick Links: Customer Reviews & Ratings + Offers (All categories mentioned up to reviews) */}
+        {/* Quick Links: Customer Reviews & Ratings + Offers */}
         <div className="pt-2 border-t border-slate-200/80 space-y-1.5 w-full">
           {/* Reviews & Ratings */}
           <button
@@ -284,43 +331,157 @@ export const CategorySelectorContent: React.FC<CategorySelectorContentProps> = (
         </div>
       </aside>
 
-      {/* RIGHT COLUMN: Subcategory Grid (Fluid responsive 2-column or 3-column) */}
+      {/* RIGHT COLUMN: Subcategory Grid OR Dedicated Brands View */}
       <section className="flex-1 min-w-0 p-2.5 sm:p-4 md:p-5 overflow-y-auto bg-white flex flex-col justify-start">
-        <div className="mb-2 sm:mb-3 flex items-center justify-between gap-1">
-          <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-400 truncate">
-            {activeDept.name} Footwear
-          </span>
-          <span className="text-[10px] sm:text-[11px] font-bold text-rose-600 shrink-0">
-            9 Categories
-          </span>
-        </div>
+        {selectedDeptId === 'brands' ? (
+          /* ========================================================
+             DEDICATED BRAND BROWSER (Walkaroo, Sparx, VKC Pride, etc.)
+             ======================================================== */
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center justify-between gap-1 pb-2 border-b border-slate-100">
+              <div>
+                <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-purple-700 block">
+                  Shop By Authorized Company Brands
+                </span>
+                <p className="text-[10px] sm:text-[11px] text-slate-500">
+                  Select a brand to view all genuine catalog styles
+                </p>
+              </div>
+              <span className="text-[10px] sm:text-[11px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full border border-purple-200 shrink-0">
+                9 Brands
+              </span>
+            </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3.5">
-          {SUBCATEGORIES.map((sub) => (
-            <button
-              key={sub.id}
-              type="button"
-              onClick={() => handleSubcategoryClick(sub)}
-              className="flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 transition-all border border-slate-100 hover:border-slate-200 group text-center cursor-pointer shadow-xs hover:shadow-sm"
-            >
-              {/* Soft circular container for footwear cutout */}
-              <div className="w-16 h-16 min-[375px]:w-18 min-[375px]:h-18 sm:w-22 sm:h-22 rounded-full bg-slate-50 flex items-center justify-center p-1.5 sm:p-2 group-hover:bg-rose-50/50 transition-colors">
-                <img
-                  src={sub.imageUrl}
-                  alt={sub.name}
-                  className="w-full h-full object-contain filter drop-shadow-sm group-hover:scale-108 transition-transform duration-300"
-                  loading="lazy"
-                />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+              {COMPANY_BRANDS.map((brand) => (
+                <div
+                  key={brand.id}
+                  onClick={() => handleBrandDirectClick(brand.name)}
+                  className={`p-3 rounded-2xl bg-gradient-to-br ${brand.bgGradient} text-white shadow-xs hover:shadow-md transition-all cursor-pointer group flex flex-col justify-between`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-serif font-black text-base sm:text-lg">
+                          {brand.name}
+                        </span>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                      </div>
+                      <p className="text-[10px] sm:text-[11px] text-white/90 line-clamp-1 mt-0.5">
+                        {brand.tagline}
+                      </p>
+                    </div>
+                    <span className="text-[9px] font-bold uppercase px-2 py-0.5 rounded-md bg-white/20 shrink-0">
+                      {brand.badge}
+                    </span>
+                  </div>
+
+                  <div className="mt-3 pt-2 border-t border-white/20 flex items-center justify-between text-[11px]">
+                    <span className="text-white/80 font-medium text-[10px]">
+                      {brand.countText}
+                    </span>
+                    <span className="font-bold flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                      <span>View Styles</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* ========================================================
+             STANDARD SUBCATEGORY GRID WITH BRAND-BASED FILTRATION
+             ======================================================== */
+          <div className="space-y-3">
+            {/* Header info */}
+            <div className="flex items-center justify-between gap-1">
+              <span className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-400 truncate">
+                {activeDept.name} Footwear
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-bold text-rose-600 shrink-0">
+                9 Categories
+              </span>
+            </div>
+
+            {/* BRAND FILTRATION PILL ROW AT TOP OF CATEGORIES */}
+            <div className="bg-[#FAF7FD] p-2 sm:p-2.5 rounded-2xl border border-purple-100/80 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                  <Tag className="w-3.5 h-3.5 text-[#7C3AED]" />
+                  <span>Filter Category by Brand:</span>
+                </span>
+                {selectedBrand !== 'ALL' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBrand('ALL')}
+                    className="text-[10px] font-bold text-purple-700 hover:text-purple-900 border-none bg-transparent cursor-pointer p-0 underline"
+                  >
+                    Reset Brand
+                  </button>
+                )}
               </div>
 
-              {/* Subcategory Name */}
-              <span className="mt-1.5 sm:mt-2 text-[10px] min-[375px]:text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
-                {sub.name}
-              </span>
-            </button>
-          ))}
-        </div>
+              <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                {CATEGORY_BRAND_FILTERS.map((b) => {
+                  const isBrandActive = selectedBrand === b.id;
+                  return (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => setSelectedBrand(isBrandActive ? 'ALL' : b.id)}
+                      className={`px-2.5 py-1 rounded-xl text-[10.5px] font-bold shrink-0 transition-all cursor-pointer border ${
+                        isBrandActive
+                          ? 'bg-[#5B21B6] text-white border-[#5B21B6] shadow-2xs'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200'
+                      }`}
+                    >
+                      <span>{b.name}</span>
+                      {b.count && (
+                        <span className="ml-1 opacity-80 text-[9.5px]">({b.count})</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Category Grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3.5">
+              {SUBCATEGORIES.map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => handleSubcategoryClick(sub)}
+                  className="flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white hover:bg-slate-50 transition-all border border-slate-100 hover:border-slate-200 group text-center cursor-pointer shadow-xs hover:shadow-sm"
+                >
+                  {/* Soft circular container for footwear cutout */}
+                  <div className="w-16 h-16 min-[375px]:w-18 min-[375px]:h-18 sm:w-22 sm:h-22 rounded-full bg-slate-50 flex items-center justify-center p-1.5 sm:p-2 group-hover:bg-rose-50/50 transition-colors">
+                    <img
+                      src={sub.imageUrl}
+                      alt={sub.name}
+                      className="w-full h-full object-contain filter drop-shadow-sm group-hover:scale-108 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+
+                  {/* Subcategory Name */}
+                  <span className="mt-1.5 sm:mt-2 text-[10px] min-[375px]:text-[11px] sm:text-xs font-bold text-slate-800 group-hover:text-rose-600 transition-colors line-clamp-2 leading-tight">
+                    {sub.name}
+                    {selectedBrand !== 'ALL' && (
+                      <span className="block text-[9px] font-semibold text-[#5B21B6]">
+                        ({selectedBrand})
+                      </span>
+                    )}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );
 };
+
+export default CategorySelectorContent;

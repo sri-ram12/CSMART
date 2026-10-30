@@ -25,12 +25,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
     <>
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-purple-100/70 shadow-xs select-none">
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-4">
+          <div className="flex items-center justify-between h-16 sm:h-20 gap-2 sm:gap-6">
             {/* ========================================================
-                LEFT SIDE: 3-DASHED MENU (HAMBURGER) + LOGO
+                LEFT SIDE: 3-DASHED MENU (HAMBURGER) + LOGO & BRAND
                 (Strictly placed on the left as explicitly requested)
                ======================================================== */}
-            <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
+            <div className="flex items-center gap-2 sm:gap-3.5 min-w-0 flex-1">
               {/* 3-Dashed Menu Button (Left-Side) */}
               <button
                 type="button"
@@ -49,13 +49,13 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
             {/* ========================================================
                 RIGHT SIDE: SEARCH + WISHLIST + CART (Clean, Uncluttered Top Bar)
                ======================================================== */}
-            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 ml-auto">
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-2">
 
               {/* Search Option */}
               <button
                 type="button"
                 onClick={onOpenSearch}
-                className="border-none p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all cursor-pointer shadow-2xs"
+                className="border-none p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                 title="Search Footwear"
                 aria-label="Search"
               >
@@ -65,7 +65,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               {/* Wishlist Option */}
               <Link
                 to="/wishlist"
-                className="border-none relative p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all shadow-2xs"
+                className="border-none relative p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all shadow-2xs hover:scale-105 active:scale-95"
                 title="Wishlist"
                 aria-label="Wishlist"
               >
@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
               <button
                 type="button"
                 onClick={toggleCart}
-                className="border-none relative p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all cursor-pointer shadow-2xs"
+                className="border-none relative p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95"
                 title="Shopping Bag / WhatsApp Order"
                 aria-label="Shopping Bag"
               >
