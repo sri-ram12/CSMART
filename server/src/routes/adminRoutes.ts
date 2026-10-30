@@ -170,6 +170,28 @@ router.put('/inventory/:variantId', async (req: AuthRequest, res: Response, next
   }
 });
 
+// GET /api/admin/products (Fetch all 555 footwear products with complete variants, media, and category)
+router.get('/products', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const products = await prisma.product.findMany({
+      include: {
+        variants: true,
+        media: true,
+        category: true,
+      },
+      orderBy: { sku: 'asc' },
+    });
+
+    res.json({
+      success: true,
+      data: products,
+      total: products.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // POST /api/admin/products (Create product)
 router.post('/products', async (req: AuthRequest, res: Response, next) => {
   try {

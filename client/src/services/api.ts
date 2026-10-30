@@ -258,6 +258,7 @@ export const api = {
 
   // Admin
   admin: {
+    getProducts: () => request<Product[]>('/admin/products'),
     getStats: () => request<any>('/admin/stats'),
     getOrders: (params: { status?: string; search?: string } = {}) => {
       const q = new URLSearchParams();

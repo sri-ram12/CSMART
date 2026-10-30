@@ -113,10 +113,10 @@ export const AdminProductsPage: React.FC = () => {
     setIsLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([
-        api.products.getAll({ limit: 1000 }),
+        api.admin.getProducts().catch(() => api.products.getAll({ limit: 1000 }).then((r) => r.products)),
         api.categories.getAll(),
       ]);
-      setProducts(prodRes.products);
+      setProducts(prodRes);
       setCategories(catRes);
       if (catRes.length > 0 && !categoryId) setCategoryId(catRes[0].id);
     } catch (e) {

@@ -25,7 +25,7 @@ router.get('/', async (req: Request, res: Response, next) => {
     } = req.query;
 
     const pageNum = Math.max(1, parseInt(page as string) || 1);
-    const take = Math.min(60, Math.max(1, parseInt(limit as string) || 24));
+    const take = Math.min(1000, Math.max(1, parseInt(limit as string) || 24));
     const skip = (pageNum - 1) * take;
 
     // Build Prisma where filter
@@ -80,18 +80,63 @@ router.get('/', async (req: Request, res: Response, next) => {
       }
     }
 
-    // 3. Strict Category Filtering (Precise categorical matching without cross-department pollution)
+    // 3. Strict Category Filtering (Precise categorical matching according to product type and PDF brand assignments)
     if (category) {
       const rawCats = (category as string).split(',').map((c) => c.trim().toLowerCase()).filter(Boolean);
       
-      const categoryConditions = rawCats.flatMap((term) => [
-        { category: { slug: term } },
-        { category: { slug: { contains: term } } },
-        { category: { name: { contains: term } } },
-      ]);
+      const catOrConditions: any[] = [];
 
-      if (categoryConditions.length > 0) {
-        andClauses.push({ OR: categoryConditions });
+      for (const term of rawCats) {
+        catOrConditions.push({ category: { slug: term } });
+        catOrConditions.push({ category: { slug: { contains: term } } });
+        catOrConditions.push({ category: { name: { contains: term } } });
+
+        // Category Type Semantics:
+        // A) Slippers / Slides / Flip-Flops
+        if (term.includes('slipper') || term.includes('slide') || term.includes('flip')) {
+          catOrConditions.push({ category: { slug: { contains: 'slipper' } } });
+          catOrConditions.push({ title: { contains: 'Slipper' } });
+          catOrConditions.push({ title: { contains: 'Slide' } });
+          catOrConditions.push({ title: { contains: 'Flip' } });
+        }
+        // B) Sandals / Floaters / Ethnic Sandals
+        else if (term.includes('sandal') || term.includes('floater') || term.includes('ethnic')) {
+          catOrConditions.push({ category: { slug: { contains: 'sandal' } } });
+          catOrConditions.push({ category: { slug: { contains: 'sandals' } } });
+          catOrConditions.push({ title: { contains: 'Sandal' } });
+          catOrConditions.push({ title: { contains: 'Floater' } });
+          catOrConditions.push({ title: { contains: 'Wedge' } });
+        }
+        // C) Shoes / Sports / Running / Sneakers / Moulded / Clogs
+        else if (
+          term.includes('shoe') ||
+          term.includes('sport') ||
+          term.includes('run') ||
+          term.includes('sneaker') ||
+          term.includes('mould') ||
+          term.includes('croc') ||
+          term.includes('clog') ||
+          term.includes('formal') ||
+          term.includes('loafer') ||
+          term.includes('boot')
+        ) {
+          catOrConditions.push({ category: { slug: { contains: 'running' } } });
+          catOrConditions.push({ category: { slug: { contains: 'shoe' } } });
+          catOrConditions.push({ title: { contains: 'Shoe' } });
+          catOrConditions.push({ title: { contains: 'Runner' } });
+          catOrConditions.push({ title: { contains: 'Sneaker' } });
+        }
+        // D) Wedges / Heels / Heel Support
+        else if (term.includes('wedge') || term.includes('heel')) {
+          catOrConditions.push({ category: { slug: { contains: 'wedge' } } });
+          catOrConditions.push({ category: { slug: { contains: 'heel' } } });
+          catOrConditions.push({ title: { contains: 'Wedge' } });
+          catOrConditions.push({ title: { contains: 'Heel' } });
+        }
+      }
+
+      if (catOrConditions.length > 0) {
+        andClauses.push({ OR: catOrConditions });
       }
     }
 

@@ -11,7 +11,7 @@ export const SlippersPage: React.FC = () => {
 
   useEffect(() => {
     setIsLoading(true);
-    api.products.getAll({ limit: 100 })
+    api.products.getAll({ limit: 1000 })
       .then((res) => {
         setSlippers(res.products);
       })
@@ -29,7 +29,21 @@ export const SlippersPage: React.FC = () => {
 
   const filtered = slippers.filter((s) => {
     if (selectedSubcategory === 'ALL') return true;
-    return s.category?.slug === selectedSubcategory;
+    const catSlug = (s.category?.slug || '').toLowerCase();
+    const title = (s.title || '').toLowerCase();
+    if (selectedSubcategory === 'slippers-slides') {
+      return catSlug.includes('slipper') || title.includes('slipper') || title.includes('slide');
+    }
+    if (selectedSubcategory === 'sandals-floaters') {
+      return catSlug.includes('sandal') || title.includes('sandal') || title.includes('floater');
+    }
+    if (selectedSubcategory === 'wedges-heel-support') {
+      return catSlug.includes('wedge') || catSlug.includes('heel') || title.includes('wedge') || title.includes('heel');
+    }
+    if (selectedSubcategory === 'sports-casual-shoes') {
+      return catSlug.includes('shoe') || catSlug.includes('running') || title.includes('shoe');
+    }
+    return true;
   });
 
   return (
