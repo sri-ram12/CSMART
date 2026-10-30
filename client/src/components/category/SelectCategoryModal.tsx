@@ -1,6 +1,5 @@
 import React from 'react';
-import { X, Layers, ShieldCheck } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { X, Layers } from 'lucide-react';
 import { CategorySelectorContent } from './CategorySelectorContent';
 
 interface SelectCategoryModalProps {
@@ -46,19 +45,6 @@ export const SelectCategoryModal: React.FC<SelectCategoryModalProps> = ({
         {/* Body: Split 2-Column CategorySelectorContent */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <CategorySelectorContent onSelect={onClose} initialDepartment={initialDepartment} />
-        </div>
-
-        {/* Footer: Admin Access Link */}
-        <div className="px-4 py-2.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs shrink-0">
-          <span className="text-[11px] text-slate-500 font-medium">Store Management</span>
-          <Link
-            to="/admin/products"
-            onClick={onClose}
-            className="flex items-center gap-1 text-[11px] font-black text-[#5B21B6] hover:text-[#4C1D95] transition-colors"
-          >
-            <ShieldCheck className="w-3.5 h-3.5 text-[#7C3AED]" />
-            <span>Admin Portal (Stock, Price, Catalog & Reviews) ↗</span>
-          </Link>
         </div>
       </div>
     </div>

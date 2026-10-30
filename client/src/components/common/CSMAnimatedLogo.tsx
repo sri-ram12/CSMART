@@ -15,7 +15,7 @@ export const CSMAnimatedLogo: React.FC<CSMAnimatedLogoProps> = ({
   return (
     <Link
       to="/"
-      className={`inline-flex items-center gap-2.5 sm:gap-3.5 group select-none shrink-0 min-w-0 ${className}`}
+      className={`inline-flex items-center gap-2 sm:gap-3 group select-none min-w-0 overflow-hidden ${className}`}
       title="Chandhana Shoe Mart (CSM) - Quality First • పాదరక్షల బృందావనం"
     >
       {/* ========================================================
@@ -24,7 +24,7 @@ export const CSMAnimatedLogo: React.FC<CSMAnimatedLogoProps> = ({
           - Authentic heart and CSM pill geometry
          ======================================================== */}
       <div className={`relative shrink-0 flex items-center justify-center transition-transform duration-300 group-hover:scale-105 ${
-        variant === 'navbar' ? 'h-10 sm:h-11 w-auto' :
+        variant === 'navbar' ? 'h-8 sm:h-10 md:h-11 w-auto' :
         variant === 'footer' ? 'h-12 sm:h-14 w-auto' :
         variant === 'hero' ? 'h-14 sm:h-16 w-auto' :
         'h-10 w-auto'
@@ -41,22 +41,22 @@ export const CSMAnimatedLogo: React.FC<CSMAnimatedLogoProps> = ({
           - Vertically centered with the emblem
           - Matches the store banner board identity
          ======================================================== */}
-      <div className="flex flex-col min-w-0 justify-center">
+      <div className="flex flex-col min-w-0 justify-center overflow-hidden">
         {/* Row 1: English Brand Name with Crisp Spacing */}
         <div className="flex items-center min-w-0">
-          <span className="font-sans font-black text-xs sm:text-sm md:text-base text-slate-900 group-hover:text-[#5B21B6] tracking-wider uppercase transition-colors whitespace-nowrap truncate">
+          <span className="font-sans font-black text-[11px] min-[360px]:text-xs sm:text-sm md:text-base text-slate-900 group-hover:text-[#5B21B6] tracking-tight sm:tracking-wider uppercase transition-colors whitespace-nowrap truncate block">
             CHANDHANA SHOE MART
           </span>
         </div>
 
         {/* Row 2: Telugu Heritage Titles from Sign Board */}
         {showTagline && (
-          <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 leading-none flex-nowrap min-w-0">
+          <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 leading-none flex-nowrap min-w-0 overflow-hidden">
             {/* Authentic 3D Telugu: చందన (Red) & షూమార్ట్ (Blue) */}
-            <span className="font-serif font-black text-[11px] sm:text-xs text-red-600 drop-shadow-[0_1px_1px_rgba(239,68,68,0.2)] tracking-tight shrink-0">
+            <span className="font-serif font-black text-[10px] sm:text-xs text-red-600 drop-shadow-[0_1px_1px_rgba(239,68,68,0.2)] tracking-tight shrink-0">
               చందన
             </span>
-            <span className="font-serif font-black text-[11px] sm:text-xs text-[#2563EB] drop-shadow-[0_1px_1px_rgba(37,99,235,0.2)] tracking-tight shrink-0">
+            <span className="font-serif font-black text-[10px] sm:text-xs text-[#2563EB] drop-shadow-[0_1px_1px_rgba(37,99,235,0.2)] tracking-tight shrink-0">
               షూమార్ట్
             </span>
 

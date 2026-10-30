@@ -17,6 +17,7 @@ import {
   Search,
   CheckCircle2,
   Package,
+  Ruler,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Admin3DModelStudioModal } from '../../components/admin/Admin3DModelStudioModal';
@@ -103,6 +104,11 @@ export const AdminProductsPage: React.FC = () => {
   // Quick price fixing fields
   const [quickPrice, setQuickPrice] = useState('');
   const [quickOriginalPrice, setQuickOriginalPrice] = useState('');
+
+  // Sizes & Availability management fields
+  const [isSizesModalOpen, setIsSizesModalOpen] = useState(false);
+  const [sizeEditingProduct, setSizeEditingProduct] = useState<Product | null>(null);
+  const [editingSizes, setEditingSizes] = useState<Array<{ size: string; inventory: number }>>([]);
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
@@ -259,6 +265,103 @@ export const AdminProductsPage: React.FC = () => {
     } catch (err: any) {
       showNotification('error', err.message || 'Failed to update price.');
     }
+  };
+
+  // Open Manage Sizes Modal
+  const handleOpenSizesModal = (p: Product) => {
+    setSizeEditingProduct(p);
+    const existingSizes = (p.variants || []).map((v) => ({
+      size: v.size,
+      inventory: v.inventory,
+    }));
+    if (existingSizes.length === 0) {
+      setEditingSizes([
+        { size: 'UK 6', inventory: 15 },
+        { size: 'UK 7', inventory: 15 },
+        { size: 'UK 8', inventory: 15 },
+        { size: 'UK 9', inventory: 15 },
+        { size: 'UK 10', inventory: 15 },
+      ]);
+    } else {
+      setEditingSizes(existingSizes);
+    }
+    setIsSizesModalOpen(true);
+  };
+
+  // 1-Click Toggle for a single size from the table
+  const handleToggleSingleSize = async (p: Product, sizeName: string, isCurrentlyAvailable: boolean) => {
+    const targetOut = isCurrentlyAvailable; // If available, mark out of stock
+    // Optimistic UI update
+    setProducts((prev) =>
+      prev.map((prod) => {
+        if (prod.id !== p.id) return prod;
+        const newVars = (prod.variants || []).map((v) =>
+          v.size === sizeName ? { ...v, inventory: targetOut ? 0 : 15 } : v
+        );
+        return { ...prod, variants: newVars };
+      })
+    );
+    try {
+      await api.admin.toggleSizeStock(p.id, sizeName, targetOut);
+      showNotification(
+        'success',
+        `${p.sku} size ${sizeName} is now marked ${targetOut ? 'OUT OF STOCK' : 'IN STOCK'}`
+      );
+    } catch (err: any) {
+      showNotification('error', err.message || 'Failed to toggle size stock.');
+      loadData();
+    }
+  };
+
+  // Save Sizes & Stock from Modal
+  const handleSaveSizes = async () => {
+    if (!sizeEditingProduct) return;
+    try {
+      const updated = await api.admin.updateSizes(sizeEditingProduct.id, editingSizes);
+      setProducts((prev) => prev.map((p) => (p.id === sizeEditingProduct.id ? updated : p)));
+      setIsSizesModalOpen(false);
+      showNotification('success', `Sizes and availability updated for ${sizeEditingProduct.sku}`);
+    } catch (err: any) {
+      showNotification('error', err.message || 'Failed to update sizes.');
+    }
+  };
+
+  const handleToggleEditingSizeAvailability = (index: number) => {
+    setEditingSizes((prev) =>
+      prev.map((s, idx) =>
+        idx === index ? { ...s, inventory: s.inventory > 0 ? 0 : 15 } : s
+      )
+    );
+  };
+
+  const handleSizeNameChange = (index: number, newName: string) => {
+    setEditingSizes((prev) =>
+      prev.map((s, idx) => (idx === index ? { ...s, size: newName } : s))
+    );
+  };
+
+  const handleSizeInventoryChange = (index: number, newInv: number) => {
+    setEditingSizes((prev) =>
+      prev.map((s, idx) => (idx === index ? { ...s, inventory: Math.max(0, newInv) } : s))
+    );
+  };
+
+  const handleRemoveSize = (index: number) => {
+    setEditingSizes((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const handleAddStandardSize = (sizeName: string) => {
+    if (!editingSizes.some((s) => s.size === sizeName)) {
+      setEditingSizes((prev) => [...prev, { size: sizeName, inventory: 15 }]);
+    }
+  };
+
+  const handleMarkAllSizesInStock = () => {
+    setEditingSizes((prev) => prev.map((s) => ({ ...s, inventory: 15 })));
+  };
+
+  const handleMarkAllSizesOutOfStock = () => {
+    setEditingSizes((prev) => prev.map((s) => ({ ...s, inventory: 0 })));
   };
 
   // Open Edit Product Modal
@@ -579,6 +682,7 @@ export const AdminProductsPage: React.FC = () => {
                       <th className="py-3.5 px-3">SKU</th>
                       <th className="py-3.5 px-3">Dept & Category</th>
                       <th className="py-3.5 px-3">Price & Official MRP</th>
+                      <th className="py-3.5 px-3">Sizes & Availability</th>
                       <th className="py-3.5 px-3 text-center">Live Stock Control</th>
                       <th className="py-3.5 px-3">3D Viewer</th>
                       <th className="py-3.5 px-4 text-right">Actions</th>
@@ -664,6 +768,41 @@ export const AdminProductsPage: React.FC = () => {
                               )}
                             </td>
 
+                            {/* Available Sizes & Stock Toggle Column */}
+                            <td className="py-3 px-3">
+                              <div className="flex items-center gap-1 flex-wrap max-w-[170px]">
+                                {p.variants && p.variants.length > 0 ? (
+                                  p.variants.map((v) => {
+                                    const isAvail = v.inventory > 0;
+                                    return (
+                                      <button
+                                        key={v.id || v.size}
+                                        type="button"
+                                        onClick={() => handleToggleSingleSize(p, v.size, isAvail)}
+                                        className={`text-[9.5px] px-1.5 py-0.5 rounded font-black border transition-all cursor-pointer ${
+                                          isAvail
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
+                                            : 'bg-rose-50 text-rose-700 border-rose-200 line-through opacity-75 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200'
+                                        }`}
+                                        title={`${v.size}: ${isAvail ? `In Stock (${v.inventory})` : 'Out of Stock'}. Click to toggle!`}
+                                      >
+                                        {v.size} {isAvail ? '✓' : '✕'}
+                                      </button>
+                                    );
+                                  })
+                                ) : (
+                                  <span className="text-[10px] text-slate-400">Standard</span>
+                                )}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleOpenSizesModal(p)}
+                                className="text-[10px] text-[#5B21B6] hover:underline font-bold mt-1 flex items-center gap-0.5 cursor-pointer border-none bg-transparent p-0"
+                              >
+                                <Ruler className="w-2.5 h-2.5" /> Manage Sizes
+                              </button>
+                            </td>
+
                             {/* 1-Click In-Stock / Out-of-Stock Toggle */}
                             <td className="py-3 px-3 text-center">
                               <button
@@ -723,6 +862,16 @@ export const AdminProductsPage: React.FC = () => {
                             {/* Action Buttons */}
                             <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1.5">
+                                {/* Manage Sizes & Stock */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenSizesModal(p)}
+                                  className="p-1.5 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors border-none bg-transparent cursor-pointer"
+                                  title="Manage Sizes & Availability"
+                                >
+                                  <Ruler className="w-4 h-4" />
+                                </button>
+
                                 {/* Quick Price Fixing */}
                                 <button
                                   type="button"
@@ -1006,6 +1155,158 @@ export const AdminProductsPage: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            MODAL 1B: MANAGE SIZES & AVAILABILITY
+           ======================================================== */}
+        {isSizesModalOpen && sizeEditingProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs overflow-y-auto">
+            <div className="max-w-md sm:max-w-lg w-full bg-white rounded-3xl p-6 sm:p-7 space-y-4 shadow-2xl border-none animate-in zoom-in-95 duration-200 my-8">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div>
+                  <h3 className="text-base font-black text-slate-900 flex items-center gap-1.5">
+                    <Ruler className="w-4 h-4 text-[#5B21B6]" />
+                    <span>Manage Sizes & Stock Availability</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium truncate max-w-sm mt-0.5">
+                    {sizeEditingProduct.title} (SKU: {sizeEditingProduct.sku})
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsSizesModalOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-700 border-none bg-transparent cursor-pointer text-base"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Quick Action Buttons */}
+              <div className="flex items-center justify-between text-xs pt-1">
+                <span className="font-bold text-slate-700">Configured Sizes ({editingSizes.length}):</span>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={handleMarkAllSizesInStock}
+                    className="text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200 cursor-pointer"
+                  >
+                    All In Stock
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleMarkAllSizesOutOfStock}
+                    className="text-[10px] font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer"
+                  >
+                    All Out of Stock
+                  </button>
+                </div>
+              </div>
+
+              {/* Sizes List with Live Toggles */}
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {editingSizes.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-slate-50 text-center text-xs text-slate-400">
+                    No sizes added yet. Use the standard size buttons below to add sizes.
+                  </div>
+                ) : (
+                  editingSizes.map((sItem, idx) => {
+                    const isAvail = sItem.inventory > 0;
+                    return (
+                      <div
+                        key={idx}
+                        className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 gap-2"
+                      >
+                        <div className="flex items-center gap-2 flex-1">
+                          <input
+                            type="text"
+                            value={sItem.size}
+                            onChange={(e) => handleSizeNameChange(idx, e.target.value)}
+                            className="w-22 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-xs font-black text-slate-900"
+                            placeholder="e.g. UK 7"
+                          />
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            Stock:
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={sItem.inventory}
+                            onChange={(e) => handleSizeInventoryChange(idx, parseInt(e.target.value) || 0)}
+                            className="w-16 px-2 py-1 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-900 text-center"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* 1-Click Toggle Available / Out of Stock */}
+                          <button
+                            type="button"
+                            onClick={() => handleToggleEditingSizeAvailability(idx)}
+                            className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer border flex items-center gap-1 ${
+                              isAvail
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                : 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                            }`}
+                          >
+                            {isAvail ? 'In Stock (Available)' : 'Out of Stock (0)'}
+                          </button>
+
+                          {/* Delete Size */}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSize(idx)}
+                            className="p-1 text-slate-400 hover:text-rose-600 rounded cursor-pointer border-none bg-transparent"
+                            title="Remove this size"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Quick Add Size Buttons */}
+              <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-600 block">Quick Add Standard Size:</span>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {['UK 4', 'UK 5', 'UK 6', 'UK 7', 'UK 8', 'UK 9', 'UK 10', 'UK 11', 'UK 12'].map((stdSize) => {
+                    const alreadyHas = editingSizes.some((s) => s.size === stdSize);
+                    if (alreadyHas) return null;
+                    return (
+                      <button
+                        key={stdSize}
+                        type="button"
+                        onClick={() => handleAddStandardSize(stdSize)}
+                        className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-[#5B21B6] hover:bg-purple-100 border border-purple-200 cursor-pointer"
+                      >
+                        + {stdSize}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Save Changes */}
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsSizesModalOpen(false)}
+                  className="px-4 py-2 text-xs font-bold text-slate-500 hover:text-slate-800 border-none bg-transparent cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveSizes}
+                  className="px-5 py-2.5 bg-[#5B21B6] hover:bg-[#4C1D95] text-white font-bold text-xs rounded-xl shadow-md border-none cursor-pointer"
+                >
+                  Save Size Availability
+                </button>
+              </div>
             </div>
           </div>
         )}

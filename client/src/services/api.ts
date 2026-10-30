@@ -280,6 +280,10 @@ export const api = {
       request<{ message: string }>(`/admin/products/${id}`, { method: 'DELETE' }),
     toggleStock: (id: string, isOutOfStock: boolean) =>
       request<Product>(`/admin/products/${id}/toggle-stock`, { method: 'PUT', body: JSON.stringify({ isOutOfStock }) }),
+    toggleSizeStock: (id: string, size: string, isOutOfStock: boolean) =>
+      request<Product>(`/admin/products/${id}/toggle-size-stock`, { method: 'PUT', body: JSON.stringify({ size, isOutOfStock }) }),
+    updateSizes: (id: string, sizes: Array<{ size: string; inventory: number }>) =>
+      request<Product>(`/admin/products/${id}/sizes`, { method: 'PUT', body: JSON.stringify({ sizes }) }),
     quickUpdatePrice: (id: string, data: { price: number; originalPrice?: number; discountPercent?: number }) =>
       request<Product>(`/admin/products/${id}/price`, { method: 'PUT', body: JSON.stringify(data) }),
     getCoupons: () => request<any[]>('/admin/coupons'),

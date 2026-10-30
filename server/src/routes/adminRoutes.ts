@@ -411,6 +411,112 @@ router.put('/products/:id/price', async (req: AuthRequest, res: Response, next) 
   }
 });
 
+// PUT /api/admin/products/:id/toggle-size-stock (Toggle stock availability for a specific size)
+router.put('/products/:id/toggle-size-stock', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { size, isOutOfStock } = req.body;
+
+    if (!size) {
+      res.status(400).json({ success: false, message: 'Size parameter is required.' });
+      return;
+    }
+
+    const targetInventory = isOutOfStock ? 0 : 15;
+
+    await prisma.productVariant.updateMany({
+      where: { productId: id, size },
+      data: { inventory: targetInventory },
+    });
+
+    const updated = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true, media: true, category: true },
+    });
+
+    res.json({
+      success: true,
+      message: `Size ${size} marked as ${isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK'}`,
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/sizes (Update/Manage multiple sizes & stock availability)
+router.put('/products/:id/sizes', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { sizes } = req.body; // Array of { size: string, inventory: number, colorName?: string }
+
+    if (!Array.isArray(sizes)) {
+      res.status(400).json({ success: false, message: 'Sizes array is required.' });
+      return;
+    }
+
+    const product = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true },
+    });
+
+    if (!product) {
+      res.status(404).json({ success: false, message: 'Product not found.' });
+      return;
+    }
+
+    const existingVariants = product.variants;
+    const inputSizeNames = new Set(sizes.map((s: any) => s.size.trim()));
+
+    // 1. Delete variants whose size was removed by admin
+    for (const v of existingVariants) {
+      if (!inputSizeNames.has(v.size)) {
+        await prisma.productVariant.delete({ where: { id: v.id } });
+      }
+    }
+
+    // 2. Update existing or create new variants
+    for (const sItem of sizes) {
+      const sTrim = sItem.size.trim();
+      const inv = typeof sItem.inventory === 'number' ? Math.max(0, sItem.inventory) : (sItem.isAvailable ? 15 : 0);
+      const match = existingVariants.find((v) => v.size === sTrim);
+
+      if (match) {
+        await prisma.productVariant.update({
+          where: { id: match.id },
+          data: { inventory: inv },
+        });
+      } else {
+        const cleanSku = `${product.sku}-${sTrim.replace(/\s+/g, '')}-${Date.now().toString().slice(-4)}`;
+        await prisma.productVariant.create({
+          data: {
+            productId: id,
+            sku: cleanSku,
+            size: sTrim,
+            colorName: sItem.colorName || existingVariants[0]?.colorName || 'Classic',
+            colorHex: existingVariants[0]?.colorHex || '#222222',
+            inventory: inv,
+            priceAdjustment: 0,
+          },
+        });
+      }
+    }
+
+    const updated = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true, media: true, category: true },
+    });
+
+    res.json({
+      success: true,
+      message: 'Product sizes and stock updated successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // DELETE /api/admin/products/:id
 router.delete('/products/:id', async (req: AuthRequest, res: Response, next) => {
   try {
