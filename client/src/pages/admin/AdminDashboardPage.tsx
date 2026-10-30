@@ -19,17 +19,12 @@ export const AdminDashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || user.role !== 'ADMIN') {
-      navigate('/login');
-      return;
-    }
-
     api.admin
       .getStats()
       .then(setStats)
       .catch(console.error)
       .finally(() => setIsLoading(false));
-  }, [user, navigate]);
+  }, []);
 
   if (!user || user.role !== 'ADMIN') return null;
 

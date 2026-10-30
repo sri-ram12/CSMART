@@ -42,57 +42,86 @@ function ScrollToTop() {
   return null;
 }
 
-export function App() {
+/** Customer storefront layout — Navbar, Footer, MobileBottomNav */
+function StorefrontLayout({ children }: { children: React.ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden">
+      <Navbar onOpenSearch={() => setIsSearchOpen(true)} />
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <CartDrawer />
+      <main className="flex-1 pb-16 lg:pb-0">{children}</main>
+      <Footer />
+      <MobileBottomNav />
+    </div>
+  );
+}
 
+/** Admin layout — plain full-screen, zero customer chrome */
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-slate-100 text-slate-900">
+      {children}
+    </div>
+  );
+}
+
+export function App() {
   return (
     <Router>
       <ScrollToTop />
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden">
-              <Navbar onOpenSearch={() => setIsSearchOpen(true)} />
-              <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-              <CartDrawer />
+            <Routes>
 
-              <main className="flex-1 pb-16 lg:pb-0">
-                <Routes>
-                  {/* Public Storefront Routes */}
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/shop" element={<ShopPage />} />
-                  <Route path="/categories" element={<CategoriesPage />} />
-                  <Route path="/slippers" element={<SlippersPage />} />
-                  <Route path="/sandals" element={<Navigate to="/slippers" replace />} />
-                  <Route path="/men" element={<Navigate to="/shop?department=MEN" replace />} />
-                  <Route path="/women" element={<Navigate to="/shop?department=WOMEN" replace />} />
-                  <Route path="/kids" element={<Navigate to="/shop?department=KIDS" replace />} />
-                  <Route path="/product/:slug" element={<ProductDetailPage />} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/order-confirmed/:orderNumber" element={<OrderConfirmationPage />} />
-                  <Route path="/orders" element={<OrderTrackingPage />} />
-                  <Route path="/orders/:idOrNumber" element={<OrderTrackingPage />} />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/register" element={<RegisterPage />} />
-                  <Route path="/profile" element={<ProfilePage />} />
-                  <Route path="/wishlist" element={<WishlistPage />} />
+              {/* ── Admin routes (no customer layout) ── */}
+              <Route path="/admin/login" element={
+                <AdminLayout><AdminLoginPage /></AdminLayout>
+              } />
+              <Route path="/admin" element={
+                <AdminLayout><AdminRoute><AdminDashboardPage /></AdminRoute></AdminLayout>
+              } />
+              <Route path="/admin/products" element={
+                <AdminLayout><AdminRoute><AdminProductsPage /></AdminRoute></AdminLayout>
+              } />
+              <Route path="/admin/orders" element={
+                <AdminLayout><AdminRoute><AdminOrdersPage /></AdminRoute></AdminLayout>
+              } />
+              <Route path="/admin/inventory" element={
+                <AdminLayout><AdminRoute><AdminInventoryPage /></AdminRoute></AdminLayout>
+              } />
+              <Route path="/admin/settings" element={
+                <AdminLayout><AdminRoute><AdminSettingsPage /></AdminRoute></AdminLayout>
+              } />
 
-                  {/* Admin Login (public) */}
-                  <Route path="/admin/login" element={<AdminLoginPage />} />
+              {/* ── Customer storefront routes (with Navbar/Footer) ── */}
+              <Route path="/*" element={
+                <StorefrontLayout>
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/categories" element={<CategoriesPage />} />
+                    <Route path="/slippers" element={<SlippersPage />} />
+                    <Route path="/sandals" element={<Navigate to="/slippers" replace />} />
+                    <Route path="/men" element={<Navigate to="/shop?department=MEN" replace />} />
+                    <Route path="/women" element={<Navigate to="/shop?department=WOMEN" replace />} />
+                    <Route path="/kids" element={<Navigate to="/shop?department=KIDS" replace />} />
+                    <Route path="/product/:slug" element={<ProductDetailPage />} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route path="/checkout" element={<CheckoutPage />} />
+                    <Route path="/order-confirmed/:orderNumber" element={<OrderConfirmationPage />} />
+                    <Route path="/orders" element={<OrderTrackingPage />} />
+                    <Route path="/orders/:idOrNumber" element={<OrderTrackingPage />} />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/register" element={<RegisterPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/wishlist" element={<WishlistPage />} />
+                  </Routes>
+                </StorefrontLayout>
+              } />
 
-                  {/* Protected Admin Routes — requires ADMIN role */}
-                  <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-                  <Route path="/admin/products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
-                  <Route path="/admin/orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
-                  <Route path="/admin/inventory" element={<AdminRoute><AdminInventoryPage /></AdminRoute>} />
-                  <Route path="/admin/settings" element={<AdminRoute><AdminSettingsPage /></AdminRoute>} />
-                </Routes>
-              </main>
-
-              <Footer />
-              <MobileBottomNav />
-            </div>
+            </Routes>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>
