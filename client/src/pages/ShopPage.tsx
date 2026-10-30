@@ -313,6 +313,7 @@ export const ShopPage: React.FC = () => {
                 className="bg-transparent text-slate-800 font-bold focus:outline-none cursor-pointer pr-1 border-none text-xs w-full"
               >
                 <option value="recommended">Popularity</option>
+                <option value="discount_desc">Highest Discount % (Best Deals)</option>
                 <option value="price_asc">Price: Low-High</option>
                 <option value="price_desc">Price: High-Low</option>
                 <option value="rating_desc">Highest Rated</option>

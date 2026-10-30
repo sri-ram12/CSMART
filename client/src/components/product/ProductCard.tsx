@@ -142,9 +142,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 <span className="text-sm sm:text-base font-serif font-black text-[#1E0842]">
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
-                {product.originalPrice && (
+                {product.originalPrice && product.originalPrice > product.price && (
                   <span className="text-[10px] sm:text-xs text-slate-400 line-through">
                     ₹{product.originalPrice.toLocaleString('en-IN')}
+                  </span>
+                )}
+                {product.discountPercent > 0 && (
+                  <span className="text-[9px] sm:text-[10px] font-black text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded tracking-tight">
+                    {product.discountPercent}% OFF
                   </span>
                 )}
               </div>

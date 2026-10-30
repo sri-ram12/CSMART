@@ -245,8 +245,10 @@ export const api = {
 
   // Reviews
   reviews: {
-    submit: (data: { productId: string; rating: number; title: string; comment: string }) =>
+    submit: (data: { productId: string; rating: number; title: string; comment: string; userName?: string }) =>
       request<any>('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+    getAll: () => request<any[]>('/reviews'),
+    delete: (id: string) => request<{ message: string }>(`/reviews/${id}`, { method: 'DELETE' }),
   },
 
   // Settings
@@ -275,6 +277,10 @@ export const api = {
       request<Product>(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deleteProduct: (id: string) =>
       request<{ message: string }>(`/admin/products/${id}`, { method: 'DELETE' }),
+    toggleStock: (id: string, isOutOfStock: boolean) =>
+      request<Product>(`/admin/products/${id}/toggle-stock`, { method: 'PUT', body: JSON.stringify({ isOutOfStock }) }),
+    quickUpdatePrice: (id: string, data: { price: number; originalPrice?: number; discountPercent?: number }) =>
+      request<Product>(`/admin/products/${id}/price`, { method: 'PUT', body: JSON.stringify(data) }),
     getCoupons: () => request<any[]>('/admin/coupons'),
     createCoupon: (data: any) => request<any>('/admin/coupons', { method: 'POST', body: JSON.stringify(data) }),
     getSettings: () => request<StoreSettings>('/admin/settings'),

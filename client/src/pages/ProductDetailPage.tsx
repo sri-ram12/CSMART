@@ -48,15 +48,22 @@ export const ProductDetailPage: React.FC = () => {
   const [isCopied, setIsCopied] = useState(false);
 
   // Review Form
+  const { user } = useAuth();
   const [reviewRating, setReviewRating] = useState(5);
+  const [reviewAuthorName, setReviewAuthorName] = useState(user?.name || '');
   const [reviewTitle, setReviewTitle] = useState('');
   const [reviewComment, setReviewComment] = useState('');
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
   const { addToCart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user?.name && !reviewAuthorName) {
+      setReviewAuthorName(user.name);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!slug) return;
@@ -181,16 +188,14 @@ export const ProductDetailPage: React.FC = () => {
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) {
-      navigate('/login');
-      return;
-    }
     try {
+      const authorName = reviewAuthorName.trim() || user?.name || 'Verified Customer';
       await api.reviews.submit({
         productId: product.id,
         rating: reviewRating,
-        title: reviewTitle,
-        comment: reviewComment,
+        title: reviewTitle.trim(),
+        comment: reviewComment.trim(),
+        userName: authorName,
       });
       setReviewSuccess(true);
       setReviewTitle('');
@@ -641,14 +646,25 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <input
-              type="text"
-              required
-              placeholder="Review Title (e.g. Incredibly lightweight and comfortable)"
-              value={reviewTitle}
-              onChange={(e) => setReviewTitle(e.target.value)}
-              className="w-full bg-white px-4 py-2.5 rounded-xl text-xs text-slate-900 placeholder-slate-400 border-none ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm"
-            />
+            {/* Reviewer Name and Review Headline */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
+                type="text"
+                required
+                placeholder="Your Full Name (e.g. Ramesh Kumar)"
+                value={reviewAuthorName}
+                onChange={(e) => setReviewAuthorName(e.target.value)}
+                className="w-full bg-white px-4 py-2.5 rounded-xl text-xs text-slate-900 placeholder-slate-400 border-none ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm"
+              />
+              <input
+                type="text"
+                required
+                placeholder="Review Title (e.g. Incredibly lightweight and comfortable)"
+                value={reviewTitle}
+                onChange={(e) => setReviewTitle(e.target.value)}
+                className="w-full bg-white px-4 py-2.5 rounded-xl text-xs text-slate-900 placeholder-slate-400 border-none ring-1 ring-slate-200 focus:outline-none focus:ring-2 focus:ring-red-600 shadow-sm"
+              />
+            </div>
 
             <textarea
               required

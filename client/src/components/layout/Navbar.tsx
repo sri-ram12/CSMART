@@ -5,6 +5,7 @@ import {
   Search,
   Heart,
   ShoppingBag,
+  ShieldCheck,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -50,6 +51,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 RIGHT SIDE: SEARCH + WISHLIST + CART (Clean, Uncluttered Top Bar)
                ======================================================== */}
             <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto pl-2">
+
+              {/* Admin Portal Quick Link */}
+              <Link
+                to="/admin/products"
+                className="border-none flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-bold text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#5B21B6] hover:text-white transition-all shadow-2xs hover:scale-105 active:scale-95 group"
+                title="Store Admin Panel (Catalog, Stock, Rates & Reviews)"
+                aria-label="Admin Portal"
+              >
+                <ShieldCheck className="w-4 h-4 text-[#7C3AED] group-hover:text-white transition-colors" />
+                <span className="hidden sm:inline font-bold">Admin</span>
+              </Link>
 
               {/* Search Option */}
               <button

@@ -269,12 +269,14 @@ router.post('/products', async (req: AuthRequest, res: Response, next) => {
   }
 });
 
-// PUT /api/admin/products/:id (Update product)
+// PUT /api/admin/products/:id (Update product details, category, brand, and pricing)
 router.put('/products/:id', async (req: AuthRequest, res: Response, next) => {
   try {
     const {
       title,
       brand,
+      department,
+      categoryId,
       price,
       originalPrice,
       discountPercent,
@@ -294,13 +296,15 @@ router.put('/products/:id', async (req: AuthRequest, res: Response, next) => {
     const data: any = {};
     if (title) data.title = title;
     if (brand) data.brand = brand;
+    if (department) data.department = department;
+    if (categoryId) data.categoryId = categoryId;
     if (price !== undefined) data.price = parseFloat(price);
     if (originalPrice !== undefined) data.originalPrice = parseFloat(originalPrice);
     if (discountPercent !== undefined) data.discountPercent = parseInt(discountPercent);
-    if (description) data.description = description;
-    if (details) data.details = details;
+    if (description !== undefined) data.description = description;
+    if (details !== undefined) data.details = details;
     if (has3D !== undefined) data.has3D = Boolean(has3D);
-    if (model3DConfig) data.model3DConfig = typeof model3DConfig === 'object' ? JSON.stringify(model3DConfig) : model3DConfig;
+    if (model3DConfig !== undefined) data.model3DConfig = typeof model3DConfig === 'object' ? JSON.stringify(model3DConfig) : model3DConfig;
     if (videoUrl !== undefined) data.videoUrl = videoUrl;
     if (videoPoster !== undefined) data.videoPoster = videoPoster;
     if (upperMaterial) data.upperMaterial = upperMaterial;
@@ -312,12 +316,72 @@ router.put('/products/:id', async (req: AuthRequest, res: Response, next) => {
     const updated = await prisma.product.update({
       where: { id: req.params.id },
       data,
-      include: { variants: true, media: true },
+      include: { variants: true, media: true, category: true },
     });
 
     res.json({
       success: true,
       message: 'Product updated successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/toggle-stock (Toggle In-Stock / Out-of-Stock)
+router.put('/products/:id/toggle-stock', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { isOutOfStock } = req.body;
+
+    // Determine target inventory: 0 if marking out of stock, 15 if restoring stock
+    const targetQty = isOutOfStock ? 0 : 15;
+
+    await prisma.productVariant.updateMany({
+      where: { productId: id },
+      data: { inventory: targetQty },
+    });
+
+    const updated = await prisma.product.findUnique({
+      where: { id },
+      include: { variants: true, media: true, category: true },
+    });
+
+    res.json({
+      success: true,
+      message: isOutOfStock ? 'Product marked as Out of Stock' : 'Product marked as In Stock',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/price (Quick Price Fixing)
+router.put('/products/:id/price', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { price, originalPrice, discountPercent } = req.body;
+
+    const data: any = {};
+    if (price !== undefined) data.price = parseFloat(price);
+    if (originalPrice !== undefined) data.originalPrice = parseFloat(originalPrice);
+    if (discountPercent !== undefined) {
+      data.discountPercent = parseInt(discountPercent);
+    } else if (originalPrice && price && parseFloat(originalPrice) > parseFloat(price)) {
+      data.discountPercent = Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100);
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data,
+      include: { variants: true, media: true, category: true },
+    });
+
+    res.json({
+      success: true,
+      message: 'Price updated successfully',
       data: updated,
     });
   } catch (error) {
