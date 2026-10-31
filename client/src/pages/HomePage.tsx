@@ -10,6 +10,7 @@ import { CustomerReviewsSection } from '../components/home/CustomerReviewsSectio
 import { StoreLocationShowcase } from '../components/home/StoreLocationShowcase';
 import { DynamicOfferBanners } from '../components/home/DynamicOfferBanners';
 import { NewArrivalsSection } from '../components/home/NewArrivalsSection';
+import { ShoeViewer3DShowcase } from '../components/home/ShoeViewer3DShowcase';
 
 export const HomePage: React.FC = () => {
   return (
@@ -25,6 +26,9 @@ export const HomePage: React.FC = () => {
 
       {/* 3. Official Company Brand Banners Showcase (VKC Pride, Walkaroo, Paragon, Sparx, Doctor Choice) */}
       <TopIndianBrandsBanner />
+
+      {/* 3.5. Interactive 3D Shoe Viewer — Popular Brand Flagship Models (Walkaroo, Sparx, VKC Pride, Paragon) */}
+      <ShoeViewer3DShowcase />
 
       {/* 4. Fresh In Store - New Arrivals Section */}
       <NewArrivalsSection />
