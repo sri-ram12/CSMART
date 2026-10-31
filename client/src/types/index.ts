@@ -80,6 +80,8 @@ export interface Product {
   variants: ProductVariant[];
   reviews?: Review[];
   related?: Product[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {

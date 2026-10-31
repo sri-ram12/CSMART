@@ -25,6 +25,14 @@ import {
   Upload,
   RefreshCw,
   ExternalLink,
+  LayoutGrid,
+  List,
+  Filter,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Admin3DModelStudioModal } from '../../components/admin/Admin3DModelStudioModal';
@@ -90,8 +98,11 @@ export const AdminProductsPage: React.FC = () => {
   const [departmentFilter, setDepartmentFilter] = useState<string>('ALL');
   const [brandFilter, setBrandFilter] = useState<string>('ALL');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK'>('ALL');
+  const [quickFilter, setQuickFilter] = useState<'ALL' | 'IN_STOCK' | 'OUT_OF_STOCK' | 'NEW_ARRIVALS'>('ALL');
+  const [sortBy, setSortBy] = useState<'newest' | 'price-asc' | 'price-desc' | 'sku' | 'title'>('newest');
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState<number>(24);
 
   // Reviews Filters
   const [reviewSearch, setReviewSearch] = useState('');
@@ -325,15 +336,36 @@ export const AdminProductsPage: React.FC = () => {
     }
   };
 
-  // Filtered Products Memo
+  // KPI Stats for quick filters
+  const catalogStats = useMemo(() => {
+    let inStock = 0;
+    let outOfStock = 0;
+    let newArrivals = 0;
+    for (const p of products) {
+      const isOut = p.variants && p.variants.length > 0
+        ? p.variants.every((v) => v.inventory <= 0)
+        : false;
+      if (isOut) outOfStock++;
+      else inStock++;
+      if (p.isNewArrival) newArrivals++;
+    }
+    return {
+      total: products.length,
+      inStock,
+      outOfStock,
+      newArrivals,
+    };
+  }, [products]);
+
+  // Filtered & Sorted Products Memo
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => {
+    const list = products.filter((p) => {
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchTitle = p.title.toLowerCase().includes(q);
-        const matchSku = p.sku.toLowerCase().includes(q);
-        const matchBrand = p.brand.toLowerCase().includes(q);
+        const matchTitle = (p.title || '').toLowerCase().includes(q);
+        const matchSku = (p.sku || '').toLowerCase().includes(q);
+        const matchBrand = (p.brand || '').toLowerCase().includes(q);
         if (!matchTitle && !matchSku && !matchBrand) return false;
       }
       // Department
@@ -344,16 +376,32 @@ export const AdminProductsPage: React.FC = () => {
       if (brandFilter !== 'ALL' && p.brand.toLowerCase() !== brandFilter.toLowerCase()) {
         return false;
       }
-      // Stock
+      // Stock Status (from select)
       const isOut = p.variants && p.variants.length > 0
         ? p.variants.every((v) => v.inventory <= 0)
         : false;
       if (stockFilter === 'IN_STOCK' && isOut) return false;
       if (stockFilter === 'OUT_OF_STOCK' && !isOut) return false;
 
+      // Quick Filter Buttons
+      if (quickFilter === 'IN_STOCK' && isOut) return false;
+      if (quickFilter === 'OUT_OF_STOCK' && !isOut) return false;
+      if (quickFilter === 'NEW_ARRIVALS' && !p.isNewArrival) return false;
+
       return true;
     });
-  }, [products, searchQuery, departmentFilter, brandFilter, stockFilter]);
+
+    return [...list].sort((a, b) => {
+      if (sortBy === 'price-asc') return a.price - b.price;
+      if (sortBy === 'price-desc') return b.price - a.price;
+      if (sortBy === 'sku') return (a.sku || '').localeCompare(b.sku || '', undefined, { numeric: true });
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      // default: newest
+      if (a.isNewArrival && !b.isNewArrival) return -1;
+      if (!a.isNewArrival && b.isNewArrival) return 1;
+      return (new Date(b.createdAt || 0).getTime()) - (new Date(a.createdAt || 0).getTime());
+    });
+  }, [products, searchQuery, departmentFilter, brandFilter, stockFilter, quickFilter, sortBy]);
 
   // Paginated Products
   const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1;
@@ -365,7 +413,7 @@ export const AdminProductsPage: React.FC = () => {
   // Reset page when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, departmentFilter, brandFilter, stockFilter]);
+  }, [searchQuery, departmentFilter, brandFilter, stockFilter, quickFilter, sortBy, pageSize]);
 
   // Toggle In-Stock / Out-of-Stock
   const handleToggleStock = async (product: Product) => {
@@ -799,228 +847,338 @@ export const AdminProductsPage: React.FC = () => {
         </div>
 
         {/* ========================================================
-            TAB 1: FOOTWEAR CATALOG MANAGEMENT (555 items)
+            TAB 1: FOOTWEAR CATALOG MANAGEMENT (560 items)
            ======================================================== */}
         {activeTab === 'catalog' && (
-          <div className="space-y-4">
-            {/* Filter & Search Bar */}
-            <div className="bg-white p-4 rounded-2xl shadow-xs border border-purple-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-              {/* Search */}
-              <div className="relative flex-1">
-                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search by SKU (e.g. 871, 102), Product Title, or Brand..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
-                />
-              </div>
+          <div className="space-y-5">
+            {/* 1. Quick KPI Filter Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {/* Total Footwear */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickFilter('ALL');
+                  setStockFilter('ALL');
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  quickFilter === 'ALL' && stockFilter === 'ALL'
+                    ? 'bg-[#5B21B6] text-white border-[#5B21B6] shadow-md ring-2 ring-purple-300'
+                    : 'bg-white hover:bg-purple-50/40 text-slate-700 border-purple-100 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${quickFilter === 'ALL' && stockFilter === 'ALL' ? 'text-purple-200' : 'text-slate-500'}`}>
+                    All Footwear
+                  </span>
+                  <Package className={`w-4 h-4 ${quickFilter === 'ALL' && stockFilter === 'ALL' ? 'text-white' : 'text-[#7C3AED]'}`} />
+                </div>
+                <div className="text-xl sm:text-2xl font-black mt-1.5 tracking-tight">
+                  {catalogStats.total}
+                </div>
+                <p className={`text-[11px] mt-0.5 font-medium ${quickFilter === 'ALL' && stockFilter === 'ALL' ? 'text-purple-200' : 'text-slate-400'}`}>
+                  Full Store Catalog
+                </p>
+              </button>
 
-              {/* Filters */}
-              <div className="flex items-center gap-2 flex-wrap">
+              {/* In Stock */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickFilter('IN_STOCK');
+                  setStockFilter('IN_STOCK');
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  quickFilter === 'IN_STOCK' || stockFilter === 'IN_STOCK'
+                    ? 'bg-emerald-700 text-white border-emerald-700 shadow-md ring-2 ring-emerald-300'
+                    : 'bg-white hover:bg-emerald-50/40 text-slate-700 border-purple-100 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${quickFilter === 'IN_STOCK' || stockFilter === 'IN_STOCK' ? 'text-emerald-200' : 'text-slate-500'}`}>
+                    In Stock
+                  </span>
+                  <CheckCircle2 className={`w-4 h-4 ${quickFilter === 'IN_STOCK' || stockFilter === 'IN_STOCK' ? 'text-white' : 'text-emerald-600'}`} />
+                </div>
+                <div className={`text-xl sm:text-2xl font-black mt-1.5 tracking-tight ${quickFilter === 'IN_STOCK' || stockFilter === 'IN_STOCK' ? 'text-white' : 'text-emerald-600'}`}>
+                  {catalogStats.inStock}
+                </div>
+                <p className={`text-[11px] mt-0.5 font-medium ${quickFilter === 'IN_STOCK' || stockFilter === 'IN_STOCK' ? 'text-emerald-200' : 'text-slate-400'}`}>
+                  Available for Customer Orders
+                </p>
+              </button>
+
+              {/* Out of Stock */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickFilter('OUT_OF_STOCK');
+                  setStockFilter('OUT_OF_STOCK');
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  quickFilter === 'OUT_OF_STOCK' || stockFilter === 'OUT_OF_STOCK'
+                    ? 'bg-rose-700 text-white border-rose-700 shadow-md ring-2 ring-rose-300'
+                    : 'bg-white hover:bg-rose-50/40 text-slate-700 border-purple-100 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${quickFilter === 'OUT_OF_STOCK' || stockFilter === 'OUT_OF_STOCK' ? 'text-rose-200' : 'text-slate-500'}`}>
+                    Out of Stock
+                  </span>
+                  <AlertCircle className={`w-4 h-4 ${quickFilter === 'OUT_OF_STOCK' || stockFilter === 'OUT_OF_STOCK' ? 'text-white' : 'text-rose-600'}`} />
+                </div>
+                <div className={`text-xl sm:text-2xl font-black mt-1.5 tracking-tight ${quickFilter === 'OUT_OF_STOCK' || stockFilter === 'OUT_OF_STOCK' ? 'text-white' : 'text-rose-600'}`}>
+                  {catalogStats.outOfStock}
+                </div>
+                <p className={`text-[11px] mt-0.5 font-medium ${quickFilter === 'OUT_OF_STOCK' || stockFilter === 'OUT_OF_STOCK' ? 'text-rose-200' : 'text-slate-400'}`}>
+                  Inventory Replenishment Needed
+                </p>
+              </button>
+
+              {/* New Arrivals */}
+              <button
+                type="button"
+                onClick={() => {
+                  setQuickFilter('NEW_ARRIVALS');
+                  setStockFilter('ALL');
+                }}
+                className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
+                  quickFilter === 'NEW_ARRIVALS'
+                    ? 'bg-amber-600 text-white border-amber-600 shadow-md ring-2 ring-amber-300'
+                    : 'bg-white hover:bg-amber-50/40 text-slate-700 border-purple-100 shadow-xs'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={`text-[11px] font-bold uppercase tracking-wider ${quickFilter === 'NEW_ARRIVALS' ? 'text-amber-200' : 'text-slate-500'}`}>
+                    New Arrivals
+                  </span>
+                  <Sparkles className={`w-4 h-4 ${quickFilter === 'NEW_ARRIVALS' ? 'text-white fill-white' : 'text-amber-500 fill-amber-500'}`} />
+                </div>
+                <div className={`text-xl sm:text-2xl font-black mt-1.5 tracking-tight ${quickFilter === 'NEW_ARRIVALS' ? 'text-white' : 'text-amber-600'}`}>
+                  {catalogStats.newArrivals}
+                </div>
+                <p className={`text-[11px] mt-0.5 font-medium ${quickFilter === 'NEW_ARRIVALS' ? 'text-amber-200' : 'text-slate-400'}`}>
+                  Featured on Homepage Carousel
+                </p>
+              </button>
+            </div>
+
+            {/* 2. Search, Filters & View Mode Toolbar */}
+            <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-xs border border-purple-100 space-y-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                {/* Search Bar */}
+                <div className="md:col-span-5 relative">
+                  <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Search by SKU (e.g. 871), Brand, or Style..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-9 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#5B21B6] transition"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 border-none bg-transparent cursor-pointer p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
                 {/* Department Filter */}
-                <select
-                  value={departmentFilter}
-                  onChange={(e) => setDepartmentFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
-                >
-                  <option value="ALL">All Departments</option>
-                  <option value="MEN">Men's Footwear</option>
-                  <option value="WOMEN">Women's Footwear</option>
-                  <option value="KIDS">Kids' Footwear</option>
-                  <option value="SLIPPERS_SANDALS">Slippers & Sandals</option>
-                </select>
+                <div className="md:col-span-2">
+                  <select
+                    value={departmentFilter}
+                    onChange={(e) => setDepartmentFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-[#5B21B6] cursor-pointer"
+                  >
+                    <option value="ALL">All Departments</option>
+                    <option value="MEN">Men's Footwear</option>
+                    <option value="WOMEN">Women's Footwear</option>
+                    <option value="KIDS">Kids' Footwear</option>
+                    <option value="SLIPPERS_SANDALS">Slippers & Sandals</option>
+                  </select>
+                </div>
 
                 {/* Brand Filter */}
-                <select
-                  value={brandFilter}
-                  onChange={(e) => setBrandFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
-                >
-                  <option value="ALL">All Brands ({ALL_BRANDS.length})</option>
-                  {ALL_BRANDS.map((b) => (
-                    <option key={b} value={b}>{b}</option>
-                  ))}
-                </select>
+                <div className="md:col-span-3">
+                  <select
+                    value={brandFilter}
+                    onChange={(e) => setBrandFilter(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-[#5B21B6] cursor-pointer"
+                  >
+                    <option value="ALL">All Brands ({ALL_BRANDS.length})</option>
+                    {ALL_BRANDS.map((b) => (
+                      <option key={b} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
 
-                {/* Stock Status Filter */}
-                <select
-                  value={stockFilter}
-                  onChange={(e) => setStockFilter(e.target.value as any)}
-                  className="px-3 py-2 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-semibold focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
-                >
-                  <option value="ALL">All Stock</option>
-                  <option value="IN_STOCK">In Stock Only</option>
-                  <option value="OUT_OF_STOCK">Out of Stock Only</option>
-                </select>
+                {/* Sort By */}
+                <div className="md:col-span-2">
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as any)}
+                    className="w-full px-3 py-2.5 rounded-xl text-xs bg-slate-50 border border-slate-200 text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-[#5B21B6] cursor-pointer"
+                  >
+                    <option value="newest">Newest First</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="sku">SKU (Numeric)</option>
+                    <option value="title">Style Name (A-Z)</option>
+                  </select>
+                </div>
+              </div>
 
-                <span className="text-[11px] font-bold text-slate-500 pl-1">
-                  Showing {filteredProducts.length} items
-                </span>
+              {/* Toolbar Secondary Bar: View Switcher, Density & Result Counter */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-700">
+                    Showing <strong className="text-[#5B21B6]">{filteredProducts.length}</strong> footwear items
+                  </span>
+                  {(searchQuery || departmentFilter !== 'ALL' || brandFilter !== 'ALL' || quickFilter !== 'ALL' || stockFilter !== 'ALL') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setDepartmentFilter('ALL');
+                        setBrandFilter('ALL');
+                        setStockFilter('ALL');
+                        setQuickFilter('ALL');
+                      }}
+                      className="text-[11px] font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200 cursor-pointer transition"
+                    >
+                      Reset All Filters
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Items Per Page */}
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <span className="text-[11px] font-medium hidden sm:inline">Per page:</span>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => setPageSize(Number(e.target.value))}
+                      className="px-2 py-1 rounded-lg text-xs bg-slate-50 border border-slate-200 font-bold text-slate-700 cursor-pointer"
+                    >
+                      <option value={24}>24</option>
+                      <option value={48}>48</option>
+                      <option value={96}>96</option>
+                    </select>
+                  </div>
+
+                  {/* View Mode Toggle: Grid Cards vs Pro Table */}
+                  <div className="inline-flex rounded-xl bg-slate-100 p-0.5 border border-slate-200">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        viewMode === 'grid'
+                          ? 'bg-white text-[#5B21B6] shadow-xs font-black'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Modern Grid Cards View"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span>Grid View</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('table')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                        viewMode === 'table'
+                          ? 'bg-white text-[#5B21B6] shadow-xs font-black'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
+                      title="Detailed Data Table View"
+                    >
+                      <List className="w-3.5 h-3.5" />
+                      <span>Table View</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Product Table */}
-            <div className="bg-white rounded-3xl shadow-xs border border-purple-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-[#FAF7FD] text-slate-700 uppercase font-bold text-[11px] border-b border-purple-100">
-                    <tr>
-                      <th className="py-3.5 px-4">Product Details</th>
-                      <th className="py-3.5 px-3">SKU</th>
-                      <th className="py-3.5 px-3">Dept & Category</th>
-                      <th className="py-3.5 px-3">Price & Official MRP</th>
-                      <th className="py-3.5 px-3">Sizes & Availability</th>
-                      <th className="py-3.5 px-3 text-center">Live Stock Control</th>
-                      <th className="py-3.5 px-3">3D Viewer</th>
-                      <th className="py-3.5 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 text-slate-700">
-                    {paginatedProducts.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="py-12 text-center text-slate-400">
-                          No footwear items match your search or filter criteria.
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedProducts.map((p) => {
-                        const isOutOfStock =
-                          p.variants && p.variants.length > 0
-                            ? p.variants.every((v) => v.inventory <= 0)
-                            : false;
+            {/* ========================================================
+                VIEW MODE A: MODERN GRID CARDS VIEW
+               ======================================================== */}
+            {viewMode === 'grid' && (
+              <div>
+                {paginatedProducts.length === 0 ? (
+                  <div className="bg-white rounded-3xl p-12 text-center border border-purple-100 space-y-3">
+                    <Package className="w-12 h-12 text-purple-200 mx-auto" />
+                    <h4 className="font-bold text-slate-800 text-sm">No footwear styles found</h4>
+                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                      Try adjusting your search query, department, or brand filter to discover catalog items.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
+                    {paginatedProducts.map((p) => {
+                      const isOutOfStock =
+                        p.variants && p.variants.length > 0
+                          ? p.variants.every((v) => v.inventory <= 0)
+                          : false;
 
-                        return (
-                          <tr key={p.id} className="hover:bg-purple-50/20 transition-colors">
-                            {/* Product thumbnail + Title */}
-                            <td className="py-3 px-4 flex items-center gap-3">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenImageModal(p)}
-                                className="relative group/thumb shrink-0 border-none bg-transparent p-0 cursor-pointer"
-                                title="Click to Change Product Picture (Gallery / Files)"
-                              >
-                                <img
-                                  src={p.media?.[0]?.url || p.variants?.[0]?.imageUrl || '/shop/shoe_placeholder.png'}
-                                  alt={p.title}
-                                  className="w-12 h-12 object-cover rounded-xl bg-slate-50 border border-slate-100 group-hover/thumb:opacity-75 transition"
-                                  loading="lazy"
-                                />
-                                <div className="absolute inset-0 bg-black/40 rounded-xl opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition">
-                                  <ImageIcon className="w-4 h-4 text-white" />
-                                </div>
-                              </button>
-                              <div className="min-w-0 max-w-xs">
-                                <span
-                                  className="font-bold text-slate-900 block truncate"
-                                  title={p.title}
-                                >
-                                  {p.title}
-                                </span>
-                                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                                  <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-bold">
-                                    {p.brand}
-                                  </span>
-                                  {p.isNewArrival && (
-                                    <span className="text-[9px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded font-black flex items-center gap-0.5">
-                                      <Sparkles className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> New
-                                    </span>
-                                  )}
-                                  {p.rating > 0 && (
-                                    <span className="text-[10px] text-amber-600 font-semibold flex items-center gap-0.5">
-                                      ★ {p.rating} ({p.reviewCount})
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
+                      return (
+                        <div
+                          key={p.id}
+                          className="group bg-white rounded-2xl border border-purple-100 hover:border-purple-300 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col overflow-hidden"
+                        >
+                          {/* Image Box */}
+                          <div className="relative aspect-[4/3] bg-gradient-to-br from-slate-50 via-white to-purple-50/20 p-3 flex items-center justify-center overflow-hidden border-b border-purple-100/70">
+                            <img
+                              src={p.media?.[0]?.url || p.variants?.[0]?.imageUrl || '/shop/shoe_placeholder.png'}
+                              alt={p.title}
+                              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-xs"
+                              loading="lazy"
+                            />
 
-                            {/* SKU */}
-                            <td className="py-3 px-3 font-mono font-bold text-slate-600 text-[11px]">
-                              {p.sku}
-                            </td>
-
-                            {/* Department & Category */}
-                            <td className="py-3 px-3">
-                              <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold block w-fit mb-1">
+                            {/* Top Left: Brand & Department Badges */}
+                            <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-[#5B21B6] text-white shadow-xs">
+                                {p.brand}
+                              </span>
+                              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-bold bg-white/95 text-slate-700 border border-slate-200 backdrop-blur-xs shadow-2xs">
                                 {p.department}
                               </span>
-                              <span className="text-[11px] text-slate-500 font-medium block truncate max-w-[130px]">
-                                {p.category?.name || 'Catalog Footwear'}
-                              </span>
-                            </td>
+                            </div>
 
-                            {/* Price, MRP & Discount */}
-                            <td className="py-3 px-3">
-                              <div className="flex items-baseline gap-1.5">
-                                <span className="font-black text-slate-900 text-sm">
-                                  ₹{p.price.toLocaleString('en-IN')}
-                                </span>
-                                {p.originalPrice && p.originalPrice > p.price && (
-                                  <span className="text-[11px] text-slate-400 line-through">
-                                    ₹{p.originalPrice.toLocaleString('en-IN')}
-                                  </span>
-                                )}
-                              </div>
-                              {p.discountPercent > 0 && (
-                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full inline-block mt-0.5">
-                                  {p.discountPercent}% OFF
-                                </span>
-                              )}
-                            </td>
-
-                            {/* Available Sizes & Stock Toggle Column */}
-                            <td className="py-3 px-3">
-                              <div className="flex items-center gap-1 flex-wrap max-w-[170px]">
-                                {p.variants && p.variants.length > 0 ? (
-                                  p.variants.map((v) => {
-                                    const isAvail = v.inventory > 0;
-                                    return (
-                                      <button
-                                        key={v.id || v.size}
-                                        type="button"
-                                        onClick={() => handleToggleSingleSize(p, v.size, isAvail)}
-                                        className={`text-[9.5px] px-1.5 py-0.5 rounded font-black border transition-all cursor-pointer ${
-                                          isAvail
-                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200'
-                                            : 'bg-rose-50 text-rose-700 border-rose-200 line-through opacity-75 hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-200'
-                                        }`}
-                                        title={`${v.size}: ${isAvail ? `In Stock (${v.inventory})` : 'Out of Stock'}. Click to toggle!`}
-                                      >
-                                        {v.size} {isAvail ? '✓' : '✕'}
-                                      </button>
-                                    );
-                                  })
-                                ) : (
-                                  <span className="text-[10px] text-slate-400">Standard</span>
-                                )}
-                              </div>
+                            {/* Top Right: Stock Pill & New Arrival Star */}
+                            <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
+                              {/* New Arrival Star */}
                               <button
                                 type="button"
-                                onClick={() => handleOpenSizesModal(p)}
-                                className="text-[10px] text-[#5B21B6] hover:underline font-bold mt-1 flex items-center gap-0.5 cursor-pointer border-none bg-transparent p-0"
+                                onClick={() => handleToggleNewArrival(p)}
+                                className={`p-1.5 rounded-lg transition cursor-pointer shadow-2xs ${
+                                  p.isNewArrival
+                                    ? 'bg-amber-100 text-amber-600 border border-amber-300'
+                                    : 'bg-white/90 text-slate-300 hover:text-amber-500 border border-slate-200'
+                                }`}
+                                title={p.isNewArrival ? 'New Arrival Active (Click to remove)' : 'Mark as New Arrival'}
                               >
-                                <Ruler className="w-2.5 h-2.5" /> Manage Sizes
+                                <Sparkles className={`w-3.5 h-3.5 ${p.isNewArrival ? 'fill-amber-500 text-amber-500' : ''}`} />
                               </button>
-                            </td>
 
-                            {/* 1-Click In-Stock / Out-of-Stock Toggle */}
-                            <td className="py-3 px-3 text-center">
+                              {/* 1-Click Stock Toggle */}
                               <button
                                 type="button"
                                 onClick={() => handleToggleStock(p)}
-                                className={`px-2.5 py-1 rounded-full text-[11px] font-black transition-all cursor-pointer border flex items-center justify-center gap-1 mx-auto ${
+                                className={`px-2 py-1 rounded-lg text-[10px] font-black transition cursor-pointer shadow-2xs flex items-center gap-1 ${
                                   isOutOfStock
-                                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                                    : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                    ? 'bg-rose-100 text-rose-700 border border-rose-300 hover:bg-rose-200'
+                                    : 'bg-emerald-100 text-emerald-800 border border-emerald-300 hover:bg-emerald-200'
                                 }`}
                                 title="Click to toggle In-Stock / Out-of-Stock"
                               >
                                 {isOutOfStock ? (
                                   <>
                                     <AlertCircle className="w-3 h-3 text-rose-600" />
-                                    <span>Out of Stock (0)</span>
+                                    <span>Out of Stock</span>
                                   </>
                                 ) : (
                                   <>
@@ -1029,154 +1187,445 @@ export const AdminProductsPage: React.FC = () => {
                                   </>
                                 )}
                               </button>
-                            </td>
+                            </div>
 
-                            {/* 3D Model Status */}
-                            <td className="py-3 px-3">
-                              {p.has3D ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelected3DProduct(p);
-                                    setIs3DStudioOpen(true);
-                                  }}
-                                  className="text-[10px] bg-purple-50 hover:bg-purple-100 text-purple-700 font-extrabold px-2 py-1 rounded-full border border-purple-200 flex items-center gap-1 cursor-pointer transition-colors"
-                                  title="Configure 3D Model"
-                                >
-                                  <Sparkles className="w-3 h-3 text-purple-600" />
-                                  <span>3D ACTIVE</span>
-                                </button>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelected3DProduct(p);
-                                    setIs3DStudioOpen(true);
-                                  }}
-                                  className="text-[10px] bg-slate-100 text-slate-500 hover:bg-slate-200 font-semibold px-2 py-1 rounded-full border-none flex items-center gap-1 cursor-pointer"
-                                  title="Add 3D Model"
-                                >
-                                  <span>+ 3D Model</span>
-                                </button>
+                            {/* Bottom: SKU pill & 1-Click Change Picture Button */}
+                            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+                              <span className="font-mono font-bold text-[10px] px-2 py-0.5 rounded-md bg-slate-900/85 text-white backdrop-blur-xs">
+                                SKU: {p.sku}
+                              </span>
+
+                              <button
+                                type="button"
+                                onClick={() => handleOpenImageModal(p)}
+                                className="px-2 py-1 rounded-md text-[10px] font-bold bg-white/95 text-[#5B21B6] hover:bg-[#5B21B6] hover:text-white border border-purple-200 shadow-2xs flex items-center gap-1 transition cursor-pointer backdrop-blur-xs"
+                                title="Change product photo from device gallery / camera"
+                              >
+                                <ImageIcon className="w-3 h-3" />
+                                <span>Change Photo</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Card Body */}
+                          <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
+                            <div className="space-y-1">
+                              <h4
+                                className="font-bold text-slate-900 text-xs sm:text-sm line-clamp-2 leading-snug group-hover:text-[#5B21B6] transition-colors"
+                                title={p.title}
+                              >
+                                {p.title}
+                              </h4>
+                              <p className="text-[11px] text-slate-500 font-medium truncate">
+                                {p.category?.name || 'Footwear Style'}
+                              </p>
+                            </div>
+
+                            {/* Price & MRP Block */}
+                            <div className="flex items-baseline justify-between pt-1 border-t border-slate-100">
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="font-black text-slate-900 text-base sm:text-lg">
+                                  ₹{p.price.toLocaleString('en-IN')}
+                                </span>
+                                {p.originalPrice && p.originalPrice > p.price && (
+                                  <span className="text-xs text-slate-400 line-through">
+                                    ₹{p.originalPrice.toLocaleString('en-IN')}
+                                  </span>
+                                )}
+                              </div>
+                              {p.discountPercent > 0 && (
+                                <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-md">
+                                  {p.discountPercent}% OFF
+                                </span>
                               )}
-                            </td>
+                            </div>
 
-                            {/* Action Buttons */}
-                            <td className="py-3 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                {/* Share Product / New Arrival */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenShareModal(p)}
-                                  className="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Share Product on WhatsApp / Customer Link"
-                                >
-                                  <Share2 className="w-4 h-4" />
-                                </button>
-
-                                {/* Change Catalog Picture from Gallery / Camera */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenImageModal(p)}
-                                  className="p-1.5 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Change Catalog Picture (Gallery / Files)"
-                                >
-                                  <ImageIcon className="w-4 h-4" />
-                                </button>
-
-                                {/* Toggle New Arrival */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleNewArrival(p)}
-                                  className={`p-1.5 rounded-lg transition-colors border-none bg-transparent cursor-pointer ${
-                                    p.isNewArrival
-                                      ? 'text-amber-500 hover:bg-amber-50'
-                                      : 'text-slate-300 hover:text-amber-500 hover:bg-amber-50/50'
-                                  }`}
-                                  title={p.isNewArrival ? 'New Arrival Active (Click to remove)' : 'Mark as New Arrival'}
-                                >
-                                  <Sparkles className={`w-4 h-4 ${p.isNewArrival ? 'fill-amber-500' : ''}`} />
-                                </button>
-
-                                {/* Manage Sizes & Stock */}
+                            {/* Sizes & Availability Strip */}
+                            <div className="space-y-1 pt-1 border-t border-slate-100">
+                              <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
+                                <span>Sizes &amp; Inventory</span>
                                 <button
                                   type="button"
                                   onClick={() => handleOpenSizesModal(p)}
-                                  className="p-1.5 rounded-lg text-purple-700 hover:bg-purple-50 transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Manage Sizes & Availability"
+                                  className="text-[#5B21B6] hover:underline font-bold flex items-center gap-0.5 cursor-pointer border-none bg-transparent p-0"
                                 >
-                                  <Ruler className="w-4 h-4" />
-                                </button>
-
-                                {/* Quick Price Fixing */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenPriceModal(p)}
-                                  className="p-1.5 rounded-lg text-emerald-700 hover:bg-emerald-50 transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Quick Fix Price & MRP"
-                                >
-                                  <Tag className="w-4 h-4" />
-                                </button>
-
-                                {/* Edit Product (Category, Brand, Dept, Price) */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleOpenEdit(p)}
-                                  className="p-1.5 rounded-lg text-[#5B21B6] hover:bg-[#FAF7FD] transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Edit Product Details & Category"
-                                >
-                                  <Edit3 className="w-4 h-4" />
-                                </button>
-
-                                {/* Delete Product */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteProduct(p.id)}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors border-none bg-transparent cursor-pointer"
-                                  title="Delete Product"
-                                >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Ruler className="w-2.5 h-2.5" /> Manage Sizes
                                 </button>
                               </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
 
-              {/* Pagination Controls */}
-              {totalPages > 1 && (
-                <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    Page <strong>{currentPage}</strong> of <strong>{totalPages}</strong> ({filteredProducts.length} products total)
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={currentPage <= 1}
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-slate-100"
-                    >
-                      Previous
-                    </button>
-                    <span className="text-xs font-black text-slate-700 px-2">
-                      {currentPage}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={currentPage >= totalPages}
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                      className="px-3 py-1.5 rounded-xl text-xs font-bold bg-white border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-slate-100"
-                    >
-                      Next
-                    </button>
+                              <div className="flex items-center gap-1 flex-wrap">
+                                {p.variants && p.variants.length > 0 ? (
+                                  p.variants.map((v) => {
+                                    const isAvail = v.inventory > 0;
+                                    return (
+                                      <button
+                                        key={v.id || v.size}
+                                        type="button"
+                                        onClick={() => handleToggleSingleSize(p, v.size, isAvail)}
+                                        className={`text-[9.5px] px-1.5 py-0.5 rounded font-black border transition cursor-pointer ${
+                                          isAvail
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-rose-50 hover:text-rose-700'
+                                            : 'bg-rose-50 text-rose-700 border-rose-200 line-through opacity-70 hover:bg-emerald-50 hover:text-emerald-800'
+                                        }`}
+                                        title={`${v.size}: ${isAvail ? `In Stock (${v.inventory})` : 'Out of Stock'}. Click to toggle.`}
+                                      >
+                                        {v.size} {isAvail ? '✓' : '✕'}
+                                      </button>
+                                    );
+                                  })
+                                ) : (
+                                  <span className="text-[10px] text-slate-400">Standard Sizes</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Card Footer Actions */}
+                          <div className="px-3.5 py-2.5 bg-slate-50/80 border-t border-purple-100/70 flex items-center justify-between gap-1.5">
+                            {/* WhatsApp & Product Share */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenShareModal(p)}
+                              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                              title="Share Product on WhatsApp with Price & Picture"
+                            >
+                              <Share2 className="w-3.5 h-3.5" />
+                              <span>Share</span>
+                            </button>
+
+                            {/* Quick Price Fix */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenPriceModal(p)}
+                              className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                              title="Quick Fix Price & MRP"
+                            >
+                              <Tag className="w-3.5 h-3.5 text-amber-600" />
+                              <span>Price</span>
+                            </button>
+
+                            {/* Edit Details */}
+                            <button
+                              type="button"
+                              onClick={() => handleOpenEdit(p)}
+                              className="px-2.5 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#5B21B6] border border-purple-200 text-xs font-bold flex items-center gap-1 transition cursor-pointer"
+                              title="Edit Details, Brand & Category"
+                            >
+                              <Edit3 className="w-3.5 h-3.5 text-[#7C3AED]" />
+                              <span>Edit</span>
+                            </button>
+
+                            {/* Delete Button */}
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="p-1.5 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer"
+                              title="Delete Footwear from Catalog"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
+                )}
+              </div>
+            )}
+
+            {/* ========================================================
+                VIEW MODE B: CLEAN & PERFECTLY ALIGNED DATA TABLE VIEW
+               ======================================================== */}
+            {viewMode === 'table' && (
+              <div className="bg-white rounded-3xl shadow-xs border border-purple-100 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs text-left table-fixed">
+                    <thead className="bg-[#FAF7FD] text-slate-700 uppercase font-black text-[11px] border-b border-purple-100">
+                      <tr>
+                        <th className="py-4 px-4 w-[280px]">Footwear Details</th>
+                        <th className="py-4 px-3 w-[110px]">SKU</th>
+                        <th className="py-4 px-3 w-[130px]">Dept &amp; Brand</th>
+                        <th className="py-4 px-3 w-[130px]">Price &amp; MRP</th>
+                        <th className="py-4 px-3 w-[180px]">Sizes Available</th>
+                        <th className="py-4 px-3 w-[130px] text-center">Live Stock</th>
+                        <th className="py-4 px-4 w-[160px] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {paginatedProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-12 text-center text-slate-400">
+                            No footwear items match your search or filter criteria.
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedProducts.map((p) => {
+                          const isOutOfStock =
+                            p.variants && p.variants.length > 0
+                              ? p.variants.every((v) => v.inventory <= 0)
+                              : false;
+
+                          return (
+                            <tr key={p.id} className="hover:bg-purple-50/25 transition-colors">
+                              {/* Product Thumbnail + Title */}
+                              <td className="py-3.5 px-4 align-middle">
+                                <div className="flex items-center gap-3">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenImageModal(p)}
+                                    className="relative group/thumb shrink-0 border border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer p-0"
+                                    title="Click to Change Picture (Gallery / Files)"
+                                  >
+                                    <img
+                                      src={p.media?.[0]?.url || p.variants?.[0]?.imageUrl || '/shop/shoe_placeholder.png'}
+                                      alt={p.title}
+                                      className="w-12 h-12 object-contain bg-slate-50 group-hover/thumb:opacity-75 transition"
+                                      loading="lazy"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition">
+                                      <ImageIcon className="w-4 h-4 text-white" />
+                                    </div>
+                                  </button>
+
+                                  <div className="min-w-0 flex-1">
+                                    <span
+                                      className="font-bold text-slate-900 block truncate text-xs"
+                                      title={p.title}
+                                    >
+                                      {p.title}
+                                    </span>
+                                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                      <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-bold">
+                                        {p.brand}
+                                      </span>
+                                      {p.isNewArrival && (
+                                        <span className="text-[9px] text-amber-800 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded font-black flex items-center gap-0.5">
+                                          <Sparkles className="w-2.5 h-2.5 fill-amber-500 text-amber-500" /> New
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </td>
+
+                              {/* SKU */}
+                              <td className="py-3.5 px-3 align-middle">
+                                <span className="font-mono font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px]">
+                                  {p.sku}
+                                </span>
+                              </td>
+
+                              {/* Dept & Brand */}
+                              <td className="py-3.5 px-3 align-middle">
+                                <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full font-bold block w-fit mb-1">
+                                  {p.department}
+                                </span>
+                                <span className="text-[11px] text-slate-500 font-medium block truncate">
+                                  {p.category?.name || 'Footwear'}
+                                </span>
+                              </td>
+
+                              {/* Price & MRP */}
+                              <td className="py-3.5 px-3 align-middle">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className="font-black text-slate-900 text-sm">
+                                    ₹{p.price.toLocaleString('en-IN')}
+                                  </span>
+                                  {p.originalPrice && p.originalPrice > p.price && (
+                                    <span className="text-[11px] text-slate-400 line-through">
+                                      ₹{p.originalPrice.toLocaleString('en-IN')}
+                                    </span>
+                                  )}
+                                </div>
+                                {p.discountPercent > 0 && (
+                                  <span className="text-[10px] font-black text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md inline-block mt-0.5">
+                                    {p.discountPercent}% OFF
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Sizes & Availability */}
+                              <td className="py-3.5 px-3 align-middle">
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  {p.variants && p.variants.length > 0 ? (
+                                    p.variants.map((v) => {
+                                      const isAvail = v.inventory > 0;
+                                      return (
+                                        <button
+                                          key={v.id || v.size}
+                                          type="button"
+                                          onClick={() => handleToggleSingleSize(p, v.size, isAvail)}
+                                          className={`text-[9.5px] px-1.5 py-0.5 rounded font-black border transition cursor-pointer ${
+                                            isAvail
+                                              ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-rose-50 hover:text-rose-700'
+                                              : 'bg-rose-50 text-rose-700 border-rose-200 line-through opacity-70 hover:bg-emerald-50 hover:text-emerald-800'
+                                          }`}
+                                          title={`${v.size}: ${isAvail ? `In Stock (${v.inventory})` : 'Out of Stock'}. Click to toggle.`}
+                                        >
+                                          {v.size} {isAvail ? '✓' : '✕'}
+                                        </button>
+                                      );
+                                    })
+                                  ) : (
+                                    <span className="text-[10px] text-slate-400">Standard</span>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenSizesModal(p)}
+                                  className="text-[10px] text-[#5B21B6] hover:underline font-bold mt-1 flex items-center gap-0.5 cursor-pointer border-none bg-transparent p-0"
+                                >
+                                  <Ruler className="w-2.5 h-2.5" /> Manage Sizes
+                                </button>
+                              </td>
+
+                              {/* 1-Click Live Stock Toggle */}
+                              <td className="py-3.5 px-3 text-center align-middle">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleStock(p)}
+                                  className={`px-2.5 py-1 rounded-full text-[11px] font-black transition cursor-pointer border flex items-center justify-center gap-1 mx-auto ${
+                                    isOutOfStock
+                                      ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                                      : 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                                  }`}
+                                  title="Click to toggle In-Stock / Out-of-Stock"
+                                >
+                                  {isOutOfStock ? (
+                                    <>
+                                      <AlertCircle className="w-3 h-3 text-rose-600" />
+                                      <span>Out of Stock</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-600" />
+                                      <span>In Stock</span>
+                                    </>
+                                  )}
+                                </button>
+                              </td>
+
+                              {/* Action Buttons */}
+                              <td className="py-3.5 px-4 text-right align-middle">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  {/* Share on WhatsApp */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenShareModal(p)}
+                                    className="p-1.5 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition cursor-pointer"
+                                    title="Share on WhatsApp with Price & Picture"
+                                  >
+                                    <Share2 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Change Photo */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenImageModal(p)}
+                                    className="p-1.5 rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
+                                    title="Change Photo from Device Gallery"
+                                  >
+                                    <ImageIcon className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Quick Price */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenPriceModal(p)}
+                                    className="p-1.5 rounded-lg text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer"
+                                    title="Quick Price & MRP"
+                                  >
+                                    <Tag className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Edit Details */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenEdit(p)}
+                                    className="p-1.5 rounded-lg text-[#5B21B6] bg-purple-50 hover:bg-purple-100 border border-purple-200 transition cursor-pointer"
+                                    title="Edit Product Details"
+                                  >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                  </button>
+
+                                  {/* Delete */}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteProduct(p.id)}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition cursor-pointer"
+                                    title="Delete from Catalog"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+
+            {/* 3. Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="p-4 bg-white rounded-2xl shadow-xs border border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <span className="text-xs text-slate-500">
+                  Showing <strong>{((currentPage - 1) * pageSize) + 1}</strong> to <strong>{Math.min(currentPage * pageSize, filteredProducts.length)}</strong> of <strong>{filteredProducts.length}</strong> styles (Page {currentPage} of {totalPages})
+                </span>
+
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    disabled={currentPage <= 1}
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-slate-100 flex items-center gap-1"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>Previous</span>
+                  </button>
+
+                  {/* Dynamic Page Pills */}
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, idx) => {
+                    let pageNum = idx + 1;
+                    if (totalPages > 7) {
+                      if (currentPage > 4 && currentPage < totalPages - 2) {
+                        pageNum = currentPage - 3 + idx;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 6 + idx;
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition cursor-pointer ${
+                          currentPage === pageNum
+                            ? 'bg-[#5B21B6] text-white shadow-xs font-black'
+                            : 'bg-slate-50 hover:bg-purple-50 text-slate-700 border border-slate-200'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+
+                  <button
+                    type="button"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-50 border border-slate-200 text-slate-700 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer hover:bg-slate-100 flex items-center gap-1"
+                  >
+                    <span>Next</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
