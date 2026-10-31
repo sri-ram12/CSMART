@@ -12,6 +12,8 @@ export interface FootwearModelProps {
   primaryColor: string;
   accentColor?: string;
   soleColor?: string;
+  roughness?: number;
+  metalness?: number;
   wireframe: boolean;
   autoRotate: boolean;
 }
@@ -44,6 +46,8 @@ export function CategoryGLBModel({
   primaryColor,
   accentColor,
   soleColor,
+  roughness,
+  metalness,
   wireframe,
   autoRotate,
 }: FootwearModelProps) {
@@ -111,10 +115,10 @@ export function CategoryGLBModel({
                 if (diffuseTexture) {
                   mat.map = diffuseTexture;
                 }
-                // Keep base color pure white so textures are sharp, crisp and not mud-tinted
-                mat.color = new THREE.Color('#FFFFFF');
-                mat.roughness = 0.58;
-                mat.metalness = 0.12;
+                // Apply brand-specific primary color tinting
+                mat.color = new THREE.Color(primaryColor || '#FFFFFF');
+                mat.roughness = roughness !== undefined ? roughness : 0.58;
+                mat.metalness = metalness !== undefined ? metalness : 0.12;
                 mat.needsUpdate = true;
               } else {
                 const name = ((mesh.name || '') + ' ' + (mat.name || '')).toLowerCase();
@@ -174,7 +178,7 @@ export function CategoryGLBModel({
         }
       }
     });
-  }, [clonedScene, isShopifyShoe, diffuseTexture, primaryColor, accentColor, soleColor, wireframe, type]);
+  }, [clonedScene, isShopifyShoe, diffuseTexture, primaryColor, accentColor, soleColor, roughness, metalness, wireframe, type]);
 
   useFrame((_, delta) => {
     if (autoRotate && groupRef.current) {
