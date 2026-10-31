@@ -6,6 +6,7 @@ import {
   Heart,
   ShoppingBag,
   QrCode,
+  Smartphone,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
@@ -53,6 +54,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 RIGHT SIDE: SEARCH + WISHLIST + CART (Clean Customer Toolbar)
                ======================================================== */}
             <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 ml-auto pl-1">
+              {/* Install PWA App Button */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open-pwa-install'))}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black text-[#5B21B6] bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-all shadow-2xs hover:scale-105 active:scale-95 shrink-0 cursor-pointer"
+                title="Install Chandhana Shoe Mart WebApp"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-[#7C3AED]" />
+                <span>Install App</span>
+              </button>
+
               {/* QR Code Storefront Share Option */}
               <button
                 type="button"

@@ -179,6 +179,7 @@ export const Footer: React.FC = () => {
           <div className="space-y-3">
             <h4 className="text-xs font-black uppercase tracking-wider text-[#1E0842]">ABOUT</h4>
             <ul className="space-y-2 text-xs text-[#4C1D95] font-medium">
+              <li><button type="button" onClick={() => window.dispatchEvent(new CustomEvent('open-pwa-install'))} className="text-left hover:text-[#5B21B6] transition-colors cursor-pointer border-none bg-transparent p-0 text-xs font-bold text-[#7C3AED]">📲 Install Mobile WebApp</button></li>
               <li><a href="#about" className="hover:text-[#5B21B6] transition-colors">About Us</a></li>
               <li><a href="#stores" className="hover:text-[#5B21B6] transition-colors">Our Store</a></li>
               <li><a href="#careers" className="hover:text-[#5B21B6] transition-colors">Careers</a></li>

@@ -1,6 +1,13 @@
-// Chandhana Shoe Mart - Service Worker v1
-const CACHE_NAME = 'csm-cache-v1';
-const STATIC_ASSETS = ['/', '/index.html', '/manifest.json'];
+// Chandhana Shoe Mart - Service Worker v2
+const CACHE_NAME = 'csm-cache-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png',
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
