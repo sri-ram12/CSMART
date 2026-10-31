@@ -249,6 +249,78 @@ export const StoreLocationShowcase: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* ========================================================
+            BOTTOM: INTERACTIVE LIVE GOOGLE MAP EMBED
+           ======================================================== */}
+        <div className="mt-10 p-5 sm:p-7 rounded-3xl bg-white border border-purple-100 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#5B21B6]">
+                <MapPin className="w-3.5 h-3.5 text-[#7C3AED]" />
+                <span>Interactive Live Google Map Location</span>
+              </div>
+              <h4 className="text-base sm:text-lg font-bold text-slate-900 mt-0.5">
+                Find Chandana Shoe Mart on the Map
+              </h4>
+              <p className="text-xs text-slate-500">
+                Opposite Tata Theatre, Main Road, Tagarapuvalasa, Visakhapatnam, Andhra Pradesh 531162
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={googleMaps.shortUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#5B21B6] hover:bg-[#4C1D95] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all"
+              >
+                <Navigation className="w-3.5 h-3.5 text-white" />
+                <span>Open in Google Maps App</span>
+                <ExternalLink className="w-3 h-3 opacity-80" />
+              </a>
+            </div>
+          </div>
+
+          {/* Interactive Google Map iframe with Pin */}
+          <div className="relative w-full h-[320px] sm:h-[400px] md:h-[450px] rounded-2xl overflow-hidden border border-purple-200/60 shadow-inner bg-slate-100">
+            <iframe
+              title="Chandana Shoe Mart Tagarapuvalasa Live Location Map"
+              src="https://maps.google.com/maps?q=17.9318122,83.4274064+(Chandana+Shoe+Mart)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+              className="w-full h-full border-0"
+              loading="lazy"
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+          </div>
+
+          {/* Quick Landmark & Store Info Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs text-slate-600">
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#FAF7FD] border border-purple-100/60">
+              <Store className="w-4 h-4 text-[#7C3AED] shrink-0" />
+              <div>
+                <p className="font-bold text-slate-800">Landmark</p>
+                <p className="text-[11px] text-slate-500">Opposite Tata Theatre (Main Road)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#FAF7FD] border border-purple-100/60">
+              <Clock className="w-4 h-4 text-[#7C3AED] shrink-0" />
+              <div>
+                <p className="font-bold text-slate-800">Business Hours</p>
+                <p className="text-[11px] text-slate-500">9:00 AM – 9:00 PM (Tuesday Closed)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 p-3 rounded-xl bg-[#FAF7FD] border border-purple-100/60">
+              <Phone className="w-4 h-4 text-[#7C3AED] shrink-0" />
+              <div>
+                <p className="font-bold text-slate-800">Direct Contact</p>
+                <a href={`tel:${phone.tel}`} className="text-[11px] text-[#5B21B6] font-semibold hover:underline">
+                  {phone.display}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ========================================================

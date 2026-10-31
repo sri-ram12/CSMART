@@ -13,4 +13,17 @@ router.get('/', async (_req: Request, res: Response, next) => {
   }
 });
 
+// GET public active banners — used by customer homepage
+router.get('/banners', async (_req: Request, res: Response, next) => {
+  try {
+    const banners = await prisma.banner.findMany({
+      where: { isActive: true },
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+    });
+    res.json({ success: true, data: banners });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

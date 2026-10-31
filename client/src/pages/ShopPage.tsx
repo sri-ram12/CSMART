@@ -526,30 +526,21 @@ export const ShopPage: React.FC = () => {
                   Explore In-Stock Authentic Brands:
                 </p>
                 <div className="flex flex-wrap items-center justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.set('brand', 'Walkaroo');
-                      next.delete('page');
-                      setSearchParams(next);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 font-bold text-xs border border-orange-200 transition-colors cursor-pointer"
-                  >
-                    Walkaroo (381 styles)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = new URLSearchParams(searchParams);
-                      next.set('brand', 'Sparx');
-                      next.delete('page');
-                      setSearchParams(next);
-                    }}
-                    className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors cursor-pointer"
-                  >
-                    Sparx (174 styles)
-                  </button>
+                  {['VKC Pride', 'Walkaroo', 'Paragon', 'Sparx', 'Walkmate', 'Doctor Choice', 'Sushma', 'Lancer'].map((b) => (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => {
+                        const next = new URLSearchParams(searchParams);
+                        next.set('brand', b);
+                        next.delete('page');
+                        setSearchParams(next);
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#5B21B6] font-bold text-xs border border-purple-200 transition-colors cursor-pointer"
+                    >
+                      {b}
+                    </button>
+                  ))}
                 </div>
               </div>
 

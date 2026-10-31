@@ -59,7 +59,7 @@ export const TopBrandMarquee: React.FC<TopBrandMarqueeProps> = ({
               : 'bg-purple-50 text-[#7C3AED] border border-purple-200/50'
           }`}
         >
-          {b.id === 'walkaroo' ? '381' : b.id === 'sparx' ? '174' : '✓'}
+          {b.badge || '✓'}
         </span>
       </button>
     );

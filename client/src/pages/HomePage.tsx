@@ -8,6 +8,8 @@ import { TopBrandMarquee } from '../components/common/TopBrandMarquee';
 import { VideoShowcase } from '../components/home/VideoShowcase';
 import { CustomerReviewsSection } from '../components/home/CustomerReviewsSection';
 import { StoreLocationShowcase } from '../components/home/StoreLocationShowcase';
+import { DynamicOfferBanners } from '../components/home/DynamicOfferBanners';
+import { NewArrivalsSection } from '../components/home/NewArrivalsSection';
 
 export const HomePage: React.FC = () => {
   return (
@@ -18,13 +20,19 @@ export const HomePage: React.FC = () => {
       {/* 2. Arched Lavender Hero Section with Sneakers & Floating Quick Category Strip */}
       <HeroSection />
 
-      {/* 3. Official Company Brand Banners Showcase (Walkaroo 381, Sparx 174, VKC, Paragon) */}
+      {/* 2.5. Admin Dynamic Promotional Banners & Offers */}
+      <DynamicOfferBanners />
+
+      {/* 3. Official Company Brand Banners Showcase (VKC Pride, Walkaroo, Paragon, Sparx, Doctor Choice) */}
       <TopIndianBrandsBanner />
 
-      {/* 4. BEST SELLERS - 5 Column Row of Authentic Scanned Catalog Footwear */}
+      {/* 4. Fresh In Store - New Arrivals Section */}
+      <NewArrivalsSection />
+
+      {/* 5. BEST SELLERS - 5 Column Row of Authentic Scanned Catalog Footwear */}
       <TrendingCarousel />
 
-      {/* 5. Dual Promotional Banners (Fresh Styles Just In + Get 15% Off) */}
+      {/* 6. Dual Promotional Banners (Fresh Styles Just In + Get 15% Off) */}
       <DualPromotionalBanners />
 
       {/* 6. Value Proposition Strip (Free shipping, Easy Returns, Secure Payment, Premium Quality, 24/7 Support) */}

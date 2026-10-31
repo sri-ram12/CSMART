@@ -5,13 +5,92 @@ import {
   Phone,
   Mail,
   MessageCircle,
+  Navigation,
+  ExternalLink,
+  Clock,
+  Store,
 } from 'lucide-react';
 import { CSMAnimatedLogo } from '../common/CSMAnimatedLogo';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#F0E5FC] text-[#2E1065] pt-16 pb-12 mt-16 border-t border-[#DFCBF8]">
+    <footer className="bg-[#F0E5FC] text-[#2E1065] pt-14 pb-12 mt-16 border-t border-[#DFCBF8]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ========================================================
+            STORE LOCATION & INTERACTIVE GOOGLE MAP BANNER (Visible on all features)
+           ======================================================== */}
+        <div className="mb-12 p-5 sm:p-7 rounded-3xl bg-white border border-purple-200/90 shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Store Details & Actions */}
+            <div className="lg:col-span-5 space-y-3.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EDE9FE] text-[#5B21B6] text-xs font-black tracking-wide">
+                <Store className="w-3.5 h-3.5 text-[#7C3AED]" />
+                <span>STORE LOCATION & LIVE MAP</span>
+              </div>
+
+              <div>
+                <h3 className="font-serif font-black text-xl sm:text-2xl text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+                  <span>Chandhana Shoe Mart</span>
+                  <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200/60 px-2 py-0.5 rounded-md">
+                    చందన షూమార్ట్
+                  </span>
+                </h3>
+                <p className="text-xs font-bold text-[#5B21B6] mt-0.5">
+                  పాదరక్షల బృందావనం • Quality First...
+                </p>
+              </div>
+
+              <div className="space-y-1.5 text-xs text-slate-600">
+                <div className="flex items-start gap-2">
+                  <MapPin className="w-4 h-4 text-[#7C3AED] shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-slate-800">Opp: Tata Theatre, Main Road</strong>, Tagarapuvalasa, Visakhapatnam, Andhra Pradesh - 531162
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-slate-500">
+                  <Clock className="w-4 h-4 text-[#7C3AED] shrink-0" />
+                  <span>Open: 9:00 AM – 9:00 PM (Tuesday Closed)</span>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                <a
+                  href="https://maps.app.goo.gl/YBteoVzaYAF12mW97"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5B21B6] hover:bg-[#4C1D95] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-98"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Get Directions on Map</span>
+                  <ExternalLink className="w-3 h-3 opacity-80" />
+                </a>
+
+                <a
+                  href="tel:09553536884"
+                  className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-[#FAF7FD] hover:bg-[#EDE9FE] text-[#5B21B6] border border-purple-200 text-xs font-bold transition-all active:scale-98"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>+91 95535 36884</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Interactive Google Map iframe */}
+            <div className="lg:col-span-7">
+              <div className="relative w-full h-56 sm:h-64 lg:h-72 rounded-2xl overflow-hidden border border-purple-200/80 shadow-inner bg-slate-100">
+                <iframe
+                  title="Chandhana Shoe Mart Google Map Location"
+                  src="https://maps.google.com/maps?q=17.9318122,83.4274064+(Chandana+Shoe+Mart)&t=&z=16&ie=UTF8&iwloc=B&output=embed"
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Main Footer Links Columns (Inspired by Reference Image Footer) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-8 pb-12 border-b border-purple-200/80">
           {/* Brand & Slogan Column */}

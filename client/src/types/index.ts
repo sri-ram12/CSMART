@@ -185,3 +185,18 @@ export interface StoreSettings {
   standardShippingFee: number;
   announcement: string;
 }
+
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle?: string | null;
+  imageUrl?: string | null;
+  linkUrl?: string | null;
+  bgColor: string;
+  textColor: string;
+  isActive: boolean;
+  order: number;
+  type: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

@@ -10,13 +10,16 @@ import {
   Settings,
   ShieldAlert,
   ArrowRight,
+  QrCode,
 } from 'lucide-react';
+import { ShareQRModal } from '../../components/common/ShareQRModal';
 
 export const AdminDashboardPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isQROpen, setIsQROpen] = useState(false);
 
   useEffect(() => {
     api.admin
@@ -77,6 +80,15 @@ export const AdminDashboardPage: React.FC = () => {
               <Settings className="w-4 h-4 text-red-600" />
               <span>Settings</span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setIsQROpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-xs font-bold text-[#5B21B6] shadow-sm border-none ring-1 ring-purple-200 transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Store QR Standee & Sharing"
+            >
+              <QrCode className="w-4 h-4 text-[#7C3AED]" />
+              <span>Store QR</span>
+            </button>
           </div>
         </div>
 
@@ -208,6 +220,8 @@ export const AdminDashboardPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <ShareQRModal isOpen={isQROpen} onClose={() => setIsQROpen(false)} />
     </div>
   );
 };

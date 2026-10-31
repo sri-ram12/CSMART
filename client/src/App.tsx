@@ -9,6 +9,7 @@ import { Footer } from './components/layout/Footer';
 import { MobileBottomNav } from './components/layout/MobileBottomNav';
 import { SearchModal } from './components/common/SearchModal';
 import { CartDrawer } from './components/cart/CartDrawer';
+import { PWAInstallModal } from './components/common/PWAInstallModal';
 
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
@@ -53,6 +54,7 @@ function StorefrontLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 pb-16 lg:pb-0">{children}</main>
       <Footer />
       <MobileBottomNav />
+      <PWAInstallModal />
     </div>
   );
 }

@@ -346,6 +346,40 @@ router.get('/featured', async (_req: Request, res: Response, next) => {
   }
 });
 
+// GET /api/products/new-arrivals
+router.get('/new-arrivals', async (_req: Request, res: Response, next) => {
+  try {
+    let products = await prisma.product.findMany({
+      where: { isNewArrival: true },
+      include: {
+        category: true,
+        media: { orderBy: { order: 'asc' } },
+        variants: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+      take: 12,
+    });
+
+    // If admin hasn't marked enough new arrivals yet, fallback to recent products
+    if (products.length < 4) {
+      const fallback = await prisma.product.findMany({
+        include: {
+          category: true,
+          media: { orderBy: { order: 'asc' } },
+          variants: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 12,
+      });
+      products = fallback;
+    }
+
+    res.json({ success: true, data: products });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // GET /api/products/trending
 router.get('/trending', async (_req: Request, res: Response, next) => {
   try {

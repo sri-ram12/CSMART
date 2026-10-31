@@ -1,4 +1,4 @@
-import { Product, Category, Order, User, Address, StoreSettings, CartItem } from '../types';
+import { Product, Category, Order, User, Address, StoreSettings, CartItem, Banner } from '../types';
 import { fallbackFeaturedProducts } from '../data/featuredProducts';
 
 const API_BASE = '/api';
@@ -86,6 +86,13 @@ export const api = {
         return await request<Product[]>('/products/trending');
       } catch {
         return fallbackFeaturedProducts.filter((p) => p.isTrending);
+      }
+    },
+    getNewArrivals: async () => {
+      try {
+        return await request<Product[]>('/products/new-arrivals');
+      } catch {
+        return fallbackFeaturedProducts.filter((p) => p.isNewArrival);
       }
     },
     get3DCollection: async () => {
@@ -309,5 +316,21 @@ export const api = {
     },
     updateProductModel: (id: string, data: { has3D: boolean; model3DConfig?: any }) =>
       request<Product>(`/admin/products/${id}/model`, { method: 'PUT', body: JSON.stringify(data) }),
+    toggleNewArrival: (id: string) =>
+      request<{ isNewArrival: boolean }>(`/admin/products/${id}/toggle-new-arrival`, { method: 'PUT' }),
+    uploadImage: (data: { image: string; filename?: string }) =>
+      request<{ url: string }>('/admin/upload-image', { method: 'POST', body: JSON.stringify(data) }),
+    updateProductImage: (id: string, imageUrl: string) =>
+      request<Product>(`/admin/products/${id}/image`, { method: 'PUT', body: JSON.stringify({ imageUrl }) }),
+    getBanners: () => request<Banner[]>('/admin/banners'),
+    createBanner: (data: Partial<Banner>) =>
+      request<Banner>('/admin/banners', { method: 'POST', body: JSON.stringify(data) }),
+    updateBanner: (id: string, data: Partial<Banner>) =>
+      request<Banner>(`/admin/banners/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteBanner: (id: string) =>
+      request<{ message: string }>(`/admin/banners/${id}`, { method: 'DELETE' }),
+  },
+  banners: {
+    getAll: () => request<Banner[]>('/settings/banners'),
   },
 };

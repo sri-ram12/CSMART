@@ -1,4 +1,7 @@
 import { Router, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import { prisma } from '../prisma.js';
 import { authenticateToken, requireAdmin, AuthRequest } from '../middleware/auth.js';
 
@@ -815,6 +818,167 @@ router.put('/products/:id/model', async (req: AuthRequest, res: Response, next) 
     res.json({
       success: true,
       message: 'Product 3D configuration saved successfully.',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ─── BANNER MANAGEMENT ───────────────────────────────────────────────────────
+
+// GET /api/admin/banners
+router.get('/banners', async (_req: AuthRequest, res: Response, next) => {
+  try {
+    const banners = await prisma.banner.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'desc' }] });
+    res.json({ success: true, data: banners });
+  } catch (error) { next(error); }
+});
+
+// POST /api/admin/banners
+router.post('/banners', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type } = req.body;
+    if (!title) { res.status(400).json({ success: false, message: 'Title is required.' }); return; }
+    const banner = await prisma.banner.create({
+      data: { title, subtitle, imageUrl, linkUrl, bgColor: bgColor || '#5B21B6', textColor: textColor || '#FFFFFF', isActive: isActive !== false, order: order || 0, type: type || 'OFFER' },
+    });
+    res.status(201).json({ success: true, data: banner });
+  } catch (error) { next(error); }
+});
+
+// PUT /api/admin/banners/:id
+router.put('/banners/:id', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type } = req.body;
+    const banner = await prisma.banner.update({
+      where: { id: req.params.id },
+      data: { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type, updatedAt: new Date() },
+    });
+    res.json({ success: true, data: banner });
+  } catch (error) { next(error); }
+});
+
+// DELETE /api/admin/banners/:id
+router.delete('/banners/:id', async (req: AuthRequest, res: Response, next) => {
+  try {
+    await prisma.banner.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'Banner deleted.' });
+  } catch (error) { next(error); }
+});
+
+// ─── NEW ARRIVALS TOGGLE ─────────────────────────────────────────────────────
+
+// PUT /api/admin/products/:id/toggle-new-arrival
+router.put('/products/:id/toggle-new-arrival', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const product = await prisma.product.findUnique({ where: { id: req.params.id }, select: { isNewArrival: true } });
+    if (!product) { res.status(404).json({ success: false, message: 'Product not found.' }); return; }
+    const updated = await prisma.product.update({
+      where: { id: req.params.id },
+      data: { isNewArrival: !product.isNewArrival },
+    });
+    res.json({ success: true, data: { isNewArrival: updated.isNewArrival } });
+  } catch (error) { next(error); }
+});
+
+// ─── PRODUCT IMAGE & GALLERY UPLOAD ──────────────────────────────────────────
+
+// POST /api/admin/upload-image
+router.post('/upload-image', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { image, filename } = req.body;
+    if (!image) {
+      res.status(400).json({ success: false, message: 'Image data or URL required' });
+      return;
+    }
+
+    // If it's already a URL
+    if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/uploads/'))) {
+      res.json({ success: true, data: { url: image } });
+      return;
+    }
+
+    // If it's a base64 data URL
+    if (typeof image === 'string' && image.startsWith('data:')) {
+      const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        const mimeType = matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+        const cleanName = (filename || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const uniqueName = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
+
+        const uploadsDir = path.resolve(process.cwd(), 'uploads');
+        if (!fs.existsSync(uploadsDir)) {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const filePath = path.join(uploadsDir, uniqueName);
+        fs.writeFileSync(filePath, buffer);
+
+        const publicUrl = `/uploads/${uniqueName}`;
+        res.json({ success: true, data: { url: publicUrl } });
+        return;
+      }
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid image format. Provide base64 data URL or HTTP link.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/image
+router.put('/products/:id/image', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      res.status(400).json({ success: false, message: 'imageUrl is required' });
+      return;
+    }
+
+    const productId = req.params.id;
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { media: true, variants: true },
+    });
+
+    if (!product) {
+      res.status(404).json({ success: false, message: 'Product not found' });
+      return;
+    }
+
+    // Update or create primary media
+    if (product.media && product.media.length > 0) {
+      await prisma.productMedia.update({
+        where: { id: product.media[0].id },
+        data: { url: imageUrl },
+      });
+    } else {
+      await prisma.productMedia.create({
+        data: {
+          productId,
+          url: imageUrl,
+          type: 'IMAGE',
+          order: 0,
+        },
+      });
+    }
+
+    // Also update variants imageUrl
+    await prisma.productVariant.updateMany({
+      where: { productId },
+      data: { imageUrl },
+    });
+
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      include: { media: true, variants: true, category: true },
+    });
+
+    res.json({
+      success: true,
+      message: 'Product picture updated successfully',
       data: updated,
     });
   } catch (error) {

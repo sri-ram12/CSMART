@@ -5,11 +5,13 @@ import {
   Search,
   Heart,
   ShoppingBag,
+  QrCode,
 } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
 import { CSMAnimatedLogo } from '../common/CSMAnimatedLogo';
 import { SelectCategoryModal } from '../category/SelectCategoryModal';
+import { ShareQRModal } from '../common/ShareQRModal';
 
 interface NavbarProps {
   onOpenSearch: () => void;
@@ -19,6 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
   const { itemCount, toggleCart } = useCart();
   const { count: wishlistCount } = useWishlist();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isQROpen, setIsQROpen] = useState(false);
 
 
   return (
@@ -50,6 +53,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
                 RIGHT SIDE: SEARCH + WISHLIST + CART (Clean Customer Toolbar)
                ======================================================== */}
             <div className="flex items-center gap-1 sm:gap-2.5 shrink-0 ml-auto pl-1">
+              {/* QR Code Storefront Share Option */}
+              <button
+                type="button"
+                onClick={() => setIsQROpen(true)}
+                className="border-none p-2 sm:p-2.5 rounded-full text-[#5B21B6] bg-[#FAF7FD] hover:bg-[#EDE9FE] transition-all cursor-pointer shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+                title="Scan & Share Store QR Code"
+                aria-label="Store QR Code"
+              >
+                <QrCode className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+              </button>
+
               {/* Search Option */}
               <button
                 type="button"
@@ -103,6 +117,12 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSearch }) => {
       <SelectCategoryModal
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+      />
+
+      {/* QR Code Storefront Share Modal */}
+      <ShareQRModal
+        isOpen={isQROpen}
+        onClose={() => setIsQROpen(false)}
       />
     </>
   );
