@@ -42,6 +42,26 @@ export interface Review {
   createdAt: string;
 }
 
+export interface WhatsAppEnquiry {
+  id: string;
+  customerName?: string;
+  phone?: string;
+  productId?: string;
+  productTitle?: string;
+  sku?: string;
+  brand?: string;
+  price?: number;
+  imageUrl?: string;
+  size?: string;
+  color?: string;
+  message: string;
+  source: string;
+  status: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'CLOSED';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: string;
   title: string;

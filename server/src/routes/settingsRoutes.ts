@@ -26,4 +26,46 @@ router.get('/banners', async (_req: Request, res: Response, next) => {
   }
 });
 
+// POST /api/settings/enquiries/log — log customer WhatsApp product enquiry
+router.post('/enquiries/log', async (req: Request, res: Response, next) => {
+  try {
+    const {
+      customerName,
+      phone,
+      productId,
+      productTitle,
+      sku,
+      brand,
+      price,
+      imageUrl,
+      size,
+      color,
+      message,
+      source,
+    } = req.body;
+
+    const enquiry = await prisma.whatsAppEnquiry.create({
+      data: {
+        customerName: customerName || 'Store Visitor',
+        phone: phone || null,
+        productId: productId || null,
+        productTitle: productTitle || null,
+        sku: sku || null,
+        brand: brand || null,
+        price: price ? parseFloat(String(price)) : null,
+        imageUrl: imageUrl || null,
+        size: size || null,
+        color: color || null,
+        message: message || 'Customer clicked WhatsApp to inquire about footwear.',
+        source: source || 'PRODUCT_DETAIL',
+        status: 'NEW',
+      },
+    });
+
+    res.json({ success: true, data: enquiry });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

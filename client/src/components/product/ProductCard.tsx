@@ -4,7 +4,7 @@ import { Heart, ShoppingBag, Star, Sparkles, Check, RotateCcw, MessageCircle } f
 import { Product } from '../../types';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { getWhatsAppProductUrl } from '../../utils/whatsapp';
+import { getWhatsAppProductUrl, logWhatsAppEnquiry } from '../../utils/whatsapp';
 import { Quick3DModal } from './Quick3DModal';
 
 interface ProductCardProps {
@@ -161,7 +161,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 href={getWhatsAppProductUrl(product.title, product.price, defaultVariant.size, defaultVariant.colorName)}
                 target="_blank"
                 rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  logWhatsAppEnquiry({
+                    customerName: 'Catalog Shopper',
+                    productId: product.id,
+                    productTitle: product.title,
+                    sku: product.sku,
+                    brand: product.brand,
+                    price: product.price,
+                    imageUrl: product.media?.[0]?.url || product.variants?.[0]?.imageUrl,
+                    size: defaultVariant.size,
+                    color: defaultVariant.colorName,
+                    message: `Price inquiry for ${product.title} (SKU: ${product.sku}, Price: ₹${product.price})`,
+                    source: 'CATALOG_CARD',
+                  });
+                }}
                 className="border-none w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white flex items-center justify-center transition-all duration-300 shadow-2xs cursor-pointer active:scale-90"
                 title="Inquire Price with Owner on WhatsApp"
                 aria-label="Inquire Price on WhatsApp"

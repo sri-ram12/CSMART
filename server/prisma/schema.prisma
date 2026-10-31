@@ -287,3 +287,28 @@ model Banner {
   @@index([isActive])
   @@index([type])
 }
+
+model WhatsAppEnquiry {
+  id           String   @id @default(uuid())
+  customerName String?  @default("Store Customer")
+  phone        String?
+  productId    String?
+  productTitle String?
+  sku          String?
+  brand        String?
+  price        Float?
+  imageUrl     String?
+  size         String?
+  color        String?
+  message      String
+  source       String   @default("PRODUCT_DETAIL") // "PRODUCT_DETAIL" | "CATALOG_CARD" | "CART_ORDER" | "GENERAL"
+  status       String   @default("NEW") // "NEW" | "CONTACTED" | "CONVERTED" | "CLOSED"
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([sku])
+  @@index([phone])
+}

@@ -27,6 +27,7 @@ import {
   Share2,
   Phone,
 } from 'lucide-react';
+import { logWhatsAppEnquiry } from '../utils/whatsapp';
 
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -572,6 +573,21 @@ export const ProductDetailPage: React.FC = () => {
                 href={whatsAppUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => {
+                  logWhatsAppEnquiry({
+                    customerName: 'Website Customer',
+                    productId: product.id,
+                    productTitle: product.title,
+                    sku: product.sku,
+                    brand: product.brand,
+                    price: product.price,
+                    imageUrl: product.media?.[0]?.url || product.variants?.[0]?.imageUrl,
+                    size: selectedSize,
+                    color: selectedColor,
+                    message: `Inquiry for ${product.title} (SKU: ${product.sku}, Size: ${selectedSize}, Price: ₹${product.price})`,
+                    source: 'PRODUCT_DETAIL',
+                  });
+                }}
                 className="w-full py-4 text-xs sm:text-sm font-black flex items-center justify-center gap-2 rounded-2xl bg-[#25D366] hover:bg-[#20bd5a] text-white shadow-lg hover:shadow-xl active:scale-95 transition-all border-none cursor-pointer"
                 title="Chat and Order with Owner on WhatsApp (9553536884)"
               >

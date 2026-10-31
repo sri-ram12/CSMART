@@ -1,4 +1,4 @@
-import { Product, Category, Order, User, Address, StoreSettings, CartItem, Banner } from '../types';
+import { Product, Category, Order, User, Address, StoreSettings, CartItem, Banner, WhatsAppEnquiry } from '../types';
 import { fallbackFeaturedProducts } from '../data/featuredProducts';
 
 const API_BASE = '/api';
@@ -263,10 +263,31 @@ export const api = {
     get: () => request<StoreSettings>('/settings'),
   },
 
+  // Customer WhatsApp Enquiries
+  enquiries: {
+    log: (data: Partial<WhatsAppEnquiry>) =>
+      request<WhatsAppEnquiry>('/settings/enquiries/log', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
   // Admin
   admin: {
     getProducts: () => request<Product[]>('/admin/products'),
     getStats: () => request<any>('/admin/stats'),
+    getEnquiries: (params: { status?: string; search?: string } = {}) => {
+      const q = new URLSearchParams();
+      if (params.status) q.append('status', params.status);
+      if (params.search) q.append('search', params.search);
+      return request<WhatsAppEnquiry[]>(`/admin/enquiries?${q.toString()}`);
+    },
+    createEnquiry: (data: Partial<WhatsAppEnquiry>) =>
+      request<WhatsAppEnquiry>('/admin/enquiries', { method: 'POST', body: JSON.stringify(data) }),
+    updateEnquiryStatus: (id: string, data: { status?: string; notes?: string }) =>
+      request<WhatsAppEnquiry>(`/admin/enquiries/${id}/status`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteEnquiry: (id: string) =>
+      request<{ message: string }>(`/admin/enquiries/${id}`, { method: 'DELETE' }),
     getOrders: (params: { status?: string; search?: string } = {}) => {
       const q = new URLSearchParams();
       if (params.status) q.append('status', params.status);

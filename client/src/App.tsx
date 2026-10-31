@@ -30,6 +30,7 @@ import AdminLoginPage from './pages/admin/AdminLoginPage';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminEnquiriesPage from './pages/admin/AdminEnquiriesPage';
 import AdminInventoryPage from './pages/admin/AdminInventoryPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import { AdminRoute } from './components/admin/AdminRoute';
@@ -87,8 +88,11 @@ export function App() {
               <Route path="/admin/products" element={
                 <AdminLayout><AdminRoute><AdminProductsPage /></AdminRoute></AdminLayout>
               } />
+              <Route path="/admin/enquiries" element={
+                <AdminLayout><AdminRoute><AdminEnquiriesPage /></AdminRoute></AdminLayout>
+              } />
               <Route path="/admin/orders" element={
-                <AdminLayout><AdminRoute><AdminOrdersPage /></AdminRoute></AdminLayout>
+                <AdminLayout><AdminRoute><AdminEnquiriesPage /></AdminRoute></AdminLayout>
               } />
               <Route path="/admin/inventory" element={
                 <AdminLayout><AdminRoute><AdminInventoryPage /></AdminRoute></AdminLayout>

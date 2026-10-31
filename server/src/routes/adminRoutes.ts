@@ -13,22 +13,38 @@ router.use(authenticateToken as any, requireAdmin as any);
 // GET /api/admin/stats
 router.get('/stats', async (_req: AuthRequest, res: Response, next) => {
   try {
-    const [totalOrders, productsCount, orders, lowStockVariants, outOfStockVariants] =
-      await Promise.all([
-        prisma.order.count(),
-        prisma.product.count(),
-        prisma.order.findMany({
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-          include: { items: true },
-        }),
-        prisma.productVariant.count({
-          where: { inventory: { lte: 5, gt: 0 } },
-        }),
-        prisma.productVariant.count({
-          where: { inventory: { lte: 0 } },
-        }),
-      ]);
+    const [
+      totalOrders,
+      productsCount,
+      orders,
+      lowStockVariants,
+      outOfStockVariants,
+      totalEnquiries,
+      newEnquiries,
+      convertedEnquiries,
+      recentEnquiries,
+    ] = await Promise.all([
+      prisma.order.count(),
+      prisma.product.count(),
+      prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: { items: true },
+      }),
+      prisma.productVariant.count({
+        where: { inventory: { lte: 5, gt: 0 } },
+      }),
+      prisma.productVariant.count({
+        where: { inventory: { lte: 0 } },
+      }),
+      prisma.whatsAppEnquiry.count(),
+      prisma.whatsAppEnquiry.count({ where: { status: 'NEW' } }),
+      prisma.whatsAppEnquiry.count({ where: { status: 'CONVERTED' } }),
+      prisma.whatsAppEnquiry.findMany({
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+      }),
+    ]);
 
     const confirmedOrders = await prisma.order.findMany({
       where: {
@@ -53,8 +69,115 @@ router.get('/stats', async (_req: AuthRequest, res: Response, next) => {
         lowStockVariants,
         outOfStockVariants,
         recentOrders: orders,
+        totalEnquiries,
+        newEnquiries,
+        convertedEnquiries,
+        recentEnquiries,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/enquiries — WhatsApp product inquiries history
+router.get('/enquiries', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { status, search } = req.query;
+    const where: any = {};
+
+    if (status && status !== 'ALL') {
+      where.status = status as string;
+    }
+
+    if (search) {
+      const s = (search as string).trim();
+      where.OR = [
+        { customerName: { contains: s } },
+        { phone: { contains: s } },
+        { productTitle: { contains: s } },
+        { sku: { contains: s } },
+        { brand: { contains: s } },
+        { message: { contains: s } },
+      ];
+    }
+
+    const enquiries = await prisma.whatsAppEnquiry.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ success: true, data: enquiries });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/enquiries — manual enquiry lead entry by admin
+router.post('/enquiries', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const {
+      customerName,
+      phone,
+      productTitle,
+      sku,
+      brand,
+      price,
+      size,
+      color,
+      message,
+      notes,
+      status,
+    } = req.body;
+
+    const enquiry = await prisma.whatsAppEnquiry.create({
+      data: {
+        customerName: customerName || 'Store Customer',
+        phone: phone || '',
+        productTitle: productTitle || '',
+        sku: sku || '',
+        brand: brand || '',
+        price: price ? parseFloat(String(price)) : null,
+        size: size || null,
+        color: color || null,
+        message: message || 'Customer phone or walk-in enquiry recorded by admin.',
+        notes: notes || null,
+        status: status || 'NEW',
+        source: 'ADMIN_MANUAL',
+      },
+    });
+
+    res.json({ success: true, data: enquiry });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/enquiries/:id/status — update lead status & admin notes
+router.put('/enquiries/:id/status', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { status, notes } = req.body;
+    const data: any = {};
+    if (status) data.status = status;
+    if (notes !== undefined) data.notes = notes;
+
+    const updated = await prisma.whatsAppEnquiry.update({
+      where: { id },
+      data,
+    });
+    res.json({ success: true, data: updated });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/enquiries/:id — delete enquiry lead
+router.delete('/enquiries/:id', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.whatsAppEnquiry.delete({ where: { id } });
+    res.json({ success: true, message: 'Customer enquiry record deleted.' });
   } catch (error) {
     next(error);
   }
