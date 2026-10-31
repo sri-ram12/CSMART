@@ -1109,4 +1109,131 @@ router.put('/products/:id/image', async (req: AuthRequest, res: Response, next) 
   }
 });
 
+// ─── VIDEO ADS & PROMOTIONAL REELS MANAGEMENT ──────────────────────────────
+
+// POST /api/admin/video-ads/upload (Upload video from device gallery / camera / file)
+router.post('/video-ads/upload', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { video, filename } = req.body;
+    if (!video) {
+      res.status(400).json({ success: false, message: 'Video data or URL is required' });
+      return;
+    }
+
+    // Direct HTTP URL
+    if (typeof video === 'string' && (video.startsWith('http://') || video.startsWith('https://') || video.startsWith('/uploads/'))) {
+      res.json({ success: true, data: { url: video } });
+      return;
+    }
+
+    // Base64 Data URL (from phone gallery, camera, file picker)
+    if (typeof video === 'string' && video.startsWith('data:')) {
+      const matches = video.match(/^data:([A-Za-z0-9-+\/]+);base64,(.+)$/);
+      if (matches && matches.length === 3) {
+        const mimeType = matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const ext = mimeType.split('/')[1]?.split(';')[0]?.replace('quicktime', 'mov') || 'mp4';
+        const cleanName = (filename || 'video_ad').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const uniqueName = `ad_${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
+
+        const videosDir = path.resolve(process.cwd(), 'uploads/videos');
+        if (!fs.existsSync(videosDir)) {
+          fs.mkdirSync(videosDir, { recursive: true });
+        }
+        const filePath = path.join(videosDir, uniqueName);
+        fs.writeFileSync(filePath, buffer);
+
+        const publicUrl = `/uploads/videos/${uniqueName}`;
+        res.json({ success: true, data: { url: publicUrl } });
+        return;
+      }
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid video format. Provide base64 data URL or HTTP link.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET /api/admin/video-ads (List all video ads)
+router.get('/video-ads', async (_req: AuthRequest, res: Response, next) => {
+  try {
+    const ads = await prisma.videoAd.findMany({
+      orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+    });
+    res.json({ success: true, data: ads });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/video-ads (Create a new video ad)
+router.post('/video-ads', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { title, tagline, brand, videoUrl, posterUrl, offerText, linkUrl, ctaText, isActive, order } = req.body;
+    if (!title || !videoUrl) {
+      res.status(400).json({ success: false, message: 'Title and Video URL are required' });
+      return;
+    }
+
+    const ad = await prisma.videoAd.create({
+      data: {
+        title: title.trim(),
+        tagline: tagline ? tagline.trim() : null,
+        brand: brand ? brand.trim() : 'Chandhana',
+        videoUrl: videoUrl.trim(),
+        posterUrl: posterUrl ? posterUrl.trim() : null,
+        offerText: offerText ? offerText.trim() : null,
+        linkUrl: linkUrl ? linkUrl.trim() : '/shop',
+        ctaText: ctaText ? ctaText.trim() : 'Enquire on WhatsApp',
+        isActive: isActive !== undefined ? Boolean(isActive) : true,
+        order: typeof order === 'number' ? order : 0,
+      },
+    });
+
+    res.status(201).json({ success: true, message: 'Video ad published successfully', data: ad });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/video-ads/:id (Update video ad)
+router.put('/video-ads/:id', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    const { title, tagline, brand, videoUrl, posterUrl, offerText, linkUrl, ctaText, isActive, order } = req.body;
+
+    const ad = await prisma.videoAd.update({
+      where: { id },
+      data: {
+        ...(title && { title: title.trim() }),
+        ...(tagline !== undefined && { tagline: tagline ? tagline.trim() : null }),
+        ...(brand !== undefined && { brand: brand ? brand.trim() : 'Chandhana' }),
+        ...(videoUrl && { videoUrl: videoUrl.trim() }),
+        ...(posterUrl !== undefined && { posterUrl: posterUrl ? posterUrl.trim() : null }),
+        ...(offerText !== undefined && { offerText: offerText ? offerText.trim() : null }),
+        ...(linkUrl !== undefined && { linkUrl: linkUrl ? linkUrl.trim() : '/shop' }),
+        ...(ctaText !== undefined && { ctaText: ctaText ? ctaText.trim() : 'Enquire on WhatsApp' }),
+        ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+        ...(order !== undefined && { order: Number(order) }),
+      },
+    });
+
+    res.json({ success: true, message: 'Video ad updated successfully', data: ad });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/video-ads/:id (Delete video ad)
+router.delete('/video-ads/:id', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id } = req.params;
+    await prisma.videoAd.delete({ where: { id } });
+    res.json({ success: true, message: 'Video ad deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

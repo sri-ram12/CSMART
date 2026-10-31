@@ -1,4 +1,4 @@
-import { Product, Category, Order, User, Address, StoreSettings, CartItem, Banner, WhatsAppEnquiry } from '../types';
+import { Product, Category, Order, User, Address, StoreSettings, CartItem, Banner, WhatsAppEnquiry, VideoAd } from '../types';
 import { fallbackFeaturedProducts } from '../data/featuredProducts';
 
 const API_BASE = '/api';
@@ -272,6 +272,13 @@ export const api = {
       }),
   },
 
+  // Promotional Video Ads for Customer Panel
+  videoAds: {
+    getActive: () => request<VideoAd[]>('/settings/video-ads'),
+    trackView: (id: string) =>
+      request<{ success: boolean }>(`/settings/video-ads/${id}/view`, { method: 'POST' }),
+  },
+
   // Admin
   admin: {
     getProducts: () => request<Product[]>('/admin/products'),
@@ -350,6 +357,16 @@ export const api = {
       request<Banner>(`/admin/banners/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     deleteBanner: (id: string) =>
       request<{ message: string }>(`/admin/banners/${id}`, { method: 'DELETE' }),
+    // Video Ads Management
+    getVideoAds: () => request<VideoAd[]>('/admin/video-ads'),
+    uploadVideo: (data: { video: string; filename?: string }) =>
+      request<{ url: string }>('/admin/video-ads/upload', { method: 'POST', body: JSON.stringify(data) }),
+    createVideoAd: (data: Partial<VideoAd>) =>
+      request<VideoAd>('/admin/video-ads', { method: 'POST', body: JSON.stringify(data) }),
+    updateVideoAd: (id: string, data: Partial<VideoAd>) =>
+      request<VideoAd>(`/admin/video-ads/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    deleteVideoAd: (id: string) =>
+      request<{ message: string }>(`/admin/video-ads/${id}`, { method: 'DELETE' }),
   },
   banners: {
     getAll: () => request<Banner[]>('/settings/banners'),

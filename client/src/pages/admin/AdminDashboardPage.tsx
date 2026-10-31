@@ -14,6 +14,7 @@ import {
   Sparkles,
   Phone,
   User,
+  Film,
 } from 'lucide-react';
 import { ShareQRModal } from '../../components/common/ShareQRModal';
 
@@ -75,6 +76,13 @@ export const AdminDashboardPage: React.FC = () => {
             >
               <AlertTriangle className="w-4 h-4 text-amber-500" />
               <span>Inventory</span>
+            </Link>
+            <Link
+              to="/admin/video-ads"
+              className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-xs font-bold text-[#5B21B6] shadow-xs border border-purple-200 transition-all flex items-center gap-1.5"
+            >
+              <Film className="w-4 h-4 text-[#7C3AED]" />
+              <span>Video Ads</span>
             </Link>
             <Link
               to="/admin/settings"

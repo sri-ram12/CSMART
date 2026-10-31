@@ -312,3 +312,24 @@ model WhatsAppEnquiry {
   @@index([sku])
   @@index([phone])
 }
+
+model VideoAd {
+  id          String   @id @default(uuid())
+  title       String
+  tagline     String?
+  brand       String?  @default("Chandhana")
+  videoUrl    String
+  posterUrl   String?
+  offerText   String?  // e.g. "Flat 25% Off Festive Deal"
+  linkUrl     String?  // CTA link or target
+  ctaText     String?  @default("Enquire on WhatsApp")
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  viewsCount  Int      @default(0)
+  clicksCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([order])
+}

@@ -33,6 +33,7 @@ import AdminOrdersPage from './pages/admin/AdminOrdersPage';
 import AdminEnquiriesPage from './pages/admin/AdminEnquiriesPage';
 import AdminInventoryPage from './pages/admin/AdminInventoryPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
+import AdminVideoAdsPage from './pages/admin/AdminVideoAdsPage';
 import { AdminRoute } from './components/admin/AdminRoute';
 
 // Auto scroll to top on route change
@@ -96,6 +97,9 @@ export function App() {
               } />
               <Route path="/admin/inventory" element={
                 <AdminLayout><AdminRoute><AdminInventoryPage /></AdminRoute></AdminLayout>
+              } />
+              <Route path="/admin/video-ads" element={
+                <AdminLayout><AdminRoute><AdminVideoAdsPage /></AdminRoute></AdminLayout>
               } />
               <Route path="/admin/settings" element={
                 <AdminLayout><AdminRoute><AdminSettingsPage /></AdminRoute></AdminLayout>

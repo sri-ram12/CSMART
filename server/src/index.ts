@@ -56,14 +56,18 @@ if (process.env.NODE_ENV !== 'test') {
   app.use(morgan('dev'));
 }
 
-// Body parsers
-app.use(express.json({ limit: '15mb' }));
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+// Body parsers (allows direct video uploads from device gallery)
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
-// Static uploads directory for product images and banners
+// Static uploads directory for product images, banners, and video ads
 const uploadsDir = path.resolve(process.cwd(), 'uploads');
+const videosDir = path.resolve(uploadsDir, 'videos');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(videosDir)) {
+  fs.mkdirSync(videosDir, { recursive: true });
 }
 app.use('/uploads', express.static(uploadsDir));
 

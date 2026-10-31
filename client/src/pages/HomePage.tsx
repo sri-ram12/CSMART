@@ -5,12 +5,12 @@ import { DualPromotionalBanners } from '../components/home/DualPromotionalBanner
 import { ValueFeatureBar } from '../components/home/ValueFeatureBar';
 import { TopIndianBrandsBanner } from '../components/home/TopIndianBrandsBanner';
 import { TopBrandMarquee } from '../components/common/TopBrandMarquee';
-import { VideoShowcase } from '../components/home/VideoShowcase';
 import { CustomerReviewsSection } from '../components/home/CustomerReviewsSection';
 import { StoreLocationShowcase } from '../components/home/StoreLocationShowcase';
 import { DynamicOfferBanners } from '../components/home/DynamicOfferBanners';
 import { NewArrivalsSection } from '../components/home/NewArrivalsSection';
 import { ShoeViewer3DShowcase } from '../components/home/ShoeViewer3DShowcase';
+import { VideoAdsShowcase } from '../components/home/VideoAdsShowcase';
 
 export const HomePage: React.FC = () => {
   return (
@@ -42,9 +42,9 @@ export const HomePage: React.FC = () => {
       {/* 6. Value Proposition Strip (Free shipping, Easy Returns, Secure Payment, Premium Quality, 24/7 Support) */}
       <ValueFeatureBar />
 
-      {/* 6. High-Definition Footwear Video Highlights Showcase (Manual Scroll & Navigation Controls) */}
+      {/* 6. In-Store Promotional Video Ads & Brand Reels (Admin Broadcast from Gallery) */}
       <div id="video-reels">
-        <VideoShowcase />
+        <VideoAdsShowcase />
       </div>
 
       {/* 7. Store Location & Google Maps Showcase with Authentic Shop Photos */}

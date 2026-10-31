@@ -62,6 +62,24 @@ export interface WhatsAppEnquiry {
   updatedAt: string;
 }
 
+export interface VideoAd {
+  id: string;
+  title: string;
+  tagline?: string;
+  brand?: string;
+  videoUrl: string;
+  posterUrl?: string;
+  offerText?: string;
+  linkUrl?: string;
+  ctaText?: string;
+  isActive: boolean;
+  order: number;
+  viewsCount: number;
+  clicksCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Product {
   id: string;
   title: string;
