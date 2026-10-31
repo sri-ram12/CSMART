@@ -510,13 +510,6 @@ export const AdminProductsPage: React.FC = () => {
         {/* Header Strip */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-purple-200/60 gap-4">
           <div className="flex items-center gap-3">
-            <Link
-              to="/"
-              className="p-2 sm:p-2.5 rounded-xl bg-white text-slate-600 hover:text-[#5B21B6] shadow-xs border border-purple-100 hover:bg-[#FAF7FD] transition-all"
-              title="Return to Storefront"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-md bg-[#5B21B6] text-white text-[10px] font-black uppercase tracking-wider">
@@ -713,14 +706,12 @@ export const AdminProductsPage: React.FC = () => {
                                 loading="lazy"
                               />
                               <div className="min-w-0 max-w-xs">
-                                <Link
-                                  to={`/product/${p.slug}`}
-                                  target="_blank"
-                                  className="font-bold text-slate-900 block truncate hover:text-[#5B21B6] transition-colors"
+                                <span
+                                  className="font-bold text-slate-900 block truncate"
                                   title={p.title}
                                 >
                                   {p.title}
-                                </Link>
+                                </span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
                                   <span className="text-[10px] text-purple-700 bg-purple-50 px-1.5 py-0.2 rounded font-bold">
                                     {p.brand}

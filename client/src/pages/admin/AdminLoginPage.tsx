@@ -141,16 +141,6 @@ export default function AdminLoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Back to store */}
-            <div className="mt-6 text-center">
-              <a
-                href="/"
-                className="text-sm text-slate-500 hover:text-slate-700 transition-colors"
-              >
-                ← Back to Chandhana Shoe Mart
-              </a>
-            </div>
           </div>
         </div>
 
