@@ -158,7 +158,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <div className="flex items-center gap-1.5 shrink-0">
               {/* WhatsApp Price Inquiry */}
               <a
-                href={getWhatsAppProductUrl(product.title, product.price, defaultVariant.size, defaultVariant.colorName)}
+                href={getWhatsAppProductUrl(
+                  product.title,
+                  product.price,
+                  defaultVariant.size,
+                  defaultVariant.colorName,
+                  product.slug,
+                  primaryMedia,
+                  product.sku
+                )}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={(e) => {
@@ -170,7 +178,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     sku: product.sku,
                     brand: product.brand,
                     price: product.price,
-                    imageUrl: product.media?.[0]?.url || product.variants?.[0]?.imageUrl,
+                    imageUrl: primaryMedia,
                     size: defaultVariant.size,
                     color: defaultVariant.colorName,
                     message: `Price inquiry for ${product.title} (SKU: ${product.sku}, Price: ₹${product.price})`,

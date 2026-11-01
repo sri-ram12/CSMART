@@ -17,6 +17,7 @@ import pincodeRoutes from './routes/pincodeRoutes.js';
 import reviewRoutes from './routes/reviewRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import settingsRoutes from './routes/settingsRoutes.js';
+import { prisma } from './prisma.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 dotenv.config();
@@ -116,6 +117,83 @@ const clientDistPath = clientDistCandidates.find((candidate) => fs.existsSync(ca
 if (clientDistPath) {
   console.log(`📦 Serving static client build from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
+
+  // Dynamic OpenGraph / WhatsApp Product Preview Card Generator
+  app.get('/product/:slug', async (req, res, next) => {
+    try {
+      const { slug } = req.params;
+      const indexPath = path.join(clientDistPath, 'index.html');
+      if (!fs.existsSync(indexPath)) {
+        return next();
+      }
+
+      const product = await prisma.product.findUnique({
+        where: { slug },
+        include: { media: { orderBy: { order: 'asc' } }, variants: true },
+      });
+
+      if (!product) {
+        return res.sendFile(indexPath);
+      }
+
+      let html = fs.readFileSync(indexPath, 'utf-8');
+
+      // Best image selection
+      const rawImage =
+        product.media?.[0]?.url ||
+        product.variants?.[0]?.imageUrl ||
+        '/csm_original_logo.png';
+
+      // Always use canonical production domain for external scrapers
+      const host = req.get('x-forwarded-host') || req.get('host') || 'www.chandhanashoemart.com';
+      const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
+      const origin = isLocal ? `http://${host}` : 'https://www.chandhanashoemart.com';
+
+      const absoluteImageUrl = rawImage.startsWith('http')
+        ? rawImage
+        : `${origin}${rawImage.startsWith('/') ? '' : '/'}${rawImage}`;
+
+      const canonicalUrl = `${origin}/product/${product.slug}`;
+      const titleText = `${product.title} (₹${product.price.toLocaleString('en-IN')}) | Chandhana Shoe Mart`;
+      const descText = product.description
+        ? product.description.replace(/[\r\n]+/g, ' ').slice(0, 200)
+        : `Check out ${product.title} at Chandhana Shoe Mart, Tagarapuvalasa. 100% genuine footwear at best prices.`;
+
+      const safeTitle = titleText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeDesc = descText.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const safeImage = absoluteImageUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      const safeUrl = canonicalUrl.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+
+      const ogMeta = `
+    <!-- Dynamic WhatsApp & Social Preview Tags for ${safeTitle} -->
+    <meta property="og:type" content="product" />
+    <meta property="og:site_name" content="Chandhana Shoe Mart" />
+    <meta property="og:title" content="${safeTitle}" />
+    <meta property="og:description" content="${safeDesc}" />
+    <meta property="og:url" content="${safeUrl}" />
+    <meta property="og:image" content="${safeImage}" />
+    <meta property="og:image:secure_url" content="${safeImage}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="800" />
+    <meta property="og:image:height" content="800" />
+    <meta property="product:price:amount" content="${product.price}" />
+    <meta property="product:price:currency" content="INR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="${safeTitle}" />
+    <meta name="twitter:description" content="${safeDesc}" />
+    <meta name="twitter:image" content="${safeImage}" />
+`;
+
+      html = html.replace(/<title>.*?<\/title>/i, `<title>${safeTitle}</title>`);
+      html = html.replace('</head>', `${ogMeta}\n  </head>`);
+
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
+    } catch (err) {
+      console.warn('OpenGraph preview injection skipped:', err);
+      return res.sendFile(path.join(clientDistPath, 'index.html'));
+    }
+  });
 
   // SPA fallback for storefront routes (excluding /api and static asset files)
   app.get('*', (req, res, next) => {

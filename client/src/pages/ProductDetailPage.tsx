@@ -27,7 +27,7 @@ import {
   Share2,
   Phone,
 } from 'lucide-react';
-import { logWhatsAppEnquiry } from '../utils/whatsapp';
+import { logWhatsAppEnquiry, getWhatsAppProductUrl, shareProductToWhatsAppWithImage } from '../utils/whatsapp';
 
 export const ProductDetailPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -179,8 +179,29 @@ export const ProductDetailPage: React.FC = () => {
     navigate('/checkout');
   };
 
-  const handleShare = () => {
-    if (navigator.clipboard) {
+  const currentImageUrl =
+    product.media?.[activeImageIdx]?.url ||
+    product.media?.[0]?.url ||
+    currentVariant?.imageUrl ||
+    product.variants?.[0]?.imageUrl ||
+    '';
+
+  const effectivePrice = product.price + (currentVariant?.priceAdjustment || 0);
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      await shareProductToWhatsAppWithImage({
+        productId: product.id,
+        productTitle: product.title,
+        sku: currentVariant?.sku || product.sku,
+        brand: product.brand,
+        price: effectivePrice,
+        imageUrl: currentImageUrl,
+        size: selectedSize,
+        color: selectedColor,
+        slug: product.slug,
+      });
+    } else if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
@@ -209,9 +230,15 @@ export const ProductDetailPage: React.FC = () => {
     }
   };
 
-  const whatsAppUrl = `https://wa.me/919553536884?text=${encodeURIComponent(
-    `Hello Chandhana Shoe Mart (Tagarapuvalasa), I would like to inquire about ${product.title} (SKU: ${product.sku}, Size: ${selectedSize}, Color: ${selectedColor}, Price: ₹${product.price})`
-  )}`;
+  const whatsAppUrl = getWhatsAppProductUrl(
+    product.title,
+    effectivePrice,
+    selectedSize,
+    selectedColor,
+    product.slug,
+    currentImageUrl,
+    currentVariant?.sku || product.sku
+  );
 
   return (
     <div className="min-h-screen bg-slate-50/60 pt-6 pb-28 lg:py-10">
@@ -578,13 +605,13 @@ export const ProductDetailPage: React.FC = () => {
                     customerName: 'Website Customer',
                     productId: product.id,
                     productTitle: product.title,
-                    sku: product.sku,
+                    sku: currentVariant?.sku || product.sku,
                     brand: product.brand,
-                    price: product.price,
-                    imageUrl: product.media?.[0]?.url || product.variants?.[0]?.imageUrl,
+                    price: effectivePrice,
+                    imageUrl: currentImageUrl,
                     size: selectedSize,
                     color: selectedColor,
-                    message: `Inquiry for ${product.title} (SKU: ${product.sku}, Size: ${selectedSize}, Price: ₹${product.price})`,
+                    message: `Inquiry for ${product.title} (SKU: ${currentVariant?.sku || product.sku}, Size: ${selectedSize}, Price: ₹${effectivePrice})`,
                     source: 'PRODUCT_DETAIL',
                   });
                 }}
