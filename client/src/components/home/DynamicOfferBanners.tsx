@@ -34,7 +34,8 @@ export const DynamicOfferBanners: React.FC = () => {
 
   if (isLoading || banners.length === 0) return null;
 
-  const currentBanner = banners[currentIndex];
+  const currentBanner = banners[currentIndex] || banners[0];
+  if (!currentBanner) return null;
 
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 my-6">

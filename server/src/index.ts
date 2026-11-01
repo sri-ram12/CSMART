@@ -117,9 +117,14 @@ if (clientDistPath) {
   console.log(`📦 Serving static client build from: ${clientDistPath}`);
   app.use(express.static(clientDistPath));
 
-  // SPA fallback for storefront routes (excluding /api)
+  // SPA fallback for storefront routes (excluding /api and static asset files)
   app.get('*', (req, res, next) => {
-    if (req.path.startsWith('/api')) {
+    if (
+      req.path.startsWith('/api') ||
+      req.path.startsWith('/uploads') ||
+      req.path.startsWith('/assets') ||
+      Boolean(path.extname(req.path))
+    ) {
       return next();
     }
     res.sendFile(path.join(clientDistPath, 'index.html'));

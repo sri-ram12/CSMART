@@ -11,6 +11,7 @@ import { DynamicOfferBanners } from '../components/home/DynamicOfferBanners';
 import { NewArrivalsSection } from '../components/home/NewArrivalsSection';
 import { ShoeViewer3DShowcase } from '../components/home/ShoeViewer3DShowcase';
 import { VideoAdsShowcase } from '../components/home/VideoAdsShowcase';
+import { ErrorBoundary } from '../components/common/ErrorBoundary';
 
 export const HomePage: React.FC = () => {
   return (
@@ -28,7 +29,9 @@ export const HomePage: React.FC = () => {
       <TopIndianBrandsBanner />
 
       {/* 3.5. Interactive 3D Shoe Viewer — Popular Brand Flagship Models (Walkaroo, Sparx, VKC Pride, Paragon) */}
-      <ShoeViewer3DShowcase />
+      <ErrorBoundary fallback={null}>
+        <ShoeViewer3DShowcase />
+      </ErrorBoundary>
 
       {/* 4. Fresh In Store - New Arrivals Section */}
       <NewArrivalsSection />

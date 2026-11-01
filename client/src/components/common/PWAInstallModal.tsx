@@ -63,8 +63,13 @@ export const PWAInstallModal: React.FC = () => {
     // If from QR scan: pop up after 600ms; otherwise after 1.8s
     const delay = fromQR ? 600 : 1800;
     const timer = setTimeout(() => {
-      // Check if user dismissed it in this session (unless they came from QR scan)
-      const dismissed = sessionStorage.getItem('csm_pwa_dismissed');
+      // Check if user dismissed it in this session (safely handled for private mode)
+      let dismissed = false;
+      try {
+        dismissed = Boolean(sessionStorage.getItem('csm_pwa_dismissed'));
+      } catch (e) {
+        dismissed = false;
+      }
       if (dismissed && !fromQR) {
         setIsMinimized(true);
       } else {
@@ -109,7 +114,11 @@ export const PWAInstallModal: React.FC = () => {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsMinimized(true);
-    sessionStorage.setItem('csm_pwa_dismissed', 'true');
+    try {
+      sessionStorage.setItem('csm_pwa_dismissed', 'true');
+    } catch (e) {
+      // ignore
+    }
   };
 
   if (isStandalone) return null;

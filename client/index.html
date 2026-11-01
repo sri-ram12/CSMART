@@ -24,11 +24,19 @@
     <!-- Razorpay -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-    <!-- Service Worker Registration -->
+    <!-- Vite Chunk Error & Service Worker Self-Healing -->
     <script>
+      // Automatically reload if a new deployment changed chunk hashes
+      window.addEventListener('vite:preloadError', function () {
+        window.location.reload();
+      });
+
+      // Register and auto-update Service Worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
-          navigator.serviceWorker.register('/sw.js');
+          navigator.serviceWorker.register('/sw.js').then(function (reg) {
+            reg.update();
+          }).catch(function () {});
         });
       }
     </script>
