@@ -350,6 +350,12 @@ export const api = {
       request<{ url: string }>('/admin/upload-image', { method: 'POST', body: JSON.stringify(data) }),
     updateProductImage: (id: string, imageUrl: string) =>
       request<Product>(`/admin/products/${id}/image`, { method: 'PUT', body: JSON.stringify({ imageUrl }) }),
+    updateProductMedia: (id: string, mediaUrls: string[]) =>
+      request<Product>(`/admin/products/${id}/media`, { method: 'PUT', body: JSON.stringify({ mediaUrls }) }),
+    deleteProductMedia: (productId: string, mediaId: string) =>
+      request<Product>(`/admin/products/${productId}/media/${mediaId}`, { method: 'DELETE' }),
+    setPrimaryProductMedia: (productId: string, mediaId: string) =>
+      request<Product>(`/admin/products/${productId}/media/${mediaId}/primary`, { method: 'PUT' }),
     getBanners: () => request<Banner[]>('/admin/banners'),
     createBanner: (data: Partial<Banner>) =>
       request<Banner>('/admin/banners', { method: 'POST', body: JSON.stringify(data) }),

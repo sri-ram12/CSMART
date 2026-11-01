@@ -4,16 +4,11 @@ import { VideoAd } from '../../types';
 import {
   Film,
   Sparkles,
-  ChevronLeft,
-  ChevronRight,
   Volume2,
   VolumeX,
   Play,
-  Pause,
   MessageCircle,
   Tag,
-  ArrowRight,
-  Maximize2,
 } from 'lucide-react';
 import { openWhatsAppWithLog } from '../../utils/whatsapp';
 
@@ -158,14 +153,6 @@ export const VideoAdsShowcase: React.FC = () => {
     setActiveIdx((prev) => (prev + 1) % ads.length);
   };
 
-  const handlePrev = () => {
-    setActiveIdx((prev) => (prev - 1 + ads.length) % ads.length);
-  };
-
-  const handleNext = () => {
-    setActiveIdx((prev) => (prev + 1) % ads.length);
-  };
-
   const handleWhatsAppEnquiry = () => {
     const text = `Hello Chandhana Shoe Mart! 👋\nI am watching your Video Ad on the website:\n🎬 *${currentAd.title}*\n🏷️ *Offer:* ${currentAd.offerText || 'Special Store Discount'}\n👟 *Brand:* ${currentAd.brand || 'Footwear'}\n\nPlease share more photos, available sizes, and store price!`;
     const url = `https://wa.me/919553536884?text=${encodeURIComponent(text)}`;
@@ -244,12 +231,12 @@ export const VideoAdsShowcase: React.FC = () => {
                   )}
                 </div>
 
-                {/* Sound & Playback Controls */}
+                {/* Sound Control (Tap video to Play/Pause, keeping UI ultra-clean) */}
                 <div className="flex items-center gap-2 pointer-events-auto">
                   <button
                     type="button"
                     onClick={toggleMute}
-                    className="p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition cursor-pointer border border-white/20 shadow-lg"
+                    className="p-2 sm:p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition cursor-pointer border border-white/20 shadow-lg"
                     title={isMuted ? 'Unmute Audio' : 'Mute Audio'}
                   >
                     {isMuted ? (
@@ -258,41 +245,20 @@ export const VideoAdsShowcase: React.FC = () => {
                       <Volume2 className="w-4 h-4 text-emerald-400" />
                     )}
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={togglePlay}
-                    className="p-2.5 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md transition cursor-pointer border border-white/20 shadow-lg"
-                    title={isPlaying ? 'Pause' : 'Play'}
-                  >
-                    {isPlaying ? (
-                      <Pause className="w-4 h-4" />
-                    ) : (
-                      <Play className="w-4 h-4 fill-white" />
-                    )}
-                  </button>
                 </div>
               </div>
 
-              {/* Navigation Arrows */}
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md transition cursor-pointer border border-white/20 shadow-lg hover:scale-105 active:scale-95"
-                title="Previous Video Ad"
-                aria-label="Previous Video Ad"
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleNext}
-                className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-black/50 hover:bg-black/80 text-white backdrop-blur-md transition cursor-pointer border border-white/20 shadow-lg hover:scale-105 active:scale-95"
-                title="Next Video Ad"
-                aria-label="Next Video Ad"
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
+              {/* Centered Play Indicator when Video is Paused */}
+              {!isPlaying && (
+                <div
+                  onClick={togglePlay}
+                  className="absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[1px] cursor-pointer"
+                >
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/90 text-[#5B21B6] flex items-center justify-center shadow-2xl transition-transform hover:scale-110 active:scale-95">
+                    <Play className="w-7 h-7 fill-[#5B21B6] ml-1" />
+                  </div>
+                </div>
+              )}
 
               {/* Bottom Video Ad Info & WhatsApp CTA */}
               <div className="absolute bottom-4 left-4 right-4 z-20 flex flex-col sm:flex-row sm:items-end justify-between gap-3 text-white pointer-events-none">
@@ -396,15 +362,6 @@ export const VideoAdsShowcase: React.FC = () => {
                 );
               })}
             </div>
-
-            {/* Direct Shop Link Button */}
-            <a
-              href="/shop"
-              className="w-full py-2.5 px-4 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-[#5B21B6] font-bold text-xs flex items-center justify-center gap-1.5 transition text-center"
-            >
-              <span>Explore All Shoes &amp; Deals in Catalog</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </a>
           </div>
         </div>
       </div>

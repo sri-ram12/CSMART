@@ -252,7 +252,7 @@ export const AdminProductsPage: React.FC = () => {
     setProducts((prev) =>
       prev.map((item) => (item.id === updatedProduct.id ? { ...item, ...updatedProduct } : item))
     );
-    showNotification('success', `Picture updated for "${updatedProduct.title}"!`);
+    showNotification('success', `Photos updated for "${updatedProduct.title}"!`);
   };
 
   // Banner CRUD handlers
@@ -1199,10 +1199,10 @@ export const AdminProductsPage: React.FC = () => {
                                 type="button"
                                 onClick={() => handleOpenImageModal(p)}
                                 className="px-2 py-1 rounded-md text-[10px] font-bold bg-white/95 text-[#5B21B6] hover:bg-[#5B21B6] hover:text-white border border-purple-200 shadow-2xs flex items-center gap-1 transition cursor-pointer backdrop-blur-xs"
-                                title="Change product photo from device gallery / camera"
+                                title="Manage multiple photos for this product (gallery / camera / URLs)"
                               >
                                 <ImageIcon className="w-3 h-3" />
-                                <span>Change Photo</span>
+                                <span>Photos ({p.media?.length || 1})</span>
                               </button>
                             </div>
                           </div>
@@ -1374,7 +1374,7 @@ export const AdminProductsPage: React.FC = () => {
                                     type="button"
                                     onClick={() => handleOpenImageModal(p)}
                                     className="relative group/thumb shrink-0 border border-slate-200 rounded-xl overflow-hidden bg-slate-50 cursor-pointer p-0"
-                                    title="Click to Change Picture (Gallery / Files)"
+                                    title={`Click to Manage Photos (${p.media?.length || 1})`}
                                   >
                                     <img
                                       src={p.media?.[0]?.url || p.variants?.[0]?.imageUrl || '/shop/shoe_placeholder.png'}
@@ -1385,6 +1385,11 @@ export const AdminProductsPage: React.FC = () => {
                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/thumb:opacity-100 flex items-center justify-center transition">
                                       <ImageIcon className="w-4 h-4 text-white" />
                                     </div>
+                                    {p.media && p.media.length > 1 && (
+                                      <span className="absolute bottom-0 right-0 px-1 py-0.5 bg-[#5B21B6] text-white text-[9px] font-black rounded-tl leading-none">
+                                        {p.media.length}
+                                      </span>
+                                    )}
                                   </button>
 
                                   <div className="min-w-0 flex-1">

@@ -157,8 +157,8 @@ export const PWAInstallModal: React.FC = () => {
             {/* Header / App Identity */}
             <div className="flex items-start gap-3.5 pr-6">
               {/* App Icon */}
-              <div className="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#5B21B6] to-[#7C3AED] flex items-center justify-center shrink-0 shadow-lg border-2 border-white">
-                <Smartphone className="w-7 h-7 text-white" />
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shrink-0 shadow-md border-2 border-purple-200 p-1.5 overflow-hidden">
+                <img src="/icons/icon-192.png" alt="CSMART Logo" className="w-full h-full object-contain" />
               </div>
 
               <div className="min-w-0">

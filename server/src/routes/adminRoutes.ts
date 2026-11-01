@@ -1051,12 +1051,16 @@ router.post('/upload-image', async (req: AuthRequest, res: Response, next) => {
   }
 });
 
-// PUT /api/admin/products/:id/image
+// PUT /api/admin/products/:id/image (Backward-compatible single / multiple image update)
 router.put('/products/:id/image', async (req: AuthRequest, res: Response, next) => {
   try {
-    const { imageUrl } = req.body;
-    if (!imageUrl) {
-      res.status(400).json({ success: false, message: 'imageUrl is required' });
+    const { imageUrl, mediaUrls } = req.body;
+    const urls: string[] = Array.isArray(mediaUrls) && mediaUrls.length > 0
+      ? mediaUrls.filter((u: any) => typeof u === 'string' && u.trim().length > 0)
+      : imageUrl ? [imageUrl] : [];
+
+    if (urls.length === 0) {
+      res.status(400).json({ success: false, message: 'imageUrl or mediaUrls is required' });
       return;
     }
 
@@ -1071,37 +1075,259 @@ router.put('/products/:id/image', async (req: AuthRequest, res: Response, next) 
       return;
     }
 
-    // Update or create primary media
-    if (product.media && product.media.length > 0) {
-      await prisma.productMedia.update({
-        where: { id: product.media[0].id },
-        data: { url: imageUrl },
-      });
-    } else {
+    // Replace existing media with provided list
+    await prisma.productMedia.deleteMany({
+      where: { productId },
+    });
+
+    for (let i = 0; i < urls.length; i++) {
       await prisma.productMedia.create({
         data: {
           productId,
-          url: imageUrl,
+          url: urls[i],
           type: 'IMAGE',
-          order: 0,
+          order: i,
         },
       });
     }
 
-    // Also update variants imageUrl
+    // Also update variants primary imageUrl
     await prisma.productVariant.updateMany({
       where: { productId },
-      data: { imageUrl },
+      data: { imageUrl: urls[0] },
     });
 
     const updated = await prisma.product.findUnique({
       where: { id: productId },
-      include: { media: true, variants: true, category: true },
+      include: { media: { orderBy: { order: 'asc' } }, variants: true, category: true },
     });
 
     res.json({
       success: true,
-      message: 'Product picture updated successfully',
+      message: 'Product pictures updated successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/media (Save / replace complete list of product pictures)
+router.put('/products/:id/media', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { mediaUrls, images } = req.body;
+    const urls: string[] = (Array.isArray(mediaUrls) ? mediaUrls : Array.isArray(images) ? images : [])
+      .filter((u: any) => typeof u === 'string' && u.trim().length > 0);
+
+    const productId = req.params.id;
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+    });
+
+    if (!product) {
+      res.status(404).json({ success: false, message: 'Product not found' });
+      return;
+    }
+
+    if (urls.length === 0) {
+      res.status(400).json({ success: false, message: 'At least one image URL is required' });
+      return;
+    }
+
+    // Replace product media with new ordered list
+    await prisma.productMedia.deleteMany({
+      where: { productId },
+    });
+
+    for (let i = 0; i < urls.length; i++) {
+      await prisma.productMedia.create({
+        data: {
+          productId,
+          url: urls[i],
+          type: 'IMAGE',
+          order: i,
+        },
+      });
+    }
+
+    // Update variants primary image to first photo
+    await prisma.productVariant.updateMany({
+      where: { productId },
+      data: { imageUrl: urls[0] },
+    });
+
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        media: { orderBy: { order: 'asc' } },
+        variants: true,
+        category: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: `Updated product with ${urls.length} photos successfully`,
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// POST /api/admin/products/:id/media (Append photo(s) to product)
+router.post('/products/:id/media', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { url, urls } = req.body;
+    const productId = req.params.id;
+    const toAdd: string[] = Array.isArray(urls) ? urls : url ? [url] : [];
+
+    if (toAdd.length === 0) {
+      res.status(400).json({ success: false, message: 'Image url is required' });
+      return;
+    }
+
+    const currentMediaCount = await prisma.productMedia.count({
+      where: { productId },
+    });
+
+    for (let i = 0; i < toAdd.length; i++) {
+      await prisma.productMedia.create({
+        data: {
+          productId,
+          url: toAdd[i],
+          type: 'IMAGE',
+          order: currentMediaCount + i,
+        },
+      });
+    }
+
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        media: { orderBy: { order: 'asc' } },
+        variants: true,
+        category: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Photo(s) added successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// DELETE /api/admin/products/:id/media/:mediaId (Remove specific photo)
+router.delete('/products/:id/media/:mediaId', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id: productId, mediaId } = req.params;
+
+    const totalCount = await prisma.productMedia.count({
+      where: { productId },
+    });
+
+    if (totalCount <= 1) {
+      res.status(400).json({
+        success: false,
+        message: 'Cannot delete the only picture. Products must have at least one picture.',
+      });
+      return;
+    }
+
+    await prisma.productMedia.delete({
+      where: { id: mediaId },
+    });
+
+    // Re-index orders
+    const remaining = await prisma.productMedia.findMany({
+      where: { productId },
+      orderBy: { order: 'asc' },
+    });
+
+    for (let i = 0; i < remaining.length; i++) {
+      await prisma.productMedia.update({
+        where: { id: remaining[i].id },
+        data: { order: i },
+      });
+    }
+
+    if (remaining.length > 0) {
+      await prisma.productVariant.updateMany({
+        where: { productId },
+        data: { imageUrl: remaining[0].url },
+      });
+    }
+
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        media: { orderBy: { order: 'asc' } },
+        variants: true,
+        category: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Photo removed successfully',
+      data: updated,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// PUT /api/admin/products/:id/media/:mediaId/primary (Set photo as primary/cover)
+router.put('/products/:id/media/:mediaId/primary', async (req: AuthRequest, res: Response, next) => {
+  try {
+    const { id: productId, mediaId } = req.params;
+
+    const targetMedia = await prisma.productMedia.findUnique({
+      where: { id: mediaId },
+    });
+
+    if (!targetMedia || targetMedia.productId !== productId) {
+      res.status(404).json({ success: false, message: 'Media item not found for this product' });
+      return;
+    }
+
+    const allMedia = await prisma.productMedia.findMany({
+      where: { productId },
+      orderBy: { order: 'asc' },
+    });
+
+    // Re-order: targetMedia becomes index 0, others follow
+    const otherMedia = allMedia.filter((m) => m.id !== mediaId);
+    const newOrdered = [targetMedia, ...otherMedia];
+
+    for (let i = 0; i < newOrdered.length; i++) {
+      await prisma.productMedia.update({
+        where: { id: newOrdered[i].id },
+        data: { order: i },
+      });
+    }
+
+    await prisma.productVariant.updateMany({
+      where: { productId },
+      data: { imageUrl: targetMedia.url },
+    });
+
+    const updated = await prisma.product.findUnique({
+      where: { id: productId },
+      include: {
+        media: { orderBy: { order: 'asc' } },
+        variants: true,
+        category: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: 'Primary photo updated successfully',
       data: updated,
     });
   } catch (error) {
