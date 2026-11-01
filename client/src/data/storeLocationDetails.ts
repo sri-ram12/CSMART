@@ -1,6 +1,6 @@
 /**
  * Authentic Google Maps Location Details for Chandana Shoe Mart (CSM)
- * Extracted directly from live Google Maps place card: https://maps.app.goo.gl/YBteoVzaYAF12mW97
+ * Extracted directly from live Google Maps place card: https://maps.app.goo.gl/3EVD2fLvJUarAszV9?g_st=ac
  */
 
 export interface StoreLocationData {
@@ -91,8 +91,8 @@ export const storeLocationDetails: StoreLocationData = {
   },
 
   googleMaps: {
-    shortUrl: 'https://maps.app.goo.gl/YBteoVzaYAF12mW97',
-    fullPlaceUrl: 'https://www.google.com/maps/place/Chandana+Shoe+Mart/@17.9318122,83.4274064,17z/data=!4m2!3m1!1s0x3a3957f918037751:0x3921cf8a897fef11',
+    shortUrl: 'https://maps.app.goo.gl/3EVD2fLvJUarAszV9?g_st=ac',
+    fullPlaceUrl: 'https://maps.app.goo.gl/3EVD2fLvJUarAszV9?g_st=ac',
     placeId: 'ChIJVXcDGPlXOTorEe9_iYrPITk',
     cid: '4116799728312643345',
     embedQuery: 'Chandana+Shoe+Mart+Tagarapuvalasa',

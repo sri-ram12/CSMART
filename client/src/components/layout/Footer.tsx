@@ -55,7 +55,7 @@ export const Footer: React.FC = () => {
 
               <div className="flex flex-wrap items-center gap-2.5 pt-1">
                 <a
-                  href="https://maps.app.goo.gl/YBteoVzaYAF12mW97"
+                  href="https://maps.app.goo.gl/3EVD2fLvJUarAszV9?g_st=ac"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5B21B6] hover:bg-[#4C1D95] text-white text-xs font-bold shadow-xs hover:shadow-md transition-all active:scale-98"

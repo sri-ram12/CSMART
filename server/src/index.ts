@@ -217,8 +217,38 @@ app.use('/api', (_req, res) => {
 // Central Error Handler
 app.use(errorHandler);
 
+// Self-healing brand spelling normalization (Coasters, Hillson, Jaguar)
+async function normalizeBrandSpellings() {
+  try {
+    const brandFixes = [
+      { from: 'Poster Shoes', to: 'Coasters', regex: /Poster Shoes|Poster/g },
+      { from: 'Hison', to: 'Hillson', regex: /Hison/g },
+      { from: 'Zaguaar', to: 'Jaguar', regex: /Zaguaar/g },
+    ];
+
+    for (const b of brandFixes) {
+      const items = await prisma.product.findMany({
+        where: { OR: [{ brand: b.from }, { title: { contains: b.from } }] },
+      });
+      for (const p of items) {
+        await prisma.product.update({
+          where: { id: p.id },
+          data: {
+            brand: b.to,
+            title: p.title.replace(b.regex, b.to),
+            description: p.description ? p.description.replace(b.regex, b.to) : p.description,
+          },
+        });
+      }
+    }
+  } catch (err) {
+    console.warn('Brand normalization skipped:', err);
+  }
+}
+
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
+    normalizeBrandSpellings();
     console.log(`
 ╔══════════════════════════════════════════════════════════════════╗
 ║              CHANDHANA SHOE MART - BACKEND API                   ║

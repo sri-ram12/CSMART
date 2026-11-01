@@ -201,11 +201,10 @@ export const AdminEnquiriesPage: React.FC = () => {
         {/* Global Notification */}
         {notification && (
           <div
-            className={`p-3.5 rounded-2xl text-xs font-bold border flex items-center justify-between animate-in fade-in duration-200 ${
-              notification.type === 'success'
+            className={`p-3.5 rounded-2xl text-xs font-bold border flex items-center justify-between animate-in fade-in duration-200 ${notification.type === 'success'
                 ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
                 : 'bg-rose-50 text-rose-700 border-rose-200'
-            }`}
+              }`}
           >
             <span>{notification.message}</span>
             <button
@@ -275,11 +274,10 @@ export const AdminEnquiriesPage: React.FC = () => {
                 key={st}
                 type="button"
                 onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  statusFilter === st
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${statusFilter === st
                     ? 'bg-[#5B21B6] text-white shadow-xs'
                     : 'bg-slate-50 hover:bg-purple-50 text-slate-600 border border-slate-200'
-                }`}
+                  }`}
               >
                 {st === 'ALL' ? 'All Leads' : st === 'NEW' ? 'New' : st === 'CONTACTED' ? 'Contacted' : st === 'CONVERTED' ? 'Purchased' : 'Closed'}
               </button>
@@ -313,8 +311,8 @@ export const AdminEnquiriesPage: React.FC = () => {
                     const cleanPhone = (enq.phone || '').replace(/\D/g, '');
                     const customerWaUrl = cleanPhone
                       ? `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(
-                          `Hello ${enq.customerName || 'Sir/Madam'}, thank you for contacting Chandhana Shoe Mart Tagarapuvalasa regarding ${enq.productTitle || 'our footwear'}. How can we assist you?`
-                        )}`
+                        `Hello ${enq.customerName || 'Sir/Madam'}, thank you for contacting Chandhana Shoe Mart Tagarapuvalasa regarding ${enq.productTitle || 'our footwear'}. How can we assist you?`
+                      )}`
                       : null;
 
                     return (
@@ -408,15 +406,14 @@ export const AdminEnquiriesPage: React.FC = () => {
                           <select
                             value={enq.status}
                             onChange={(e) => handleUpdateStatus(enq.id, e.target.value as any)}
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-black border cursor-pointer ${
-                              enq.status === 'NEW'
+                            className={`px-2.5 py-1 rounded-full text-[10px] font-black border cursor-pointer ${enq.status === 'NEW'
                                 ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
                                 : enq.status === 'CONTACTED'
-                                ? 'bg-sky-50 text-sky-800 border-sky-300'
-                                : enq.status === 'CONVERTED'
-                                ? 'bg-purple-50 text-purple-800 border-purple-300'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
-                            }`}
+                                  ? 'bg-sky-50 text-sky-800 border-sky-300'
+                                  : enq.status === 'CONVERTED'
+                                    ? 'bg-purple-50 text-purple-800 border-purple-300'
+                                    : 'bg-slate-100 text-slate-600 border-slate-200'
+                              }`}
                           >
                             <option value="NEW">🟢 New Lead</option>
                             <option value="CONTACTED">🔵 Contacted</option>
@@ -571,7 +568,7 @@ export const AdminEnquiriesPage: React.FC = () => {
                     onChange={(e) => setNewBrand(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 font-bold focus:outline-none focus:ring-2 focus:ring-[#5B21B6]"
                   >
-                    {['Walkaroo', 'Sparx', 'VKC Pride', 'Paragon', 'Walkmate', 'Striker', 'Brano', 'Redfort', 'Zaguaar', 'Hison', 'Poster Shoes', 'Lancer', 'Jockey', 'Sushma', 'TR Selections', 'ZM Selections', 'Airpistha', 'Doctor Choice'].map((b) => (
+                    {['Walkaroo', 'Sparx', 'VKC Pride', 'Paragon', 'Walkmate', 'Striker', 'Brano', 'Redfort', 'Jaguar', 'Hillson', 'Coasters', 'Lancer', 'Jockey', 'Sushma', 'TR Selections', 'ZM Selections', 'Airpistha', 'Doctor Choice'].map((b) => (
                       <option key={b} value={b}>{b}</option>
                     ))}
                   </select>

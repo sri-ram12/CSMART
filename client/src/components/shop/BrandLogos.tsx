@@ -177,8 +177,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-10 h
     );
   }
 
-  // 9. ZAGUAAR
-  if (norm.includes('zaguaar') || norm.includes('jaguar')) {
+  // 9. JAGUAR
+  if (norm.includes('jaguar') || norm.includes('zaguaar')) {
     if (variant === 'emblem') {
       return (
         <svg viewBox="0 0 40 40" className={className}>
@@ -192,14 +192,14 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-10 h
         <circle cx="16" cy="20" r="12" fill="#0D9488" />
         <path d="M10 20 L16 15 L22 20 L16 25 Z" fill="#CCFBF1" />
         <text x="68" y="26" textAnchor="middle" fontSize="14" fontWeight="900" letterSpacing="1.2" fill="#0F766E">
-          ZAGUAAR
+          JAGUAR
         </text>
       </svg>
     );
   }
 
-  // 10. HISON
-  if (norm.includes('hison')) {
+  // 10. HILLSON
+  if (norm.includes('hillson') || norm.includes('hison')) {
     if (variant === 'emblem') {
       return (
         <svg viewBox="0 0 40 40" className={className}>
@@ -211,20 +211,20 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-10 h
     return (
       <svg viewBox="0 0 105 40" className={className}>
         <polygon points="16,8 28,30 4,30" fill="#0284C7" />
-        <text x="64" y="26" textAnchor="middle" fontSize="15" fontWeight="900" letterSpacing="1.5" fill="#0369A1">
-          HISON
+        <text x="64" y="26" textAnchor="middle" fontSize="14" fontWeight="900" letterSpacing="1.2" fill="#0369A1">
+          HILLSON
         </text>
       </svg>
     );
   }
 
-  // 11. POSTER SHOES
-  if (norm.includes('poster')) {
+  // 11. COASTERS
+  if (norm.includes('coaster') || norm.includes('poster')) {
     if (variant === 'emblem') {
       return (
         <svg viewBox="0 0 40 40" className={className}>
           <rect x="8" y="6" width="24" height="28" rx="4" fill="#9D174D" />
-          <text x="20" y="24" textAnchor="middle" fontSize="12" fontWeight="900" fill="#FFFFFF">P</text>
+          <text x="20" y="24" textAnchor="middle" fontSize="12" fontWeight="900" fill="#FFFFFF">C</text>
         </svg>
       );
     }
@@ -232,7 +232,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({ brand, className = 'w-10 h
       <svg viewBox="0 0 125 40" className={className}>
         <rect x="6" y="8" width="20" height="24" rx="3" fill="#9D174D" />
         <text x="74" y="25" textAnchor="middle" fontSize="13" fontWeight="900" letterSpacing="1" fill="#831843">
-          POSTER SHOES
+          COASTERS
         </text>
       </svg>
     );
