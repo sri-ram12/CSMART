@@ -53,7 +53,7 @@ app.use(
 );
 
 // Logging
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.use(morgan('dev'));
 }
 
@@ -246,7 +246,7 @@ async function normalizeBrandSpellings() {
   }
 }
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     normalizeBrandSpellings();
     console.log(`
