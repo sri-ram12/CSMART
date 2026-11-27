@@ -246,7 +246,7 @@ async function normalizeBrandSpellings() {
   }
 }
 
-if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
+if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     normalizeBrandSpellings();
     console.log(`
