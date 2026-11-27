@@ -1,0 +1,1300 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
+const crypto_1 = __importDefault(require("crypto"));
+const prisma_js_1 = require("../prisma.js");
+const auth_js_1 = require("../middleware/auth.js");
+const router = (0, express_1.Router)();
+// Apply admin guard to all routes
+router.use(auth_js_1.authenticateToken, auth_js_1.requireAdmin);
+// GET /api/admin/stats
+router.get('/stats', async (_req, res, next) => {
+    try {
+        const [totalOrders, productsCount, orders, lowStockVariants, outOfStockVariants, totalEnquiries, newEnquiries, convertedEnquiries, recentEnquiries,] = await Promise.all([
+            prisma_js_1.prisma.order.count(),
+            prisma_js_1.prisma.product.count(),
+            prisma_js_1.prisma.order.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 10,
+                include: { items: true },
+            }),
+            prisma_js_1.prisma.productVariant.count({
+                where: { inventory: { lte: 5, gt: 0 } },
+            }),
+            prisma_js_1.prisma.productVariant.count({
+                where: { inventory: { lte: 0 } },
+            }),
+            prisma_js_1.prisma.whatsAppEnquiry.count(),
+            prisma_js_1.prisma.whatsAppEnquiry.count({ where: { status: 'NEW' } }),
+            prisma_js_1.prisma.whatsAppEnquiry.count({ where: { status: 'CONVERTED' } }),
+            prisma_js_1.prisma.whatsAppEnquiry.findMany({
+                orderBy: { createdAt: 'desc' },
+                take: 10,
+            }),
+        ]);
+        const confirmedOrders = await prisma_js_1.prisma.order.findMany({
+            where: {
+                paymentStatus: 'PAID',
+            },
+            select: { totalAmount: true },
+        });
+        const totalRevenue = confirmedOrders.reduce((sum, o) => sum + o.totalAmount, 0);
+        const pendingOrders = await prisma_js_1.prisma.order.count({
+            where: { status: { in: ['PLACED', 'CONFIRMED', 'PROCESSING'] } },
+        });
+        res.json({
+            success: true,
+            data: {
+                totalOrders,
+                totalRevenue,
+                pendingOrders,
+                productsCount,
+                lowStockVariants,
+                outOfStockVariants,
+                recentOrders: orders,
+                totalEnquiries,
+                newEnquiries,
+                convertedEnquiries,
+                recentEnquiries,
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// GET /api/admin/enquiries — WhatsApp product inquiries history
+router.get('/enquiries', async (req, res, next) => {
+    try {
+        const { status, search } = req.query;
+        const where = {};
+        if (status && status !== 'ALL') {
+            where.status = status;
+        }
+        if (search) {
+            const s = search.trim();
+            where.OR = [
+                { customerName: { contains: s } },
+                { phone: { contains: s } },
+                { productTitle: { contains: s } },
+                { sku: { contains: s } },
+                { brand: { contains: s } },
+                { message: { contains: s } },
+            ];
+        }
+        const enquiries = await prisma_js_1.prisma.whatsAppEnquiry.findMany({
+            where,
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json({ success: true, data: enquiries });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/enquiries — manual enquiry lead entry by admin
+router.post('/enquiries', async (req, res, next) => {
+    try {
+        const { customerName, phone, productTitle, sku, brand, price, size, color, message, notes, status, } = req.body;
+        const enquiry = await prisma_js_1.prisma.whatsAppEnquiry.create({
+            data: {
+                customerName: customerName || 'Store Customer',
+                phone: phone || '',
+                productTitle: productTitle || '',
+                sku: sku || '',
+                brand: brand || '',
+                price: price ? parseFloat(String(price)) : null,
+                size: size || null,
+                color: color || null,
+                message: message || 'Customer phone or walk-in enquiry recorded by admin.',
+                notes: notes || null,
+                status: status || 'NEW',
+                source: 'ADMIN_MANUAL',
+            },
+        });
+        res.json({ success: true, data: enquiry });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/enquiries/:id/status — update lead status & admin notes
+router.put('/enquiries/:id/status', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, notes } = req.body;
+        const data = {};
+        if (status)
+            data.status = status;
+        if (notes !== undefined)
+            data.notes = notes;
+        const updated = await prisma_js_1.prisma.whatsAppEnquiry.update({
+            where: { id },
+            data,
+        });
+        res.json({ success: true, data: updated });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// DELETE /api/admin/enquiries/:id — delete enquiry lead
+router.delete('/enquiries/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await prisma_js_1.prisma.whatsAppEnquiry.delete({ where: { id } });
+        res.json({ success: true, message: 'Customer enquiry record deleted.' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// GET /api/admin/orders
+router.get('/orders', async (req, res, next) => {
+    try {
+        const { status, search } = req.query;
+        const where = {};
+        if (status && status !== 'ALL') {
+            where.status = status;
+        }
+        if (search) {
+            const s = search.trim();
+            where.OR = [
+                { orderNumber: { contains: s } },
+                { trackingNumber: { contains: s } },
+                { guestEmail: { contains: s } },
+                { guestName: { contains: s } },
+                { user: { name: { contains: s } } },
+            ];
+        }
+        const orders = await prisma_js_1.prisma.order.findMany({
+            where,
+            include: {
+                items: true,
+                user: { select: { id: true, name: true, email: true, phone: true } },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json({ success: true, data: orders });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/orders/:id/status
+router.put('/orders/:id/status', async (req, res, next) => {
+    try {
+        const { status, trackingNumber, courierName, paymentStatus } = req.body;
+        const data = {};
+        if (status)
+            data.status = status;
+        if (trackingNumber)
+            data.trackingNumber = trackingNumber;
+        if (courierName)
+            data.courierName = courierName;
+        if (paymentStatus)
+            data.paymentStatus = paymentStatus;
+        const updated = await prisma_js_1.prisma.order.update({
+            where: { id: req.params.id },
+            data,
+            include: { items: true },
+        });
+        res.json({
+            success: true,
+            message: `Order status updated to ${updated.status}`,
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// GET /api/admin/inventory
+router.get('/inventory', async (req, res, next) => {
+    try {
+        const { lowStockOnly } = req.query;
+        const where = {};
+        if (lowStockOnly === 'true') {
+            where.inventory = { lte: 5 };
+        }
+        const variants = await prisma_js_1.prisma.productVariant.findMany({
+            where,
+            include: {
+                product: { select: { id: true, title: true, sku: true, brand: true, price: true } },
+            },
+            orderBy: { inventory: 'asc' },
+        });
+        res.json({ success: true, data: variants });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/inventory/:variantId
+router.put('/inventory/:variantId', async (req, res, next) => {
+    try {
+        const { inventory } = req.body;
+        const qty = parseInt(inventory);
+        if (isNaN(qty) || qty < 0) {
+            res.status(400).json({ success: false, message: 'Valid non-negative inventory number is required.' });
+            return;
+        }
+        const updated = await prisma_js_1.prisma.productVariant.update({
+            where: { id: req.params.variantId },
+            data: { inventory: qty },
+            include: { product: true },
+        });
+        res.json({
+            success: true,
+            message: `Stock updated for ${updated.sku} to ${updated.inventory}`,
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// GET /api/admin/products (Fetch all 555 footwear products with complete variants, media, and category)
+router.get('/products', async (req, res, next) => {
+    try {
+        const products = await prisma_js_1.prisma.product.findMany({
+            include: {
+                variants: true,
+                media: true,
+                category: true,
+            },
+            orderBy: { sku: 'asc' },
+        });
+        res.json({
+            success: true,
+            data: products,
+            total: products.length,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/products (Create product)
+router.post('/products', async (req, res, next) => {
+    try {
+        const { title, brand, sku, categoryId, department, price, originalPrice, discountPercent, description, details, has3D, model3DConfig, videoUrl, videoPoster, upperMaterial, soleMaterial, insoleMaterial, cushioning, closureType, heelHeight, weight, gripType, careInstructions, warranty, media = [], variants = [], } = req.body;
+        const slug = title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-')
+            .replace(/(^-|-$)+/g, '') + `-${Date.now().toString().slice(-4)}`;
+        const product = await prisma_js_1.prisma.product.create({
+            data: {
+                title,
+                slug,
+                brand: brand || 'Chandhana',
+                sku,
+                categoryId,
+                department,
+                price: parseFloat(price),
+                originalPrice: originalPrice ? parseFloat(originalPrice) : null,
+                discountPercent: parseInt(discountPercent) || 0,
+                description,
+                details,
+                has3D: Boolean(has3D),
+                model3DConfig: typeof model3DConfig === 'object' ? JSON.stringify(model3DConfig) : model3DConfig,
+                videoUrl,
+                videoPoster,
+                upperMaterial,
+                soleMaterial,
+                insoleMaterial,
+                cushioning,
+                closureType,
+                heelHeight,
+                weight,
+                gripType,
+                careInstructions,
+                warranty,
+                media: {
+                    create: media.map((url, idx) => ({
+                        url,
+                        order: idx,
+                        type: 'IMAGE',
+                    })),
+                },
+                variants: {
+                    create: variants.map((v, idx) => ({
+                        sku: v.sku || `${sku}-${v.size}-${idx}`,
+                        colorName: v.colorName,
+                        colorHex: v.colorHex || '#000000',
+                        size: v.size,
+                        inventory: parseInt(v.inventory) || 10,
+                        priceAdjustment: parseFloat(v.priceAdjustment) || 0,
+                        imageUrl: v.imageUrl || (media[0] || ''),
+                    })),
+                },
+            },
+            include: {
+                variants: true,
+                media: true,
+            },
+        });
+        res.status(201).json({
+            success: true,
+            message: 'Product created successfully',
+            data: product,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id (Update product details, category, brand, and pricing)
+router.put('/products/:id', async (req, res, next) => {
+    try {
+        const { title, brand, department, categoryId, price, originalPrice, discountPercent, description, details, has3D, model3DConfig, videoUrl, videoPoster, upperMaterial, soleMaterial, isFeatured, isTrending, isNewArrival, } = req.body;
+        const data = {};
+        if (title)
+            data.title = title;
+        if (brand)
+            data.brand = brand;
+        if (department)
+            data.department = department;
+        if (categoryId)
+            data.categoryId = categoryId;
+        if (price !== undefined)
+            data.price = parseFloat(price);
+        if (originalPrice !== undefined)
+            data.originalPrice = parseFloat(originalPrice);
+        if (discountPercent !== undefined)
+            data.discountPercent = parseInt(discountPercent);
+        if (description !== undefined)
+            data.description = description;
+        if (details !== undefined)
+            data.details = details;
+        if (has3D !== undefined)
+            data.has3D = Boolean(has3D);
+        if (model3DConfig !== undefined)
+            data.model3DConfig = typeof model3DConfig === 'object' ? JSON.stringify(model3DConfig) : model3DConfig;
+        if (videoUrl !== undefined)
+            data.videoUrl = videoUrl;
+        if (videoPoster !== undefined)
+            data.videoPoster = videoPoster;
+        if (upperMaterial)
+            data.upperMaterial = upperMaterial;
+        if (soleMaterial)
+            data.soleMaterial = soleMaterial;
+        if (isFeatured !== undefined)
+            data.isFeatured = Boolean(isFeatured);
+        if (isTrending !== undefined)
+            data.isTrending = Boolean(isTrending);
+        if (isNewArrival !== undefined)
+            data.isNewArrival = Boolean(isNewArrival);
+        const updated = await prisma_js_1.prisma.product.update({
+            where: { id: req.params.id },
+            data,
+            include: { variants: true, media: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: 'Product updated successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/toggle-stock (Toggle In-Stock / Out-of-Stock)
+router.put('/products/:id/toggle-stock', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { isOutOfStock } = req.body;
+        // Determine target inventory: 0 if marking out of stock, 15 if restoring stock
+        const targetQty = isOutOfStock ? 0 : 15;
+        await prisma_js_1.prisma.productVariant.updateMany({
+            where: { productId: id },
+            data: { inventory: targetQty },
+        });
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id },
+            include: { variants: true, media: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: isOutOfStock ? 'Product marked as Out of Stock' : 'Product marked as In Stock',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/price (Quick Price Fixing)
+router.put('/products/:id/price', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { price, originalPrice, discountPercent } = req.body;
+        const data = {};
+        if (price !== undefined)
+            data.price = parseFloat(price);
+        if (originalPrice !== undefined)
+            data.originalPrice = parseFloat(originalPrice);
+        if (discountPercent !== undefined) {
+            data.discountPercent = parseInt(discountPercent);
+        }
+        else if (originalPrice && price && parseFloat(originalPrice) > parseFloat(price)) {
+            data.discountPercent = Math.round(((parseFloat(originalPrice) - parseFloat(price)) / parseFloat(originalPrice)) * 100);
+        }
+        const updated = await prisma_js_1.prisma.product.update({
+            where: { id },
+            data,
+            include: { variants: true, media: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: 'Price updated successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/toggle-size-stock (Toggle stock availability for a specific size)
+router.put('/products/:id/toggle-size-stock', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { size, isOutOfStock } = req.body;
+        if (!size) {
+            res.status(400).json({ success: false, message: 'Size parameter is required.' });
+            return;
+        }
+        const targetInventory = isOutOfStock ? 0 : 15;
+        await prisma_js_1.prisma.productVariant.updateMany({
+            where: { productId: id, size },
+            data: { inventory: targetInventory },
+        });
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id },
+            include: { variants: true, media: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: `Size ${size} marked as ${isOutOfStock ? 'OUT OF STOCK' : 'IN STOCK'}`,
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/sizes (Update/Manage multiple sizes & stock availability)
+router.put('/products/:id/sizes', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { sizes } = req.body; // Array of { size: string, inventory: number, colorName?: string }
+        if (!Array.isArray(sizes)) {
+            res.status(400).json({ success: false, message: 'Sizes array is required.' });
+            return;
+        }
+        const product = await prisma_js_1.prisma.product.findUnique({
+            where: { id },
+            include: { variants: true },
+        });
+        if (!product) {
+            res.status(404).json({ success: false, message: 'Product not found.' });
+            return;
+        }
+        const existingVariants = product.variants;
+        const inputSizeNames = new Set(sizes.map((s) => s.size.trim()));
+        // 1. Delete variants whose size was removed by admin
+        for (const v of existingVariants) {
+            if (!inputSizeNames.has(v.size)) {
+                await prisma_js_1.prisma.productVariant.delete({ where: { id: v.id } });
+            }
+        }
+        // 2. Update existing or create new variants
+        for (const sItem of sizes) {
+            const sTrim = sItem.size.trim();
+            const inv = typeof sItem.inventory === 'number' ? Math.max(0, sItem.inventory) : (sItem.isAvailable ? 15 : 0);
+            const match = existingVariants.find((v) => v.size === sTrim);
+            if (match) {
+                await prisma_js_1.prisma.productVariant.update({
+                    where: { id: match.id },
+                    data: { inventory: inv },
+                });
+            }
+            else {
+                const cleanSku = `${product.sku}-${sTrim.replace(/\s+/g, '')}-${Date.now().toString().slice(-4)}`;
+                await prisma_js_1.prisma.productVariant.create({
+                    data: {
+                        productId: id,
+                        sku: cleanSku,
+                        size: sTrim,
+                        colorName: sItem.colorName || existingVariants[0]?.colorName || 'Classic',
+                        colorHex: existingVariants[0]?.colorHex || '#222222',
+                        inventory: inv,
+                        priceAdjustment: 0,
+                    },
+                });
+            }
+        }
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id },
+            include: { variants: true, media: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: 'Product sizes and stock updated successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// DELETE /api/admin/products/:id
+router.delete('/products/:id', async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        // Check if product is in any past orders
+        const orderCount = await prisma_js_1.prisma.orderItem.count({
+            where: { productId },
+        });
+        if (orderCount > 0) {
+            res.status(400).json({
+                success: false,
+                message: `Cannot delete style: referenced in ${orderCount} customer order(s). You can set its inventory to 0 to mark as discontinued.`,
+            });
+            return;
+        }
+        await prisma_js_1.prisma.product.delete({
+            where: { id: productId },
+        });
+        res.json({ success: true, message: 'Product deleted successfully.' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// Coupons
+router.get('/coupons', async (_req, res, next) => {
+    try {
+        const coupons = await prisma_js_1.prisma.coupon.findMany({
+            orderBy: { createdAt: 'desc' },
+        });
+        res.json({ success: true, data: coupons });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+router.post('/coupons', async (req, res, next) => {
+    try {
+        const { code, discountType, value, minOrderValue, maxDiscount, expiresAt } = req.body;
+        const coupon = await prisma_js_1.prisma.coupon.create({
+            data: {
+                code: code.trim().toUpperCase(),
+                discountType: discountType || 'PERCENTAGE',
+                value: parseFloat(value),
+                minOrderValue: parseFloat(minOrderValue) || 0,
+                maxDiscount: maxDiscount ? parseFloat(maxDiscount) : null,
+                expiresAt: expiresAt ? new Date(expiresAt) : null,
+            },
+        });
+        res.status(201).json({ success: true, message: 'Coupon created', data: coupon });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// Store Settings
+router.get('/settings', async (_req, res, next) => {
+    try {
+        const settings = await prisma_js_1.prisma.storeSettings.findFirst();
+        res.json({ success: true, data: settings });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+router.put('/settings', async (req, res, next) => {
+    try {
+        const settings = await prisma_js_1.prisma.storeSettings.upsert({
+            where: { id: 'store-default' },
+            update: req.body,
+            create: {
+                id: 'store-default',
+                ...req.body,
+            },
+        });
+        res.json({ success: true, message: 'Store settings updated', data: settings });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// =========================================================================
+// 3D MODEL ASSET MANAGEMENT ENDPOINTS (CHANDHANA SHOE MART 3D STUDIO)
+// =========================================================================
+// GET /api/admin/models/available (List built-in and uploaded 3D assets)
+router.get('/models/available', async (_req, res, next) => {
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const modelsDir = path.resolve(process.cwd(), 'client/public/models');
+        const available = [];
+        if (fs.existsSync(modelsDir)) {
+            const files = fs.readdirSync(modelsDir);
+            for (const file of files) {
+                if (file.toLowerCase().endsWith('.glb') || file.toLowerCase().endsWith('.gltf')) {
+                    const stats = fs.statSync(path.join(modelsDir, file));
+                    const isBuiltIn = ['shoe.glb', 'slipper.glb', 'sandal.glb', 'formal.glb', 'loafer.glb', 'boot.glb'].includes(file);
+                    let inferredType = 'custom';
+                    if (file.includes('shoe'))
+                        inferredType = 'sneaker';
+                    else if (file.includes('slipper'))
+                        inferredType = 'slipper';
+                    else if (file.includes('sandal'))
+                        inferredType = 'sandal';
+                    else if (file.includes('formal'))
+                        inferredType = 'formal';
+                    else if (file.includes('loafer'))
+                        inferredType = 'loafer';
+                    else if (file.includes('boot'))
+                        inferredType = 'boot';
+                    available.push({
+                        filename: file,
+                        url: `/models/${file}`,
+                        type: inferredType,
+                        sizeBytes: stats.size,
+                        format: 'glb',
+                        isBuiltIn,
+                    });
+                }
+            }
+        }
+        res.json({ success: true, data: available });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/models/upload (Securely upload and validate GLB model)
+router.post('/models/upload', async (req, res, next) => {
+    try {
+        const fs = await import('fs');
+        const path = await import('path');
+        const { filename, base64Data } = req.body;
+        if (!filename || !base64Data) {
+            res.status(400).json({
+                success: false,
+                message: 'Both filename and base64Data are required for model upload.',
+            });
+            return;
+        }
+        // Strip data URL scheme prefix if provided
+        const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
+        const buffer = Buffer.from(cleanBase64, 'base64');
+        // 1. Size Validation (Max 35 MB)
+        const MAX_SIZE_BYTES = 35 * 1024 * 1024;
+        if (buffer.length > MAX_SIZE_BYTES) {
+            res.status(400).json({
+                success: false,
+                message: `File exceeds maximum allowed size of 35MB (Current: ${(buffer.length / (1024 * 1024)).toFixed(1)}MB).`,
+            });
+            return;
+        }
+        // 2. Binary glTF Header Validation (Magic bytes: 'glTF' -> 0x46546C67)
+        if (buffer.length < 20) {
+            res.status(400).json({
+                success: false,
+                message: 'Uploaded file is corrupted or too small to be a valid 3D model.',
+            });
+            return;
+        }
+        const magic = buffer.toString('utf8', 0, 4);
+        if (magic !== 'glTF') {
+            res.status(400).json({
+                success: false,
+                message: `Invalid 3D model format. Header magic was "${magic}", expected "glTF" binary. Only standard glTF 2.0 binary (.glb) files are accepted.`,
+            });
+            return;
+        }
+        const version = buffer.readUInt32LE(4);
+        if (version !== 2) {
+            res.status(400).json({
+                success: false,
+                message: `Unsupported glTF version: ${version}. Only glTF 2.0 is supported.`,
+            });
+            return;
+        }
+        // 3. Sanitize filename & save
+        const safeBaseName = filename
+            .toLowerCase()
+            .replace(/\.glb$/i, '')
+            .replace(/[^a-z0-9_-]/g, '_')
+            .slice(0, 40);
+        const savedFilename = `custom_${safeBaseName}_${Date.now().toString().slice(-6)}.glb`;
+        const targetDirs = [
+            path.resolve(process.cwd(), 'client/public/models'),
+            path.resolve(process.cwd(), 'client/dist/models'),
+            path.resolve(process.cwd(), 'uploads/models'),
+        ];
+        for (const d of targetDirs) {
+            if (!fs.existsSync(d)) {
+                fs.mkdirSync(d, { recursive: true });
+            }
+            fs.writeFileSync(path.join(d, savedFilename), buffer);
+        }
+        const modelUrl = `/models/${savedFilename}`;
+        res.status(201).json({
+            success: true,
+            message: '3D model validated and published successfully.',
+            data: {
+                filename: savedFilename,
+                modelUrl,
+                sizeBytes: buffer.length,
+                format: 'glb',
+                version: 2,
+                status: 'ready',
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/model (Assign/Update product 3D configuration)
+router.put('/products/:id/model', async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        const { has3D, modelType, modelUrl, defaultColor, accentColor, soleColor, roughness, metalness, variants, } = req.body;
+        const existingProduct = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+        });
+        if (!existingProduct) {
+            res.status(404).json({ success: false, message: 'Product not found.' });
+            return;
+        }
+        // Parse or build model3DConfig
+        let parsedConfig = {};
+        if (existingProduct.model3DConfig) {
+            try {
+                parsedConfig = JSON.parse(existingProduct.model3DConfig);
+            }
+            catch { }
+        }
+        const updatedConfig = {
+            ...parsedConfig,
+            modelType: modelType !== undefined ? modelType : parsedConfig.modelType || 'sneaker',
+            modelUrl: modelUrl !== undefined ? modelUrl : parsedConfig.modelUrl,
+            format: 'glb',
+            status: 'ready',
+            defaultColor: defaultColor || parsedConfig.defaultColor || '#DC2626',
+            accentColor: accentColor || parsedConfig.accentColor || '#FFFFFF',
+            soleColor: soleColor || parsedConfig.soleColor || '#F8FAFC',
+            roughness: roughness !== undefined ? parseFloat(roughness) : (parsedConfig.roughness ?? 0.5),
+            metalness: metalness !== undefined ? parseFloat(metalness) : (parsedConfig.metalness ?? 0.1),
+            variants: variants || parsedConfig.variants || [],
+            updatedAt: new Date().toISOString(),
+        };
+        const updated = await prisma_js_1.prisma.product.update({
+            where: { id: productId },
+            data: {
+                has3D: has3D !== undefined ? Boolean(has3D) : true,
+                model3DConfig: JSON.stringify(updatedConfig),
+            },
+            include: {
+                category: true,
+                variants: true,
+                media: true,
+            },
+        });
+        res.json({
+            success: true,
+            message: 'Product 3D configuration saved successfully.',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// ─── BANNER MANAGEMENT ───────────────────────────────────────────────────────
+// GET /api/admin/banners
+router.get('/banners', async (_req, res, next) => {
+    try {
+        const banners = await prisma_js_1.prisma.banner.findMany({ orderBy: [{ order: 'asc' }, { createdAt: 'desc' }] });
+        res.json({ success: true, data: banners });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/banners
+router.post('/banners', async (req, res, next) => {
+    try {
+        const { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type } = req.body;
+        if (!title) {
+            res.status(400).json({ success: false, message: 'Title is required.' });
+            return;
+        }
+        const banner = await prisma_js_1.prisma.banner.create({
+            data: { title, subtitle, imageUrl, linkUrl, bgColor: bgColor || '#5B21B6', textColor: textColor || '#FFFFFF', isActive: isActive !== false, order: order || 0, type: type || 'OFFER' },
+        });
+        res.status(201).json({ success: true, data: banner });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/banners/:id
+router.put('/banners/:id', async (req, res, next) => {
+    try {
+        const { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type } = req.body;
+        const banner = await prisma_js_1.prisma.banner.update({
+            where: { id: req.params.id },
+            data: { title, subtitle, imageUrl, linkUrl, bgColor, textColor, isActive, order, type, updatedAt: new Date() },
+        });
+        res.json({ success: true, data: banner });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// DELETE /api/admin/banners/:id
+router.delete('/banners/:id', async (req, res, next) => {
+    try {
+        await prisma_js_1.prisma.banner.delete({ where: { id: req.params.id } });
+        res.json({ success: true, message: 'Banner deleted.' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// ─── NEW ARRIVALS TOGGLE ─────────────────────────────────────────────────────
+// PUT /api/admin/products/:id/toggle-new-arrival
+router.put('/products/:id/toggle-new-arrival', async (req, res, next) => {
+    try {
+        const product = await prisma_js_1.prisma.product.findUnique({ where: { id: req.params.id }, select: { isNewArrival: true } });
+        if (!product) {
+            res.status(404).json({ success: false, message: 'Product not found.' });
+            return;
+        }
+        const updated = await prisma_js_1.prisma.product.update({
+            where: { id: req.params.id },
+            data: { isNewArrival: !product.isNewArrival },
+        });
+        res.json({ success: true, data: { isNewArrival: updated.isNewArrival } });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// ─── PRODUCT IMAGE & GALLERY UPLOAD ──────────────────────────────────────────
+// POST /api/admin/upload-image
+router.post('/upload-image', async (req, res, next) => {
+    try {
+        const { image, filename } = req.body;
+        if (!image) {
+            res.status(400).json({ success: false, message: 'Image data or URL required' });
+            return;
+        }
+        // If it's already a URL
+        if (typeof image === 'string' && (image.startsWith('http://') || image.startsWith('https://') || image.startsWith('/uploads/'))) {
+            res.json({ success: true, data: { url: image } });
+            return;
+        }
+        // If it's a base64 data URL
+        if (typeof image === 'string' && image.startsWith('data:')) {
+            const matches = image.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                const buffer = Buffer.from(matches[2], 'base64');
+                const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
+                const cleanName = (filename || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
+                const uniqueName = `${Date.now()}_${crypto_1.default.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
+                const uploadsDir = path_1.default.resolve(process.cwd(), 'uploads');
+                if (!fs_1.default.existsSync(uploadsDir)) {
+                    fs_1.default.mkdirSync(uploadsDir, { recursive: true });
+                }
+                const filePath = path_1.default.join(uploadsDir, uniqueName);
+                fs_1.default.writeFileSync(filePath, buffer);
+                const publicUrl = `/uploads/${uniqueName}`;
+                res.json({ success: true, data: { url: publicUrl } });
+                return;
+            }
+        }
+        res.status(400).json({ success: false, message: 'Invalid image format. Provide base64 data URL or HTTP link.' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/image (Backward-compatible single / multiple image update)
+router.put('/products/:id/image', async (req, res, next) => {
+    try {
+        const { imageUrl, mediaUrls } = req.body;
+        const urls = Array.isArray(mediaUrls) && mediaUrls.length > 0
+            ? mediaUrls.filter((u) => typeof u === 'string' && u.trim().length > 0)
+            : imageUrl ? [imageUrl] : [];
+        if (urls.length === 0) {
+            res.status(400).json({ success: false, message: 'imageUrl or mediaUrls is required' });
+            return;
+        }
+        const productId = req.params.id;
+        const product = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: { media: true, variants: true },
+        });
+        if (!product) {
+            res.status(404).json({ success: false, message: 'Product not found' });
+            return;
+        }
+        // Replace existing media with provided list
+        await prisma_js_1.prisma.productMedia.deleteMany({
+            where: { productId },
+        });
+        for (let i = 0; i < urls.length; i++) {
+            await prisma_js_1.prisma.productMedia.create({
+                data: {
+                    productId,
+                    url: urls[i],
+                    type: 'IMAGE',
+                    order: i,
+                },
+            });
+        }
+        // Also update variants primary imageUrl
+        await prisma_js_1.prisma.productVariant.updateMany({
+            where: { productId },
+            data: { imageUrl: urls[0] },
+        });
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: { media: { orderBy: { order: 'asc' } }, variants: true, category: true },
+        });
+        res.json({
+            success: true,
+            message: 'Product pictures updated successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/media (Save / replace complete list of product pictures)
+router.put('/products/:id/media', async (req, res, next) => {
+    try {
+        const { mediaUrls, images } = req.body;
+        const urls = (Array.isArray(mediaUrls) ? mediaUrls : Array.isArray(images) ? images : [])
+            .filter((u) => typeof u === 'string' && u.trim().length > 0);
+        const productId = req.params.id;
+        const product = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+        });
+        if (!product) {
+            res.status(404).json({ success: false, message: 'Product not found' });
+            return;
+        }
+        if (urls.length === 0) {
+            res.status(400).json({ success: false, message: 'At least one image URL is required' });
+            return;
+        }
+        // Replace product media with new ordered list
+        await prisma_js_1.prisma.productMedia.deleteMany({
+            where: { productId },
+        });
+        for (let i = 0; i < urls.length; i++) {
+            await prisma_js_1.prisma.productMedia.create({
+                data: {
+                    productId,
+                    url: urls[i],
+                    type: 'IMAGE',
+                    order: i,
+                },
+            });
+        }
+        // Update variants primary image to first photo
+        await prisma_js_1.prisma.productVariant.updateMany({
+            where: { productId },
+            data: { imageUrl: urls[0] },
+        });
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                media: { orderBy: { order: 'asc' } },
+                variants: true,
+                category: true,
+            },
+        });
+        res.json({
+            success: true,
+            message: `Updated product with ${urls.length} photos successfully`,
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/products/:id/media (Append photo(s) to product)
+router.post('/products/:id/media', async (req, res, next) => {
+    try {
+        const { url, urls } = req.body;
+        const productId = req.params.id;
+        const toAdd = Array.isArray(urls) ? urls : url ? [url] : [];
+        if (toAdd.length === 0) {
+            res.status(400).json({ success: false, message: 'Image url is required' });
+            return;
+        }
+        const currentMediaCount = await prisma_js_1.prisma.productMedia.count({
+            where: { productId },
+        });
+        for (let i = 0; i < toAdd.length; i++) {
+            await prisma_js_1.prisma.productMedia.create({
+                data: {
+                    productId,
+                    url: toAdd[i],
+                    type: 'IMAGE',
+                    order: currentMediaCount + i,
+                },
+            });
+        }
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                media: { orderBy: { order: 'asc' } },
+                variants: true,
+                category: true,
+            },
+        });
+        res.json({
+            success: true,
+            message: 'Photo(s) added successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// DELETE /api/admin/products/:id/media/:mediaId (Remove specific photo)
+router.delete('/products/:id/media/:mediaId', async (req, res, next) => {
+    try {
+        const { id: productId, mediaId } = req.params;
+        const totalCount = await prisma_js_1.prisma.productMedia.count({
+            where: { productId },
+        });
+        if (totalCount <= 1) {
+            res.status(400).json({
+                success: false,
+                message: 'Cannot delete the only picture. Products must have at least one picture.',
+            });
+            return;
+        }
+        await prisma_js_1.prisma.productMedia.delete({
+            where: { id: mediaId },
+        });
+        // Re-index orders
+        const remaining = await prisma_js_1.prisma.productMedia.findMany({
+            where: { productId },
+            orderBy: { order: 'asc' },
+        });
+        for (let i = 0; i < remaining.length; i++) {
+            await prisma_js_1.prisma.productMedia.update({
+                where: { id: remaining[i].id },
+                data: { order: i },
+            });
+        }
+        if (remaining.length > 0) {
+            await prisma_js_1.prisma.productVariant.updateMany({
+                where: { productId },
+                data: { imageUrl: remaining[0].url },
+            });
+        }
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                media: { orderBy: { order: 'asc' } },
+                variants: true,
+                category: true,
+            },
+        });
+        res.json({
+            success: true,
+            message: 'Photo removed successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/products/:id/media/:mediaId/primary (Set photo as primary/cover)
+router.put('/products/:id/media/:mediaId/primary', async (req, res, next) => {
+    try {
+        const { id: productId, mediaId } = req.params;
+        const targetMedia = await prisma_js_1.prisma.productMedia.findUnique({
+            where: { id: mediaId },
+        });
+        if (!targetMedia || targetMedia.productId !== productId) {
+            res.status(404).json({ success: false, message: 'Media item not found for this product' });
+            return;
+        }
+        const allMedia = await prisma_js_1.prisma.productMedia.findMany({
+            where: { productId },
+            orderBy: { order: 'asc' },
+        });
+        // Re-order: targetMedia becomes index 0, others follow
+        const otherMedia = allMedia.filter((m) => m.id !== mediaId);
+        const newOrdered = [targetMedia, ...otherMedia];
+        for (let i = 0; i < newOrdered.length; i++) {
+            await prisma_js_1.prisma.productMedia.update({
+                where: { id: newOrdered[i].id },
+                data: { order: i },
+            });
+        }
+        await prisma_js_1.prisma.productVariant.updateMany({
+            where: { productId },
+            data: { imageUrl: targetMedia.url },
+        });
+        const updated = await prisma_js_1.prisma.product.findUnique({
+            where: { id: productId },
+            include: {
+                media: { orderBy: { order: 'asc' } },
+                variants: true,
+                category: true,
+            },
+        });
+        res.json({
+            success: true,
+            message: 'Primary photo updated successfully',
+            data: updated,
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// ─── VIDEO ADS & PROMOTIONAL REELS MANAGEMENT ──────────────────────────────
+// POST /api/admin/video-ads/upload (Upload video from device gallery / camera / file)
+router.post('/video-ads/upload', async (req, res, next) => {
+    try {
+        const { video, filename } = req.body;
+        if (!video) {
+            res.status(400).json({ success: false, message: 'Video data or URL is required' });
+            return;
+        }
+        // Direct HTTP URL
+        if (typeof video === 'string' && (video.startsWith('http://') || video.startsWith('https://') || video.startsWith('/uploads/'))) {
+            res.json({ success: true, data: { url: video } });
+            return;
+        }
+        // Base64 Data URL (from phone gallery, camera, file picker)
+        if (typeof video === 'string' && video.startsWith('data:')) {
+            const matches = video.match(/^data:([A-Za-z0-9-+\/]+);base64,(.+)$/);
+            if (matches && matches.length === 3) {
+                const mimeType = matches[1];
+                const buffer = Buffer.from(matches[2], 'base64');
+                const ext = mimeType.split('/')[1]?.split(';')[0]?.replace('quicktime', 'mov') || 'mp4';
+                const cleanName = (filename || 'video_ad').replace(/[^a-zA-Z0-9_-]/g, '_');
+                const uniqueName = `ad_${Date.now()}_${crypto_1.default.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
+                const videosDir = path_1.default.resolve(process.cwd(), 'uploads/videos');
+                if (!fs_1.default.existsSync(videosDir)) {
+                    fs_1.default.mkdirSync(videosDir, { recursive: true });
+                }
+                const filePath = path_1.default.join(videosDir, uniqueName);
+                fs_1.default.writeFileSync(filePath, buffer);
+                const publicUrl = `/uploads/videos/${uniqueName}`;
+                res.json({ success: true, data: { url: publicUrl } });
+                return;
+            }
+        }
+        res.status(400).json({ success: false, message: 'Invalid video format. Provide base64 data URL or HTTP link.' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// GET /api/admin/video-ads (List all video ads)
+router.get('/video-ads', async (_req, res, next) => {
+    try {
+        const ads = await prisma_js_1.prisma.videoAd.findMany({
+            orderBy: [{ order: 'asc' }, { createdAt: 'desc' }],
+        });
+        res.json({ success: true, data: ads });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// POST /api/admin/video-ads (Create a new video ad)
+router.post('/video-ads', async (req, res, next) => {
+    try {
+        const { title, tagline, brand, videoUrl, posterUrl, offerText, linkUrl, ctaText, isActive, order } = req.body;
+        if (!title || !videoUrl) {
+            res.status(400).json({ success: false, message: 'Title and Video URL are required' });
+            return;
+        }
+        const ad = await prisma_js_1.prisma.videoAd.create({
+            data: {
+                title: title.trim(),
+                tagline: tagline ? tagline.trim() : null,
+                brand: brand ? brand.trim() : 'Chandhana',
+                videoUrl: videoUrl.trim(),
+                posterUrl: posterUrl ? posterUrl.trim() : null,
+                offerText: offerText ? offerText.trim() : null,
+                linkUrl: linkUrl ? linkUrl.trim() : '/shop',
+                ctaText: ctaText ? ctaText.trim() : 'Enquire on WhatsApp',
+                isActive: isActive !== undefined ? Boolean(isActive) : true,
+                order: typeof order === 'number' ? order : 0,
+            },
+        });
+        res.status(201).json({ success: true, message: 'Video ad published successfully', data: ad });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// PUT /api/admin/video-ads/:id (Update video ad)
+router.put('/video-ads/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { title, tagline, brand, videoUrl, posterUrl, offerText, linkUrl, ctaText, isActive, order } = req.body;
+        const ad = await prisma_js_1.prisma.videoAd.update({
+            where: { id },
+            data: {
+                ...(title && { title: title.trim() }),
+                ...(tagline !== undefined && { tagline: tagline ? tagline.trim() : null }),
+                ...(brand !== undefined && { brand: brand ? brand.trim() : 'Chandhana' }),
+                ...(videoUrl && { videoUrl: videoUrl.trim() }),
+                ...(posterUrl !== undefined && { posterUrl: posterUrl ? posterUrl.trim() : null }),
+                ...(offerText !== undefined && { offerText: offerText ? offerText.trim() : null }),
+                ...(linkUrl !== undefined && { linkUrl: linkUrl ? linkUrl.trim() : '/shop' }),
+                ...(ctaText !== undefined && { ctaText: ctaText ? ctaText.trim() : 'Enquire on WhatsApp' }),
+                ...(isActive !== undefined && { isActive: Boolean(isActive) }),
+                ...(order !== undefined && { order: Number(order) }),
+            },
+        });
+        res.json({ success: true, message: 'Video ad updated successfully', data: ad });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+// DELETE /api/admin/video-ads/:id (Delete video ad)
+router.delete('/video-ads/:id', async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await prisma_js_1.prisma.videoAd.delete({ where: { id } });
+        res.json({ success: true, message: 'Video ad deleted successfully' });
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.default = router;

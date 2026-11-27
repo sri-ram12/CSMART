@@ -3,8 +3,10 @@ node_modules/
 */node_modules/
 
 # Production builds
-dist/
+/dist/
 client/dist/
+!server/dist/
+!server/dist/**
 
 # Environment variables
 .env
