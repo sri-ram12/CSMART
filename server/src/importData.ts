@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './prisma.js';
 import fs from 'fs';
 import path from 'path';
-
-const prisma = new PrismaClient();
 
 async function importAll() {
   const jsonPath = path.resolve(process.cwd(), 'server/prisma/data_export.json');
@@ -14,7 +12,7 @@ async function importAll() {
   console.log('📦 Reading export data from:', jsonPath);
   const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
-  console.log('🚀 Starting import into Supabase PostgreSQL...');
+  console.log('🚀 Starting import into Turso Database...');
 
   // 1. Store Settings
   if (data.storeSettings?.length) {
