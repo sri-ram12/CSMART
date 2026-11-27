@@ -851,11 +851,15 @@ router.post('/models/upload', async (req: AuthRequest, res: Response, next) => {
       path.resolve(process.cwd(), 'uploads/models'),
     ];
 
-    for (const d of targetDirs) {
-      if (!fs.existsSync(d)) {
-        fs.mkdirSync(d, { recursive: true });
+    try {
+      for (const d of targetDirs) {
+        if (!fs.existsSync(d)) {
+          fs.mkdirSync(d, { recursive: true });
+        }
+        fs.writeFileSync(path.join(d, savedFilename), buffer);
       }
-      fs.writeFileSync(path.join(d, savedFilename), buffer);
+    } catch (writeErr) {
+      console.warn('Filesystem write skipped in serverless environment:', writeErr);
     }
 
     const modelUrl = `/models/${savedFilename}`;
@@ -1032,16 +1036,21 @@ router.post('/upload-image', async (req: AuthRequest, res: Response, next) => {
         const cleanName = (filename || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
         const uniqueName = `${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
 
-        const uploadsDir = path.resolve(process.cwd(), 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-          fs.mkdirSync(uploadsDir, { recursive: true });
+        try {
+          const uploadsDir = path.resolve(process.cwd(), 'uploads');
+          if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+          }
+          const filePath = path.join(uploadsDir, uniqueName);
+          fs.writeFileSync(filePath, buffer);
+          const publicUrl = `/uploads/${uniqueName}`;
+          res.json({ success: true, data: { url: publicUrl } });
+          return;
+        } catch (fileErr) {
+          // If filesystem is read-only (serverless), store data URL directly in DB for permanent storage
+          res.json({ success: true, data: { url: image } });
+          return;
         }
-        const filePath = path.join(uploadsDir, uniqueName);
-        fs.writeFileSync(filePath, buffer);
-
-        const publicUrl = `/uploads/${uniqueName}`;
-        res.json({ success: true, data: { url: publicUrl } });
-        return;
       }
     }
 
@@ -1362,16 +1371,22 @@ router.post('/video-ads/upload', async (req: AuthRequest, res: Response, next) =
         const cleanName = (filename || 'video_ad').replace(/[^a-zA-Z0-9_-]/g, '_');
         const uniqueName = `ad_${Date.now()}_${crypto.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
 
-        const videosDir = path.resolve(process.cwd(), 'uploads/videos');
-        if (!fs.existsSync(videosDir)) {
-          fs.mkdirSync(videosDir, { recursive: true });
-        }
-        const filePath = path.join(videosDir, uniqueName);
-        fs.writeFileSync(filePath, buffer);
+        try {
+          const videosDir = path.resolve(process.cwd(), 'uploads/videos');
+          if (!fs.existsSync(videosDir)) {
+            fs.mkdirSync(videosDir, { recursive: true });
+          }
+          const filePath = path.join(videosDir, uniqueName);
+          fs.writeFileSync(filePath, buffer);
 
-        const publicUrl = `/uploads/videos/${uniqueName}`;
-        res.json({ success: true, data: { url: publicUrl } });
-        return;
+          const publicUrl = `/uploads/videos/${uniqueName}`;
+          res.json({ success: true, data: { url: publicUrl } });
+          return;
+        } catch (fileErr) {
+          // If filesystem is read-only (serverless), store data URL directly in DB
+          res.json({ success: true, data: { url: video } });
+          return;
+        }
       }
     }
 

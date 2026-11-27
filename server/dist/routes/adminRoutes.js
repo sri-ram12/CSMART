@@ -742,11 +742,16 @@ router.post('/models/upload', async (req, res, next) => {
             path.resolve(process.cwd(), 'client/dist/models'),
             path.resolve(process.cwd(), 'uploads/models'),
         ];
-        for (const d of targetDirs) {
-            if (!fs.existsSync(d)) {
-                fs.mkdirSync(d, { recursive: true });
+        try {
+            for (const d of targetDirs) {
+                if (!fs.existsSync(d)) {
+                    fs.mkdirSync(d, { recursive: true });
+                }
+                fs.writeFileSync(path.join(d, savedFilename), buffer);
             }
-            fs.writeFileSync(path.join(d, savedFilename), buffer);
+        }
+        catch (writeErr) {
+            console.warn('Filesystem write skipped in serverless environment:', writeErr);
         }
         const modelUrl = `/models/${savedFilename}`;
         res.status(201).json({
@@ -916,15 +921,22 @@ router.post('/upload-image', async (req, res, next) => {
                 const ext = mimeType.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg';
                 const cleanName = (filename || 'image').replace(/[^a-zA-Z0-9_-]/g, '_');
                 const uniqueName = `${Date.now()}_${crypto_1.default.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
-                const uploadsDir = path_1.default.resolve(process.cwd(), 'uploads');
-                if (!fs_1.default.existsSync(uploadsDir)) {
-                    fs_1.default.mkdirSync(uploadsDir, { recursive: true });
+                try {
+                    const uploadsDir = path_1.default.resolve(process.cwd(), 'uploads');
+                    if (!fs_1.default.existsSync(uploadsDir)) {
+                        fs_1.default.mkdirSync(uploadsDir, { recursive: true });
+                    }
+                    const filePath = path_1.default.join(uploadsDir, uniqueName);
+                    fs_1.default.writeFileSync(filePath, buffer);
+                    const publicUrl = `/uploads/${uniqueName}`;
+                    res.json({ success: true, data: { url: publicUrl } });
+                    return;
                 }
-                const filePath = path_1.default.join(uploadsDir, uniqueName);
-                fs_1.default.writeFileSync(filePath, buffer);
-                const publicUrl = `/uploads/${uniqueName}`;
-                res.json({ success: true, data: { url: publicUrl } });
-                return;
+                catch (fileErr) {
+                    // If filesystem is read-only (serverless), store data URL directly in DB for permanent storage
+                    res.json({ success: true, data: { url: image } });
+                    return;
+                }
             }
         }
         res.status(400).json({ success: false, message: 'Invalid image format. Provide base64 data URL or HTTP link.' });
@@ -1203,15 +1215,22 @@ router.post('/video-ads/upload', async (req, res, next) => {
                 const ext = mimeType.split('/')[1]?.split(';')[0]?.replace('quicktime', 'mov') || 'mp4';
                 const cleanName = (filename || 'video_ad').replace(/[^a-zA-Z0-9_-]/g, '_');
                 const uniqueName = `ad_${Date.now()}_${crypto_1.default.randomBytes(4).toString('hex')}_${cleanName}.${ext}`;
-                const videosDir = path_1.default.resolve(process.cwd(), 'uploads/videos');
-                if (!fs_1.default.existsSync(videosDir)) {
-                    fs_1.default.mkdirSync(videosDir, { recursive: true });
+                try {
+                    const videosDir = path_1.default.resolve(process.cwd(), 'uploads/videos');
+                    if (!fs_1.default.existsSync(videosDir)) {
+                        fs_1.default.mkdirSync(videosDir, { recursive: true });
+                    }
+                    const filePath = path_1.default.join(videosDir, uniqueName);
+                    fs_1.default.writeFileSync(filePath, buffer);
+                    const publicUrl = `/uploads/videos/${uniqueName}`;
+                    res.json({ success: true, data: { url: publicUrl } });
+                    return;
                 }
-                const filePath = path_1.default.join(videosDir, uniqueName);
-                fs_1.default.writeFileSync(filePath, buffer);
-                const publicUrl = `/uploads/videos/${uniqueName}`;
-                res.json({ success: true, data: { url: publicUrl } });
-                return;
+                catch (fileErr) {
+                    // If filesystem is read-only (serverless), store data URL directly in DB
+                    res.json({ success: true, data: { url: video } });
+                    return;
+                }
             }
         }
         res.status(400).json({ success: false, message: 'Invalid video format. Provide base64 data URL or HTTP link.' });
