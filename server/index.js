@@ -1,3 +1,2 @@
-const serverApp = require('./dist/index.js');
-const app = serverApp.default || serverApp;
-module.exports = app;
+const app = require('./dist/bundle.js');
+module.exports = app.default || app;
