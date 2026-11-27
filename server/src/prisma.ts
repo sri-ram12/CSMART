@@ -4,9 +4,13 @@ import { createClient } from '@libsql/client';
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
+const TURSO_DEFAULT_URL = 'libsql://csmart-sri-ram12.aws-ap-south-1.turso.io';
+const TURSO_DEFAULT_TOKEN =
+  'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTU3NjE2MjUsImlkIjoiMDFhMjFiYmItMmIwMS03YmIzLTk2MzEtNGQ2MTg5MDQ0ZTk4Iiwia2lkIjoiZGNkNG1GVVpSdVlJUDRXMXB5eHFGaXlZWWlaTlI0akhhMXRyYnpCbmdGYyIsInJpZCI6IjAzOTU5NjdhLWE1MmQtNGY0NS1hMzE3LTAyY2UwMzI5ZWMyMSJ9.nUcDyHXH6MsbDoYRGyV5JNSoUzLCPAtg_pZhHuRRxttzp4VoOdf8Zn-JVeHyJogDKOGP3zCNcwKWV9WT9ErwAQ';
+
 function createPrismaClient(): PrismaClient {
-  const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || '';
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const tursoUrl = process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || TURSO_DEFAULT_URL;
+  const authToken = process.env.TURSO_AUTH_TOKEN || TURSO_DEFAULT_TOKEN;
 
   if (tursoUrl.startsWith('libsql:') || tursoUrl.startsWith('https:')) {
     const libsql = createClient({

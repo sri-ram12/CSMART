@@ -64,11 +64,15 @@ app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 // Static uploads directory for product images, banners, and video ads
 const uploadsDir = path.resolve(process.cwd(), 'uploads');
 const videosDir = path.resolve(uploadsDir, 'videos');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
-}
-if (!fs.existsSync(videosDir)) {
-  fs.mkdirSync(videosDir, { recursive: true });
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+  if (!fs.existsSync(videosDir)) {
+    fs.mkdirSync(videosDir, { recursive: true });
+  }
+} catch (err) {
+  // Read-only filesystem in serverless environments (e.g. Vercel)
 }
 app.use('/uploads', express.static(uploadsDir));
 
@@ -80,30 +84,40 @@ const apiLimiter = rateLimit({
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
-app.use('/api/', apiLimiter);
+app.use('/api', apiLimiter);
 
-// Health Check
-app.get('/api/health', (_req, res) => {
+// Health Check (responds on both /api/health and /health)
+const healthHandler = (_req: express.Request, res: express.Response) => {
   res.json({
     status: 'healthy',
     brand: 'CHANDHANA SHOE MART',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: '1.0.0',
+    database: process.env.TURSO_DATABASE_URL ? 'turso-libsql' : 'turso-cloud',
   });
-});
+};
+app.get('/api/health', healthHandler);
+app.get('/health', healthHandler);
 
-// Mount Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/categories', categoryRoutes);
-app.use('/api/checkout', checkoutRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/pincode', pincodeRoutes);
-app.use('/api/reviews', reviewRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/settings', settingsRoutes);
+// Mount Routes (supports both /api/* and /* for compatibility with Vercel service rewrites)
+const apiRoutes: [string, any][] = [
+  ['/auth', authRoutes],
+  ['/products', productRoutes],
+  ['/categories', categoryRoutes],
+  ['/checkout', checkoutRoutes],
+  ['/orders', orderRoutes],
+  ['/payment', paymentRoutes],
+  ['/pincode', pincodeRoutes],
+  ['/reviews', reviewRoutes],
+  ['/admin', adminRoutes],
+  ['/settings', settingsRoutes],
+];
+
+for (const [prefix, router] of apiRoutes) {
+  app.use(`/api${prefix}`, router);
+  app.use(prefix, router);
+}
 
 // Production static asset serving for Render / single-service deployment
 const clientDistCandidates = [
@@ -246,7 +260,7 @@ async function normalizeBrandSpellings() {
   }
 }
 
-if (process.env.NODE_ENV !== 'test') {
+if (process.env.NODE_ENV !== 'test' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     normalizeBrandSpellings();
     console.log(`
@@ -258,6 +272,12 @@ if (process.env.NODE_ENV !== 'test') {
 ╚══════════════════════════════════════════════════════════════════╝
     `);
   });
+}
+
+// CommonJS export compatibility for Vercel Express runtime
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = app;
+  (module.exports as any).default = app;
 }
 
 export default app;
