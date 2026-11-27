@@ -29,8 +29,33 @@ function createPrismaClient(): PrismaClient {
   });
 }
 
-export const prisma = globalForPrisma.prisma || createPrismaClient();
+let _prismaInstance: PrismaClient | null = null;
+let _initError: Error | null = null;
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+export function getPrismaClient(): PrismaClient {
+  if (_prismaInstance) return _prismaInstance;
+  if (_initError) throw _initError;
+
+  try {
+    _prismaInstance = globalForPrisma.prisma || createPrismaClient();
+    if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = _prismaInstance;
+    return _prismaInstance;
+  } catch (err: any) {
+    _initError = err;
+    console.error('Failed to initialize Prisma client:', err);
+    throw err;
+  }
+}
+
+export const prisma = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getPrismaClient();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+});
 
 export default prisma;

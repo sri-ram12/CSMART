@@ -87,14 +87,31 @@ const apiLimiter = rateLimit({
 app.use('/api', apiLimiter);
 
 // Health Check (responds on both /api/health and /health)
-const healthHandler = (_req: express.Request, res: express.Response) => {
+const healthHandler = async (_req: express.Request, res: express.Response) => {
+  let dbStatus = 'connecting';
+  let productCount = 0;
+  let dbError: string | null = null;
+
+  try {
+    productCount = await prisma.product.count();
+    dbStatus = 'connected';
+  } catch (err: any) {
+    dbStatus = 'error';
+    dbError = err.message || String(err);
+  }
+
   res.json({
-    status: 'healthy',
+    status: dbStatus === 'connected' ? 'healthy' : 'degraded',
     brand: 'CHANDHANA SHOE MART',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     version: '1.0.0',
-    database: process.env.TURSO_DATABASE_URL ? 'turso-libsql' : 'turso-cloud',
+    database: {
+      status: dbStatus,
+      products: productCount,
+      target: process.env.TURSO_DATABASE_URL ? 'turso-libsql' : 'turso-cloud',
+      error: dbError,
+    },
   });
 };
 app.get('/api/health', healthHandler);
