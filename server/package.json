@@ -2,7 +2,7 @@
   "name": "csmart-server",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "prisma generate && tsc && npx esbuild src/index.ts --bundle --platform=node --target=node18 --external:@prisma/client --outfile=dist/bundle.js",
